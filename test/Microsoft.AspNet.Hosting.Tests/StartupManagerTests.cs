@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using Microsoft.AspNet.Abstractions;
 using Microsoft.AspNet.DependencyInjection;
 using Microsoft.AspNet.Hosting.Startup;
-using Microsoft.AspNet.Hosting.Tests.Fakes;
+using Microsoft.AspNet.Hosting.Fakes;
 using Xunit;
 
-namespace Microsoft.AspNet.Hosting.Tests
+namespace Microsoft.AspNet.Hosting
 {
     
     public class StartupManagerTests : IFakeStartupCallback
@@ -21,7 +19,7 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             var manager = services.GetService<IStartupManager>();
 
-            var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests.Fakes.FakeStartup, Microsoft.AspNet.Hosting.Tests");
+            var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Fakes.FakeStartup, Microsoft.AspNet.Hosting.Tests");
 
             Assert.IsType<StartupManager>(manager);
             Assert.NotNull(startup);
@@ -36,7 +34,7 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             var manager = services.GetService<IStartupManager>();
 
-            var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests.Fakes.FakeStartupWithServices, Microsoft.AspNet.Hosting.Tests");
+            var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Fakes.FakeStartupWithServices, Microsoft.AspNet.Hosting.Tests");
 
             startup.Invoke(null);
 

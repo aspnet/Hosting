@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
-using Microsoft.AspNet.Abstractions;
+using Microsoft.AspNet.DependencyInjection;
 using Microsoft.AspNet.Hosting.Builder;
-using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -54,12 +54,16 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureServerFactory(HostingContext context)
         {
+            if (context.ServerFactory == null)
+            {
+                context.ServerFactory = context.Services.GetService<IServerFactory>();
+            }
             if (context.ServerFactory != null)
             {
                 return;
             }
 
-            context.ServerFactory = _serverManager.GetServer(context.ServerName);
+            context.ServerFactory = _serverManager.GetServerFactory(context.ServerName);
         }
 
         private void EnsureApplicationDelegate(HostingContext context)

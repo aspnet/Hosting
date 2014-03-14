@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Microsoft.AspNet.ConfigurationModel;
 using Microsoft.AspNet.DependencyInjection;
 using Microsoft.AspNet.Hosting.Builder;
-using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -18,7 +18,7 @@ namespace Microsoft.AspNet.Hosting
         public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
         {
             yield return DescribeService<IHostingEngine, HostingEngine>(configuration);
-            yield return DescribeService<IServerFactoryProvider, ServerFactoryProvider>(configuration);
+            yield return DescribeService<IServerManager, ServerManager>(configuration);
 
             yield return DescribeService<IStartupManager, StartupManager>(configuration);
             yield return DescribeService<IStartupLoaderProvider, StartupLoaderProvider>(configuration);
