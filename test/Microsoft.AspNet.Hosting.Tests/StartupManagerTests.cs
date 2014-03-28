@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Microsoft.AspNet.Abstractions;
 using Microsoft.AspNet.DependencyInjection;
+using Microsoft.AspNet.DependencyInjection.Fallback;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Hosting.Tests.Fakes;
 using Xunit;
@@ -17,7 +18,9 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void DefaultServicesLocateStartupByNameAndNamespace()
         {
-            IServiceProvider services = new ServiceProvider().Add(HostingServices.GetDefaultServices());
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.Add(HostingServices.GetDefaultServices());
+            var services = serviceCollection.BuildServiceProvider();
 
             var manager = services.GetService<IStartupManager>();
 
@@ -30,9 +33,10 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupClassMayHaveHostingServicesInjected()
         {
-            IServiceProvider services = new ServiceProvider()
-                .Add(HostingServices.GetDefaultServices())
-                .AddInstance<IFakeStartupCallback>(this);
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.Add(HostingServices.GetDefaultServices());
+            serviceCollection.AddInstance<IFakeStartupCallback>(this);
+            var services = serviceCollection.BuildServiceProvider();
 
             var manager = services.GetService<IStartupManager>();
 

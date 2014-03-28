@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Abstractions;
 using Microsoft.AspNet.DependencyInjection;
+using Microsoft.AspNet.DependencyInjection.Fallback;
 using Microsoft.AspNet.Hosting.Server;
 using Xunit;
 
@@ -17,8 +18,9 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void HostingEngineCanBeResolvedWithDefaultServices()
         {
-            var services = new ServiceProvider()
-                .Add(HostingServices.GetDefaultServices());
+            var services = new ServiceCollection()
+                .Add(HostingServices.GetDefaultServices())
+                .BuildServiceProvider();
 
             var engine = services.GetService<IHostingEngine>();
 
@@ -28,10 +30,11 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void HostingEngineCanBeStarted()
         {
-            var services = new ServiceProvider()
+            var services = new ServiceCollection()
                 .Add(HostingServices.GetDefaultServices()
                     .Where(descriptor => descriptor.ServiceType != typeof(IServerManager)))
-                .AddInstance<IServerManager>(this);
+                .AddInstance<IServerManager>(this)
+                .BuildServiceProvider();
 
             var engine = services.GetService<IHostingEngine>();
 

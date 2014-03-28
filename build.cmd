@@ -1,12 +1,20 @@
 @echo off
 cd %~dp0
 
-IF EXIST .nuget\NuGet.exe goto restore
-echo Downloading latest version of NuGet.exe...
-md .nuget
-@powershell -NoProfile -ExecutionPolicy unrestricted -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest 'https://www.nuget.org/nuget.exe' -OutFile '.nuget\NuGet.exe'"
+SETLOCAL
+SET CACHED_NUGET=%LocalAppData%\NuGet\NuGet.exe
 
-:restore
+IF EXIST %CACHED_NUGET% goto copynuget
+echo Downloading latest version of NuGet.exe...
+IF NOT EXIST %LocalAppData%\NuGet md %LocalAppData%\NuGet
+@powershell -NoProfile -ExecutionPolicy unrestricted -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest 'https://www.nuget.org/nuget.exe' -OutFile '%CACHED_NUGET%'"
+
+:copynuget
+IF EXIST .nuget\nuget.exe goto build
+md .nuget
+copy %CACHED_NUGET% .nuget\nuget.exe > nul
+
+:build
 IF EXIST packages\KoreBuild goto run
 .nuget\NuGet.exe install KoreBuild -ExcludeVersion -o packages -nocache -pre
 .nuget\NuGet.exe install Sake -version 0.2 -o packages -ExcludeVersion
