@@ -28,8 +28,11 @@ namespace Microsoft.AspNet.Hosting
             }
             config.AddEnvironmentVariables();
 
+            var applicationLifetime = new ManualApplicationLifetime();
+
             var serviceCollection = new ServiceCollection();
             serviceCollection.Add(HostingServices.GetDefaultServices(config));
+            serviceCollection.AddInstance<IApplicationLifetime>(applicationLifetime);
             var services = serviceCollection.BuildServiceProvider(_serviceProvider);
 
             var appEnvironment = _serviceProvider.GetService<IApplicationEnvironment>();
@@ -53,6 +56,7 @@ namespace Microsoft.AspNet.Hosting
             {
                 Console.WriteLine("Started");
                 Console.ReadLine();
+                applicationLifetime.Shutdown();
             }
         }
     }
