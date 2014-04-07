@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Abstractions;
 using Microsoft.AspNet.DependencyInjection;
 using Microsoft.AspNet.DependencyInjection.Fallback;
-using Xunit;
-using Microsoft.AspNet.Abstractions;
-using System.IO;
 using Microsoft.Net.Runtime;
-using System.Runtime.Versioning;
+using Xunit;
 
-namespace Microsoft.AspNet.Hosting.Testing.Tests
+namespace Microsoft.AspNet.Hosting.Embedded
 {
     public class TestServerTests
     {
@@ -19,7 +16,7 @@ namespace Microsoft.AspNet.Hosting.Testing.Tests
         public void TestServer_CreateWithDelegate()
         {
             // Act & Assert
-            Assert.DoesNotThrow(() => TestServer.Create(app => { }));
+            Assert.DoesNotThrow(() => EmbeddedServer.Create(app => { }));
         }
 
         [Fact]
@@ -31,14 +28,14 @@ namespace Microsoft.AspNet.Hosting.Testing.Tests
                 .BuildServiceProvider();
 
             // Act & Assert
-            Assert.DoesNotThrow(() => TestServer.Create(services, app => { }));
+            Assert.DoesNotThrow(() => EmbeddedServer.Create(services, app => { }));
         }
 
         [Fact]
         public async Task TestServer_CreateWithGeneric()
         {
             // Arrange
-            var server = TestServer.Create<Startup>();
+            var server = EmbeddedServer.Create<Startup>();
             var client = server.Handler;
 
             // Act

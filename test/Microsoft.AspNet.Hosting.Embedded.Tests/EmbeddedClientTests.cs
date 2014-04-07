@@ -1,16 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Abstractions;
 using Xunit;
-using System.Diagnostics;
 
-namespace Microsoft.AspNet.Hosting.Testing.Tests
+namespace Microsoft.AspNet.Hosting.Embedded.Tests
 {
     public class TestClientTests
     {
-        TestServer _server = TestServer.Create(app => app.Run(async ctx => { }));
+        EmbeddedServer _server = EmbeddedServer.Create(app => app.Run(async ctx => { }));
 
         [Fact]
         public async Task TestClient_SendAsync_ConfiguresRequestProperly()
@@ -90,7 +88,7 @@ namespace Microsoft.AspNet.Hosting.Testing.Tests
         public async Task TestClient_SendAsync_RewindsTheResponseStream()
         {
             // Arrange
-            var server = TestServer.Create(app => app.Run(ctx => ctx.Response.WriteAsync("Hello world")));
+            var server = EmbeddedServer.Create(app => app.Run(ctx => ctx.Response.WriteAsync("Hello world")));
             var client = server.Handler;
 
             // Act
@@ -106,8 +104,8 @@ namespace Microsoft.AspNet.Hosting.Testing.Tests
         {
             // Arrange
             RequestDelegate appDelegate = async ctx =>
-                ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd());
-            var server = TestServer.Create(app => app.Run(appDelegate));
+                await ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd());
+            var server = EmbeddedServer.Create(app => app.Run(appDelegate));
             var client = server.Handler;
 
             // Act
@@ -124,8 +122,8 @@ namespace Microsoft.AspNet.Hosting.Testing.Tests
         {
             // Arrange
             RequestDelegate appDelegate = async ctx =>
-                ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd());
-            var server = TestServer.Create(app => app.Run(appDelegate));
+                await ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd());
+            var server = EmbeddedServer.Create(app => app.Run(appDelegate));
             var client = server.Handler;
 
             // Act

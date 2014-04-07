@@ -1,20 +1,20 @@
-﻿using Microsoft.AspNet.Abstractions;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNet.Abstractions;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.HttpFeature;
 using Microsoft.AspNet.PipelineCore;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Microsoft.AspNet.Hosting.Testing
+namespace Microsoft.AspNet.Hosting.Embedded
 {
-    public class TestClient
+    public class EmbeddedClient
     {
         private Func<object, Task> _pipeline;
-        public TestClient(Func<object, Task> pipeline)
+        internal EmbeddedClient(Func<object, Task> pipeline)
         {
             _pipeline = pipeline;
         }
@@ -34,8 +34,31 @@ namespace Microsoft.AspNet.Hosting.Testing
                                                   Stream body = null,
                                                   Action<HttpRequest> onSendingRequest = null)
         {
-            var testInformation = new TestRequestResponseInformation();
-            var request = (IHttpRequestInformation)testInformation;
+            var request = CreateRequest(method, uri, headers, body);
+            var response = new ResponseInformation();
+
+            var features = new FeatureCollection();
+            features.Add(typeof(IHttpRequestInformation), request);
+            features.Add(typeof(IHttpResponseInformation), response);
+            var httpContext = new DefaultHttpContext(features);
+
+            if (onSendingRequest != null)
+            {
+                onSendingRequest(httpContext.Request);
+            }
+            await _pipeline(features);
+
+            response.Body.Seek(0, SeekOrigin.Begin);
+            return httpContext.Response;
+        }
+
+        private static IHttpRequestInformation CreateRequest(
+            string method,
+            Uri uri,
+            IDictionary<string, string[]> headers,
+            Stream body)
+        {
+            var request = new RequestInformation();
             request.Method = method;
             request.Scheme = uri.Scheme;
             request.Path = PathString.FromUriComponent(uri).Value;
@@ -64,19 +87,7 @@ namespace Microsoft.AspNet.Hosting.Testing
             {
                 request.Body = Stream.Null;
             }
-
-            var httpContext = new DefaultHttpContext(new FeatureObject(testInformation));
-
-            if (onSendingRequest != null)
-            {
-                onSendingRequest(httpContext.Request);
-            }
-
-            await _pipeline(testInformation);
-
-            var response = (IHttpResponseInformation)testInformation;
-            response.Body.Seek(0, SeekOrigin.Begin);
-            return httpContext.Response;
+            return request;
         }
 
         public async Task<HttpResponse> GetAsync(string url)
@@ -172,7 +183,7 @@ namespace Microsoft.AspNet.Hosting.Testing
         {
             if (!dictionary.ContainsKey("Content-Length"))
             {
-                dictionary["Content-Length"] = new string[1] { body.Length.ToString() };
+                dictionary["Content-Length"] = new[] { body.Length.ToString(CultureInfo.InvariantCulture) };
             }
         }
 
@@ -184,9 +195,10 @@ namespace Microsoft.AspNet.Hosting.Testing
 
         private static Dictionary<string, string[]> CreateContentHeaders(string contentType, int contentLength)
         {
-            return new Dictionary<string, string[]>{
-                    {"Content-Type", new string[1]{contentType}},
-                    {"Content-Length", new string[1]{contentLength.ToString()}}
+            return new Dictionary<string, string[]>
+                {
+                    {"Content-Type", new [] { contentType } },
+                    {"Content-Length", new [] { contentLength.ToString(CultureInfo.InvariantCulture) } }
                 };
         }
     }

@@ -1,39 +1,32 @@
-﻿using Microsoft.AspNet.Abstractions;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.Versioning;
+using System.Threading.Tasks;
+using Microsoft.AspNet.Abstractions;
 using Microsoft.AspNet.ConfigurationModel;
 using Microsoft.AspNet.DependencyInjection;
 using Microsoft.AspNet.DependencyInjection.Fallback;
-using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
 using Microsoft.Net.Runtime;
-using Microsoft.AspNet.HttpFeature;
-using System.IO;
-using System.Runtime.Versioning;
-using System.Diagnostics;
 
-namespace Microsoft.AspNet.Hosting.Testing
+namespace Microsoft.AspNet.Hosting.Embedded
 {
-    public class TestServer : IServerFactory, IDisposable
+    public class EmbeddedServer : IServerFactory, IDisposable
     {
-        private static readonly string ServerName = "Microsoft.AspNet.Host.Testing";
+        private static readonly string ServerName = "Microsoft.AspNet.Host.Embedded";
         private Func<object, Task> _appDelegate = null;
 
-        public static TestServer Create<TStartup>()
+        public static EmbeddedServer Create<TStartup>()
         {
             var fakeKlrServiceProvider = new ServiceCollection()
-                                 .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
+                                 .AddSingleton<IApplicationEnvironment, EmbeddedApplicationEnvironment>()
                                  .BuildServiceProvider();
 
             return Create<TStartup>(fakeKlrServiceProvider);
         }
 
-        public static TestServer Create<TStartup>(IServiceProvider provider)
+        public static EmbeddedServer Create<TStartup>(IServiceProvider provider)
         {
             var startupLoader = new StartupLoader(provider, new NullStartupLoader());
             var name = typeof(TStartup).AssemblyQualifiedName;
@@ -41,16 +34,16 @@ namespace Microsoft.AspNet.Hosting.Testing
             return Create(provider, startupLoader.LoadStartup(name, diagnosticMessages));
         }
 
-        public static TestServer Create(Action<IBuilder> app)
+        public static EmbeddedServer Create(Action<IBuilder> app)
         {
             var fakeKlrServiceProvider = new ServiceCollection()
-                                             .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
+                                             .AddSingleton<IApplicationEnvironment, EmbeddedApplicationEnvironment>()
                                              .BuildServiceProvider();
 
             return Create(fakeKlrServiceProvider, app);
         }
 
-        public static TestServer Create(IServiceProvider provider, Action<IBuilder> app)
+        public static EmbeddedServer Create(IServiceProvider provider, Action<IBuilder> app)
         {
             var collection = new ServiceCollection();
             var hostingServices = HostingServices.GetDefaultServices();
@@ -59,10 +52,10 @@ namespace Microsoft.AspNet.Hosting.Testing
             collection.Add(hostingServices);
 
             var serviceProvider = collection.BuildServiceProvider(provider);
-            return new TestServer(config, serviceProvider, app);
+            return new EmbeddedServer(config, serviceProvider, app);
         }
 
-        public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IBuilder> appStartup)
+        public EmbeddedServer(IConfiguration config, IServiceProvider serviceProvider, Action<IBuilder> appStartup)
         {
             var env = serviceProvider.GetService<IApplicationEnvironment>();
             if (env == null)
@@ -100,7 +93,7 @@ namespace Microsoft.AspNet.Hosting.Testing
             return this;
         }
 
-        public TestClient Handler { get { return new TestClient(_appDelegate); } }
+        public EmbeddedClient Handler { get { return new EmbeddedClient(_appDelegate); } }
 
         public void Dispose()
         {
@@ -111,31 +104,27 @@ namespace Microsoft.AspNet.Hosting.Testing
         {
             public string Name
             {
-                get { return TestServer.ServerName; }
+                get { return EmbeddedServer.ServerName; }
             }
         }
 
-        private class TestApplicationEnvironment : IApplicationEnvironment
+        private class EmbeddedApplicationEnvironment : IApplicationEnvironment
         {
-            public string ApplicationName
+            public EmbeddedApplicationEnvironment()
             {
-                get { return "Microsoft.AspNet.Host.Testing"; }
+                var assemblyName = typeof(EmbeddedApplicationEnvironment).Assembly.GetName();
+                ApplicationBasePath = Environment.CurrentDirectory;
+                ApplicationName = assemblyName.Name;
+                Version = assemblyName.Version.ToString();
+                TargetFramework = new FrameworkName(".NETFramework", new Version(4, 5));
             }
+            public string ApplicationName { get; set; }
 
-            public string Version
-            {
-                get { return "0.1-alpha"; }
-            }
+            public string Version { get; set; }
 
-            public string ApplicationBasePath
-            {
-                get { return Environment.CurrentDirectory; }
-            }
+            public string ApplicationBasePath { get; set; }
 
-            public FrameworkName TargetFramework
-            {
-                get { return new FrameworkName(".NET Framework", new Version("4.5")); }
-            }
+            public FrameworkName TargetFramework { get; set; }
         }
     }
 }

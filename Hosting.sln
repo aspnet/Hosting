@@ -27,9 +27,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KWebStartup.k10", "samples\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KWebStartup.net45", "samples\KWebStartup\KWebStartup.net45.csproj", "{B5939234-73ED-4DAD-A2C6-D61AA6DFB406}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AspNet.Hosting.Testing.Tests.net45", "test\Microsoft.AspNet.Hosting.Testing.Tests\Microsoft.AspNet.Hosting.Testing.Tests.net45.csproj", "{B47265A6-E0AD-49A9-8229-C704AEF2443B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AspNet.Hosting.Embedded.Tests.net45", "test\Microsoft.AspNet.Hosting.Embedded.Tests\Microsoft.AspNet.Hosting.Embedded.Tests.net45.csproj", "{AD1B9A4D-1615-49EB-A28B-6B959CB941E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AspNet.Hosting.Testing.net45", "src\Microsoft.AspNet.Hosting.Testing\Microsoft.AspNet.Hosting.Testing.net45.csproj", "{74D6EB13-3A83-4D8E-ACE9-5043BC9E5CEC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AspNet.Hosting.Embedded.net45", "src\Microsoft.AspNet.Hosting.Embedded\Microsoft.AspNet.Hosting.Embedded.net45.csproj", "{B3B34884-CE81-46C6-9E4E-6747861BA65F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,14 +65,14 @@ Global
 		{B5939234-73ED-4DAD-A2C6-D61AA6DFB406}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5939234-73ED-4DAD-A2C6-D61AA6DFB406}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5939234-73ED-4DAD-A2C6-D61AA6DFB406}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B47265A6-E0AD-49A9-8229-C704AEF2443B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B47265A6-E0AD-49A9-8229-C704AEF2443B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B47265A6-E0AD-49A9-8229-C704AEF2443B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B47265A6-E0AD-49A9-8229-C704AEF2443B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{74D6EB13-3A83-4D8E-ACE9-5043BC9E5CEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{74D6EB13-3A83-4D8E-ACE9-5043BC9E5CEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{74D6EB13-3A83-4D8E-ACE9-5043BC9E5CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{74D6EB13-3A83-4D8E-ACE9-5043BC9E5CEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD1B9A4D-1615-49EB-A28B-6B959CB941E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD1B9A4D-1615-49EB-A28B-6B959CB941E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD1B9A4D-1615-49EB-A28B-6B959CB941E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD1B9A4D-1615-49EB-A28B-6B959CB941E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3B34884-CE81-46C6-9E4E-6747861BA65F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3B34884-CE81-46C6-9E4E-6747861BA65F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3B34884-CE81-46C6-9E4E-6747861BA65F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3B34884-CE81-46C6-9E4E-6747861BA65F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,7 +87,7 @@ Global
 		{EB784E77-FD42-46EC-9C8C-502B78962407} = {E0497F39-AFFB-4819-A116-E39E361915AB}
 		{C0235BA1-9198-42C0-92D8-7578E9B9D96B} = {C30C98CD-3D69-4AE9-B680-0E0E6D8834C6}
 		{B5939234-73ED-4DAD-A2C6-D61AA6DFB406} = {C30C98CD-3D69-4AE9-B680-0E0E6D8834C6}
-		{B47265A6-E0AD-49A9-8229-C704AEF2443B} = {FEB39027-9158-4DE2-997F-7ADAEF8188D0}
-		{74D6EB13-3A83-4D8E-ACE9-5043BC9E5CEC} = {93FB86DB-7D2A-46CE-AFD2-0B53E6A8CF69}
+		{AD1B9A4D-1615-49EB-A28B-6B959CB941E4} = {FEB39027-9158-4DE2-997F-7ADAEF8188D0}
+		{B3B34884-CE81-46C6-9E4E-6747861BA65F} = {93FB86DB-7D2A-46CE-AFD2-0B53E6A8CF69}
 	EndGlobalSection
 EndGlobal
