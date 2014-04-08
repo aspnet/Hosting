@@ -17,6 +17,27 @@ namespace Microsoft.AspNet.Hosting.Embedded
         private static readonly string ServerName = "Microsoft.AspNet.Host.Embedded";
         private Func<object, Task> _appDelegate = null;
 
+        public EmbeddedServer(IConfiguration config, IServiceProvider serviceProvider, Action<IBuilder> appStartup)
+        {
+            var env = serviceProvider.GetService<IApplicationEnvironment>();
+            if (env == null)
+            {
+                throw new ArgumentException("IApplicationEnvironment couldn't be resolved.", "serviceProvider");
+            }
+
+            HostingContext hostContext = new HostingContext()
+            {
+                ApplicationName = env.ApplicationName,
+                Configuration = config,
+                ServerFactory = this,
+                Services = serviceProvider,
+                ApplicationStartup = appStartup
+            };
+
+            var engine = serviceProvider.GetService<IHostingEngine>();
+            var disposable = engine.Start(hostContext);
+        }
+
         public static EmbeddedServer Create<TStartup>(IServiceProvider provider)
         {
             var startupLoader = new StartupLoader(provider, new NullStartupLoader());
@@ -37,26 +58,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
             return new EmbeddedServer(config, serviceProvider, app);
         }
 
-        public EmbeddedServer(IConfiguration config, IServiceProvider serviceProvider, Action<IBuilder> appStartup)
-        {
-            var env = serviceProvider.GetService<IApplicationEnvironment>();
-            if (env == null)
-            {
-                throw new ArgumentException("serviceProvider", "IApplicationEnvironment couldn't be resolved.");
-            }
-
-            HostingContext hostContext = new HostingContext()
-            {
-                ApplicationName = env.ApplicationName,
-                Configuration = config,
-                ServerFactory = this,
-                Services = serviceProvider,
-                ApplicationStartup = appStartup
-            };
-
-            var engine = serviceProvider.GetService<IHostingEngine>();
-            var disposable = engine.Start(hostContext);
-        }
+        public EmbeddedClient Handler { get { return new EmbeddedClient(_appDelegate); } }
 
         public IServerInformation Initialize(IConfiguration configuration)
         {
@@ -67,7 +69,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
         {
             if (!serverInformation.GetType().Equals(typeof(ServerInformation)))
             {
-                throw new ArgumentException("serverInformation");
+                throw new ArgumentException(string.Format("The server must be {0}", ServerName), "serverInformation");
             }
 
             _appDelegate = application;
@@ -75,11 +77,11 @@ namespace Microsoft.AspNet.Hosting.Embedded
             return this;
         }
 
-        public EmbeddedClient Handler { get { return new EmbeddedClient(_appDelegate); } }
-
         public void Dispose()
         {
-            // No op
+            // IServerFactory.Start needs to return an IDisposable. Tipically this IDisposable instance is used to 
+            // clear any server resources when tearing down the host. In our case we don't have anything to clear
+            // so we just implement IDisposable and do nothing.
         }
 
         private class ServerInformation : IServerInformation

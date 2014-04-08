@@ -13,8 +13,8 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
 {
     public class EmbeddedClientTests
     {
-        IServiceProvider _services;
-        EmbeddedServer _server;
+        private readonly IServiceProvider _services;
+        private readonly EmbeddedServer _server;
 
         public EmbeddedClientTests()
         {
@@ -26,7 +26,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_SendAsync_ConfiguresRequestProperly()
+        public async Task SendAsync_ConfiguresRequestProperly()
         {
             // Arrange
             var client = _server.Handler;
@@ -51,7 +51,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_SendAsync_InvokesCallbackWhenPassed()
+        public async Task SendAsync_InvokesCallbackWhenPassed()
         {
             // Arrange
             var client = _server.Handler;
@@ -65,7 +65,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_SendAsync_RespectsExistingHost()
+        public async Task SendAsync_RespectsExistingHost()
         {
             // Arrange
             var client = _server.Handler;
@@ -80,7 +80,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_SendAsync_RespectsArgumentBody()
+        public async Task SendAsync_RespectsArgumentBody()
         {
             // Arrange
             var client = _server.Handler;
@@ -100,7 +100,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_SendAsync_RewindsTheResponseStream()
+        public async Task SendAsync_RewindsTheResponseStream()
         {
             // Arrange
             var server = EmbeddedServer.Create(_services, app => app.Run(ctx => ctx.Response.WriteAsync("Hello world")));
@@ -115,7 +115,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_PutAsyncWorks()
+        public async Task PutAsyncWorks()
         {
             // Arrange
             RequestDelegate appDelegate = async ctx =>
@@ -133,7 +133,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedClient_PostAsyncWorks()
+        public async Task PostAsyncWorks()
         {
             // Arrange
             RequestDelegate appDelegate = async ctx =>

@@ -195,7 +195,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
 
         private static Dictionary<string, string[]> CreateContentHeaders(string contentType, int contentLength)
         {
-            return new Dictionary<string, string[]>
+            return new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
             {
                 { "Content-Type", new [] { contentType } },
                 { "Content-Length", new [] { contentLength.ToString(CultureInfo.InvariantCulture) } }

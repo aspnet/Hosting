@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.HttpFeature;
 
@@ -8,7 +9,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
     {
         public RequestInformation()
         {
-            Headers = new Dictionary<string, string[]>();
+            Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             PathBase = "";
             Body = Stream.Null;
             Protocol = "HTTP/1.1";

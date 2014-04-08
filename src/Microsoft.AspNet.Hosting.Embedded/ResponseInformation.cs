@@ -9,7 +9,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
     {
         public ResponseInformation()
         {
-            Headers = new Dictionary<string, string[]>();
+            Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             Body = new MemoryStream();
         }
 

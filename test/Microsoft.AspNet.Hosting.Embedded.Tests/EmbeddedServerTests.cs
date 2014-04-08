@@ -13,7 +13,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
     public class EmbeddedServerTests
     {
         [Fact]
-        public void EmbeddedServer_CreateWithDelegate()
+        public void CreateWithDelegate()
         {
             // Arrange
             var services = new ServiceCollection()
@@ -25,7 +25,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task EmbeddedServer_CreateWithGeneric()
+        public async Task CreateWithGeneric()
         {
             // Arrange
             var services = new ServiceCollection()
@@ -43,7 +43,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public void EmbeddedServer_ThrowsIfNoApplicationEnvironmentIsRegisteredWithTheProvider()
+        public void ThrowsIfNoApplicationEnvironmentIsRegisteredWithTheProvider()
         {
             // Arrange
             var services = new ServiceCollection()
@@ -51,24 +51,24 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentException>(
-                "IApplicationEnvironment couldn't be resolved.",
+                "serviceProvider",
                 () => EmbeddedServer.Create<Startup>(services));
         }
-    }
 
-    public class Startup
-    {
-        public void Configuration(IBuilder builder)
+        public class Startup
         {
-            builder.Run(ctx => ctx.Response.WriteAsync("Startup"));
+            public void Configuration(IBuilder builder)
+            {
+                builder.Run(ctx => ctx.Response.WriteAsync("Startup"));
+            }
         }
-    }
 
-    public class AnotherStartup
-    {
-        public void Configuration(IBuilder builder)
+        public class AnotherStartup
         {
-            builder.Run(ctx => ctx.Response.WriteAsync("Another Startup"));
+            public void Configuration(IBuilder builder)
+            {
+                builder.Run(ctx => ctx.Response.WriteAsync("Another Startup"));
+            }
         }
     }
 }
