@@ -14,7 +14,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
     public class EmbeddedClient
     {
         private Func<object, Task> _pipeline;
-        internal EmbeddedClient(Func<object, Task> pipeline)
+        public EmbeddedClient(Func<object, Task> pipeline)
         {
             _pipeline = pipeline;
         }
@@ -196,10 +196,10 @@ namespace Microsoft.AspNet.Hosting.Embedded
         private static Dictionary<string, string[]> CreateContentHeaders(string contentType, int contentLength)
         {
             return new Dictionary<string, string[]>
-                {
-                    {"Content-Type", new [] { contentType } },
-                    {"Content-Length", new [] { contentLength.ToString(CultureInfo.InvariantCulture) } }
-                };
+            {
+                { "Content-Type", new [] { contentType } },
+                { "Content-Length", new [] { contentLength.ToString(CultureInfo.InvariantCulture) } }
+            };
         }
     }
 }

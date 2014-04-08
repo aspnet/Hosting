@@ -1,17 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Abstractions;
+using Microsoft.AspNet.DependencyInjection;
+using Microsoft.AspNet.DependencyInjection.Fallback;
+using Microsoft.Net.Runtime;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Embedded.Tests
 {
-    public class TestClientTests
+    public class EmbeddedClientTests
     {
-        EmbeddedServer _server = EmbeddedServer.Create(app => app.Run(async ctx => { }));
+        IServiceProvider _services;
+        EmbeddedServer _server;
+
+        public EmbeddedClientTests()
+        {
+            _services = new ServiceCollection()
+                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
+                .BuildServiceProvider();
+
+            _server = EmbeddedServer.Create(_services, app => app.Run(async ctx => { }));
+        }
 
         [Fact]
-        public async Task TestClient_SendAsync_ConfiguresRequestProperly()
+        public async Task EmbeddedClient_SendAsync_ConfiguresRequestProperly()
         {
             // Arrange
             var client = _server.Handler;
@@ -36,7 +51,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task TestClient_SendAsync_InvokesCallbackWhenPassed()
+        public async Task EmbeddedClient_SendAsync_InvokesCallbackWhenPassed()
         {
             // Arrange
             var client = _server.Handler;
@@ -50,7 +65,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task TestClient_SendAsync_RespectsExistingHost()
+        public async Task EmbeddedClient_SendAsync_RespectsExistingHost()
         {
             // Arrange
             var client = _server.Handler;
@@ -65,7 +80,7 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task TestClient_SendAsync_RespectsArgumentBody()
+        public async Task EmbeddedClient_SendAsync_RespectsArgumentBody()
         {
             // Arrange
             var client = _server.Handler;
@@ -85,10 +100,10 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task TestClient_SendAsync_RewindsTheResponseStream()
+        public async Task EmbeddedClient_SendAsync_RewindsTheResponseStream()
         {
             // Arrange
-            var server = EmbeddedServer.Create(app => app.Run(ctx => ctx.Response.WriteAsync("Hello world")));
+            var server = EmbeddedServer.Create(_services, app => app.Run(ctx => ctx.Response.WriteAsync("Hello world")));
             var client = server.Handler;
 
             // Act
@@ -100,12 +115,12 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task TestClient_PutAsyncWorks()
+        public async Task EmbeddedClient_PutAsyncWorks()
         {
             // Arrange
             RequestDelegate appDelegate = async ctx =>
                 await ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd());
-            var server = EmbeddedServer.Create(app => app.Run(appDelegate));
+            var server = EmbeddedServer.Create(_services, app => app.Run(appDelegate));
             var client = server.Handler;
 
             // Act
@@ -118,12 +133,12 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
         }
 
         [Fact]
-        public async Task TestClient_PostAsyncWorks()
+        public async Task EmbeddedClient_PostAsyncWorks()
         {
             // Arrange
             RequestDelegate appDelegate = async ctx =>
                 await ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd());
-            var server = EmbeddedServer.Create(app => app.Run(appDelegate));
+            var server = EmbeddedServer.Create(_services, app => app.Run(appDelegate));
             var client = server.Handler;
 
             // Act
@@ -134,6 +149,5 @@ namespace Microsoft.AspNet.Hosting.Embedded.Tests
             Assert.Equal("POST", request.Method);
             Assert.Equal("Hello world", new StreamReader(response.Body).ReadToEnd());
         }
-
     }
 }

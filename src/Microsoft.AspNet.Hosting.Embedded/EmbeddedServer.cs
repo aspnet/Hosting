@@ -17,30 +17,12 @@ namespace Microsoft.AspNet.Hosting.Embedded
         private static readonly string ServerName = "Microsoft.AspNet.Host.Embedded";
         private Func<object, Task> _appDelegate = null;
 
-        public static EmbeddedServer Create<TStartup>()
-        {
-            var fakeKlrServiceProvider = new ServiceCollection()
-                                 .AddSingleton<IApplicationEnvironment, EmbeddedApplicationEnvironment>()
-                                 .BuildServiceProvider();
-
-            return Create<TStartup>(fakeKlrServiceProvider);
-        }
-
         public static EmbeddedServer Create<TStartup>(IServiceProvider provider)
         {
             var startupLoader = new StartupLoader(provider, new NullStartupLoader());
             var name = typeof(TStartup).AssemblyQualifiedName;
             var diagnosticMessages = new List<string>();
             return Create(provider, startupLoader.LoadStartup(name, diagnosticMessages));
-        }
-
-        public static EmbeddedServer Create(Action<IBuilder> app)
-        {
-            var fakeKlrServiceProvider = new ServiceCollection()
-                                             .AddSingleton<IApplicationEnvironment, EmbeddedApplicationEnvironment>()
-                                             .BuildServiceProvider();
-
-            return Create(fakeKlrServiceProvider, app);
         }
 
         public static EmbeddedServer Create(IServiceProvider provider, Action<IBuilder> app)
@@ -60,7 +42,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
             var env = serviceProvider.GetService<IApplicationEnvironment>();
             if (env == null)
             {
-                throw new InvalidOperationException("The service provider must be able to resolve an IApplicationEnvironment");
+                throw new ArgumentException("serviceProvider", "IApplicationEnvironment couldn't be resolved.");
             }
 
             HostingContext hostContext = new HostingContext()
@@ -106,25 +88,6 @@ namespace Microsoft.AspNet.Hosting.Embedded
             {
                 get { return EmbeddedServer.ServerName; }
             }
-        }
-
-        private class EmbeddedApplicationEnvironment : IApplicationEnvironment
-        {
-            public EmbeddedApplicationEnvironment()
-            {
-                var assemblyName = typeof(EmbeddedApplicationEnvironment).Assembly.GetName();
-                ApplicationBasePath = Environment.CurrentDirectory;
-                ApplicationName = assemblyName.Name;
-                Version = assemblyName.Version.ToString();
-                TargetFramework = new FrameworkName(".NETFramework", new Version(4, 5));
-            }
-            public string ApplicationName { get; set; }
-
-            public string Version { get; set; }
-
-            public string ApplicationBasePath { get; set; }
-
-            public FrameworkName TargetFramework { get; set; }
         }
     }
 }

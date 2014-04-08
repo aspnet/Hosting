@@ -8,23 +8,16 @@ using Microsoft.AspNet.DependencyInjection.Fallback;
 using Microsoft.Net.Runtime;
 using Xunit;
 
-namespace Microsoft.AspNet.Hosting.Embedded
+namespace Microsoft.AspNet.Hosting.Embedded.Tests
 {
-    public class TestServerTests
+    public class EmbeddedServerTests
     {
         [Fact]
-        public void TestServer_CreateWithDelegate()
-        {
-            // Act & Assert
-            Assert.DoesNotThrow(() => EmbeddedServer.Create(app => { }));
-        }
-
-        [Fact]
-        public void TestServer_CreateWithCustomServiceProviderAndDelegate()
+        public void EmbeddedServer_CreateWithDelegate()
         {
             // Arrange
             var services = new ServiceCollection()
-                .AddSingleton<IApplicationEnvironment, MyAppEnvironment>()
+                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
                 .BuildServiceProvider();
 
             // Act & Assert
@@ -32,10 +25,14 @@ namespace Microsoft.AspNet.Hosting.Embedded
         }
 
         [Fact]
-        public async Task TestServer_CreateWithGeneric()
+        public async Task EmbeddedServer_CreateWithGeneric()
         {
             // Arrange
-            var server = EmbeddedServer.Create<Startup>();
+            var services = new ServiceCollection()
+                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
+                .BuildServiceProvider();
+
+            var server = EmbeddedServer.Create<Startup>(services);
             var client = server.Handler;
 
             // Act
@@ -44,29 +41,18 @@ namespace Microsoft.AspNet.Hosting.Embedded
             // Assert
             Assert.Equal("Startup", new StreamReader(response.Body).ReadToEnd());
         }
-    }
 
-    public class MyAppEnvironment : IApplicationEnvironment
-    {
-
-        public string ApplicationName
+        [Fact]
+        public void EmbeddedServer_ThrowsIfNoApplicationEnvironmentIsRegisteredWithTheProvider()
         {
-            get { return "Hello world"; }
-        }
+            // Arrange
+            var services = new ServiceCollection()
+                .BuildServiceProvider();
 
-        public string Version
-        {
-            get { return "1.0.0.0"; }
-        }
-
-        public string ApplicationBasePath
-        {
-            get { return "."; }
-        }
-
-        public FrameworkName TargetFramework
-        {
-            get { return new FrameworkName(".NET Framework", new Version("4.5")); }
+            // Act & Assert
+            Assert.Throws<ArgumentException>(
+                "IApplicationEnvironment couldn't be resolved.",
+                () => EmbeddedServer.Create<Startup>(services));
         }
     }
 
