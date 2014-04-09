@@ -13,7 +13,8 @@ namespace Microsoft.AspNet.Hosting.Embedded
 {
     public class EmbeddedClient
     {
-        private Func<object, Task> _pipeline;
+        private readonly Func<object, Task> _pipeline;
+
         public EmbeddedClient(Func<object, Task> pipeline)
         {
             _pipeline = pipeline;
@@ -129,44 +130,44 @@ namespace Microsoft.AspNet.Hosting.Embedded
             string url,
             string content,
             string contentType,
-            Action<HttpRequest> onSedingRequest = null)
+            Action<HttpRequest> onSendingRequest = null)
         {
-            return await PostAsync(new Uri(url), content, contentType, onSedingRequest);
+            return await PostAsync(new Uri(url), content, contentType, onSendingRequest);
         }
 
         public async Task<HttpResponse> PostAsync(
             Uri url,
             string content,
             string contentType,
-            Action<HttpRequest> onSedingRequest = null)
+            Action<HttpRequest> onSendingRequest = null)
         {
             var bytes = GetBytes(content);
             var headers = CreateContentHeaders(contentType, bytes.Length);
             var body = new MemoryStream(bytes);
 
-            return await SendAsync("POST", url, headers, body, onSedingRequest);
+            return await SendAsync("POST", url, headers, body, onSendingRequest);
         }
 
         public async Task<HttpResponse> PutAsync(
             string url,
             string content,
             string contentType,
-            Action<HttpRequest> onSedingRequest = null)
+            Action<HttpRequest> onSendingRequest = null)
         {
-            return await PutAsync(new Uri(url), content, contentType, onSedingRequest);
+            return await PutAsync(new Uri(url), content, contentType, onSendingRequest);
         }
 
         public async Task<HttpResponse> PutAsync(
             Uri url,
             string content,
             string contentType,
-            Action<HttpRequest> onSedingRequest = null)
+            Action<HttpRequest> onSendingRequest = null)
         {
             var bytes = GetBytes(content);
             var headers = CreateContentHeaders(contentType, bytes.Length);
             var body = new MemoryStream(bytes);
 
-            return await SendAsync("PUT", url, headers, body, onSedingRequest);
+            return await SendAsync("PUT", url, headers, body, onSendingRequest);
         }
 
         public async Task<HttpResponse> DeleteAsync(string url)

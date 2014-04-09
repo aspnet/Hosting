@@ -14,8 +14,10 @@ namespace Microsoft.AspNet.Hosting.Embedded
 {
     public class EmbeddedServer : IServerFactory, IDisposable
     {
-        private static readonly string ServerName = "Microsoft.AspNet.Host.Embedded";
-        private Func<object, Task> _appDelegate = null;
+        private static readonly string ServerName = typeof(EmbeddedServer).FullName;
+        private static readonly ServerInformation ServerInfo = new ServerInformation();
+        private Func<object, Task> _appDelegate;
+        private EmbeddedClient _handler;
 
         public EmbeddedServer(IConfiguration config, IServiceProvider serviceProvider, Action<IBuilder> appStartup)
         {
@@ -58,16 +60,27 @@ namespace Microsoft.AspNet.Hosting.Embedded
             return new EmbeddedServer(config, serviceProvider, app);
         }
 
-        public EmbeddedClient Handler { get { return new EmbeddedClient(_appDelegate); } }
+        public EmbeddedClient Handler
+        {
+            get
+            {
+                if (_handler == null)
+                {
+                    _handler = new EmbeddedClient(_appDelegate);
+                }
+
+                return _handler;
+            }
+        }
 
         public IServerInformation Initialize(IConfiguration configuration)
         {
-            return new ServerInformation();
+            return ServerInfo;
         }
 
         public IDisposable Start(IServerInformation serverInformation, Func<object, Task> application)
         {
-            if (!serverInformation.GetType().Equals(typeof(ServerInformation)))
+            if (!(serverInformation.GetType() == typeof(ServerInformation)))
             {
                 throw new ArgumentException(string.Format("The server must be {0}", ServerName), "serverInformation");
             }
@@ -79,7 +92,7 @@ namespace Microsoft.AspNet.Hosting.Embedded
 
         public void Dispose()
         {
-            // IServerFactory.Start needs to return an IDisposable. Tipically this IDisposable instance is used to 
+            // IServerFactory.Start needs to return an IDisposable. Typically this IDisposable instance is used to 
             // clear any server resources when tearing down the host. In our case we don't have anything to clear
             // so we just implement IDisposable and do nothing.
         }
