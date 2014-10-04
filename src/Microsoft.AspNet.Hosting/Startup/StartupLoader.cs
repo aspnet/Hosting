@@ -22,6 +22,8 @@ using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.DependencyInjection.Fallback;
+using Microsoft.Framework.OptionsModel;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
@@ -36,6 +38,36 @@ namespace Microsoft.AspNet.Hosting.Startup
         {
             _services = services;
             _next = next;
+        }
+
+        private void Invoke<TArg>(MethodInfo methodInfo, object instance, TArg arg)
+        {
+            var parameterInfos = methodInfo.GetParameters();
+            var parameters = new object[parameterInfos.Length];
+            for (var index = 0; index != parameterInfos.Length; ++index)
+            {
+                var parameterInfo = parameterInfos[index];
+                if (parameterInfo.ParameterType == typeof(TArg))
+                {
+                    parameters[index] = arg;
+                }
+                else
+                {
+                    try
+                    {
+                        parameters[index] = _services.GetService(parameterInfo.ParameterType);
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception(string.Format(
+                            "TODO: Unable to resolve service for {0} method {1} {2}",
+                            methodInfo.Name,
+                            parameterInfo.Name,
+                            parameterInfo.ParameterType.FullName));
+                    }
+                }
+            }
+            methodInfo.Invoke(instance, parameters);
         }
 
         public Action<IApplicationBuilder> LoadStartup(
@@ -81,7 +113,7 @@ namespace Microsoft.AspNet.Hosting.Startup
 
             if (type == null)
             {
-                throw new Exception(String.Format("TODO: {0} or {1} class not found in assembly {2}", 
+                throw new Exception(String.Format("TODO: {0} or {1} class not found in assembly {2}",
                     startupName1,
                     startupName2,
                     applicationName));
@@ -113,33 +145,30 @@ namespace Microsoft.AspNet.Hosting.Startup
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
             }
 
+            var configureServicesMethod = type.GetTypeInfo().GetDeclaredMethod("ConfigureServices");
+            object configureServicesInstance = null;
+            if (configureServicesMethod != null)
+            {
+                if (configureServicesMethod.ReturnType != typeof(void))
+                {
+                    throw new Exception(string.Format("TODO: {0} method isn't void-returning.",
+                        configureServicesMethod.Name));
+                }
+                if (!configureServicesMethod.IsStatic)
+                {
+                    configureServicesInstance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
+                }
+            }
             return builder =>
             {
-                var parameterInfos = methodInfo.GetParameters();
-                var parameters = new object[parameterInfos.Length];
-                for (var index = 0; index != parameterInfos.Length; ++index)
+                if (configureServicesMethod != null)
                 {
-                    var parameterInfo = parameterInfos[index];
-                    if (parameterInfo.ParameterType == typeof(IApplicationBuilder))
-                    {
-                        parameters[index] = builder;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            parameters[index] = _services.GetService(parameterInfo.ParameterType);
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new Exception(string.Format(
-                                "TODO: Unable to resolve service for startup method {0} {1}",
-                                parameterInfo.Name,
-                                parameterInfo.ParameterType.FullName));
-                        }
-                    }
+                    var services = new ServiceCollection();
+                    services.Add(OptionsServices.GetDefaultServices());
+                    Invoke<IServiceCollection>(configureServicesMethod, instance, services);
+                    builder.ApplicationServices = services.BuildServiceProvider(builder.ApplicationServices);
                 }
-                methodInfo.Invoke(instance, parameters);
+                Invoke(methodInfo, instance, builder);
             };
         }
     }
