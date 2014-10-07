@@ -139,14 +139,8 @@ namespace Microsoft.AspNet.Hosting.Startup
                     methodInfo.Name));
             }
 
-            object instance = null;
-            if (!methodInfo.IsStatic)
-            {
-                instance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
-            }
 
             var configureServicesMethod = type.GetTypeInfo().GetDeclaredMethod("ConfigureServices");
-            object configureServicesInstance = null;
             if (configureServicesMethod != null)
             {
                 if (configureServicesMethod.ReturnType != typeof(void))
@@ -154,10 +148,11 @@ namespace Microsoft.AspNet.Hosting.Startup
                     throw new Exception(string.Format("TODO: {0} method isn't void-returning.",
                         configureServicesMethod.Name));
                 }
-                if (!configureServicesMethod.IsStatic)
-                {
-                    configureServicesInstance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
-                }
+            }
+            object instance = null;
+            if (!methodInfo.IsStatic || !configureServicesMethod.IsStatic)
+            {
+                instance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
             }
             return builder =>
             {
