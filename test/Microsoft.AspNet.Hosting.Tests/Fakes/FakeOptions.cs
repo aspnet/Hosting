@@ -19,6 +19,7 @@ namespace Microsoft.AspNet.Hosting.Fakes
 {
     public class FakeOptions
     {
-        public bool Flag { get; set; }
+        public bool Configured { get; set; }
+        public string Environment { get; set; }
     }
 }

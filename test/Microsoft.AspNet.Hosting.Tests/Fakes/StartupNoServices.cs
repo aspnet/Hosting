@@ -21,24 +21,14 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Fakes
 {
-    public class StartupWithConfigureServices
+    public class StartupNoServices
     {
-        private readonly IFakeStartupCallback _fakeStartupCallback;
-
-        public StartupWithConfigureServices(IFakeStartupCallback fakeStartupCallback)
+        public StartupNoServices()
         {
-            _fakeStartupCallback = fakeStartupCallback;
         }
 
-        public void ConfigureServices(IServiceCollection services)
+        public void Configure(IApplicationBuilder builder)
         {
-            services.ConfigureOptions<FakeOptions>(o => o.Flag = true);
-        }
-
-        public void Configure(IApplicationBuilder builder, IFakeStartupCallback fakeStartupCallback2)
-        {
-            _fakeStartupCallback.ConfigurationMethodCalled(this);
-            fakeStartupCallback2.ConfigurationMethodCalled(this);
         }
     }
 }
