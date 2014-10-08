@@ -88,7 +88,8 @@ namespace Microsoft.AspNet.Hosting
 
             startup.Invoke(app);
 
-            Assert.Throws<Exception>(() => app.ApplicationServices.GetService<IOptionsAccessor<FakeOptions>>());
+            var ex = Assert.Throws<Exception>(() => app.ApplicationServices.GetService<IOptionsAccessor<FakeOptions>>());
+            Assert.True(ex.Message.Contains("No service for type 'Microsoft.Framework.OptionsModel.IOptionsAccessor"));
         }
 
         public void ConfigurationMethodCalled(object instance)
