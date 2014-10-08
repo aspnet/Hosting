@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
@@ -40,16 +39,46 @@ namespace Microsoft.AspNet.Hosting.Startup
             _next = next;
         }
 
-        private void Invoke<TArg>(MethodInfo methodInfo, object instance, TArg arg)
+        private MethodInfo FindMethod(Type startupType, string methodName, string environmentName, Type returnType = null, bool required = true)
+        {
+            var methodNameWithEnv = methodName + environmentName;
+            var methodInfo = startupType.GetTypeInfo().GetDeclaredMethod(methodNameWithEnv)
+                ?? startupType.GetTypeInfo().GetDeclaredMethod(methodName);
+            if (methodInfo == null)
+            {
+                if (required)
+                {
+                    throw new Exception(string.Format("TODO: {0} or {1} method not found",
+                        methodNameWithEnv,
+                        methodName));
+
+                }
+                return null;
+            }
+
+            if (returnType != null && methodInfo.ReturnType != returnType)
+            {
+                throw new Exception(string.Format("TODO: {0} method does not return " + returnType.Name,
+                    methodInfo.Name));
+            }
+
+            return methodInfo;
+        }
+
+        private void Invoke(MethodInfo methodInfo, object instance, IApplicationBuilder builder, IServiceCollection services = null)
         {
             var parameterInfos = methodInfo.GetParameters();
             var parameters = new object[parameterInfos.Length];
             for (var index = 0; index != parameterInfos.Length; ++index)
             {
                 var parameterInfo = parameterInfos[index];
-                if (parameterInfo.ParameterType == typeof(TArg))
+                if (parameterInfo.ParameterType == typeof(IApplicationBuilder))
                 {
-                    parameters[index] = arg;
+                    parameters[index] = builder;
+                }
+                else if (services != null && parameterInfo.ParameterType == typeof(IServiceCollection))
+                {
+                    parameters[index] = services;
                 }
                 else
                 {
@@ -119,51 +148,28 @@ namespace Microsoft.AspNet.Hosting.Startup
                     applicationName));
             }
 
-            var configureMethod1 = "Configure" + environmentName;
-            var configureMethod2 = "Configure";
-            var methodInfo = type.GetTypeInfo().GetDeclaredMethod(configureMethod1);
-            if (methodInfo == null)
-            {
-                methodInfo = type.GetTypeInfo().GetDeclaredMethod(configureMethod2);
-            }
-            if (methodInfo == null)
-            {
-                throw new Exception(string.Format("TODO: {0} or {1} method not found",
-                    configureMethod1,
-                    configureMethod2));
-            }
+            var configureMethod = FindMethod(type, "Configure", environmentName, typeof(void), required: true);
+            // TODO: accept IServiceProvider method as well?
+            var servicesMethod = FindMethod(type, "ConfigureServices", environmentName, typeof(void), required: false);
 
-            if (methodInfo.ReturnType != typeof(void))
-            {
-                throw new Exception(string.Format("TODO: {0} method isn't void-returning.",
-                    methodInfo.Name));
-            }
-
-
-            var configureServicesMethod = type.GetTypeInfo().GetDeclaredMethod("ConfigureServices");
-            if (configureServicesMethod != null)
-            {
-                if (configureServicesMethod.ReturnType != typeof(void))
-                {
-                    throw new Exception(string.Format("TODO: {0} method isn't void-returning.",
-                        configureServicesMethod.Name));
-                }
-            }
             object instance = null;
-            if (!methodInfo.IsStatic || !configureServicesMethod.IsStatic)
+            if (!configureMethod.IsStatic || (servicesMethod != null && !servicesMethod.IsStatic))
             {
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
             }
             return builder =>
             {
-                if (configureServicesMethod != null)
+                if (servicesMethod != null)
                 {
                     var services = new ServiceCollection();
                     services.Add(OptionsServices.GetDefaultServices());
-                    Invoke<IServiceCollection>(configureServicesMethod, instance, services);
-                    builder.ApplicationServices = services.BuildServiceProvider(builder.ApplicationServices);
+                    Invoke(servicesMethod, instance, builder, services);
+                    if (builder != null)
+                    {
+                        builder.ApplicationServices = services.BuildServiceProvider(builder.ApplicationServices);
+                    }
                 }
-                Invoke(methodInfo, instance, builder);
+                Invoke(configureMethod, instance, builder);
             };
         }
     }

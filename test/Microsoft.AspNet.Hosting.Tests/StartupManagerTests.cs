@@ -21,6 +21,8 @@ using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Xunit;
+using Microsoft.Framework.OptionsModel;
+using Microsoft.AspNet.Builder;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -42,6 +44,26 @@ namespace Microsoft.AspNet.Hosting
             var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithServices");
 
             startup.Invoke(null);
+
+            Assert.Equal(2, _configurationMethodCalledList.Count);
+        }
+
+        [Fact]
+        public void StartupClassWithConfigureServices()
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.Add(HostingServices.GetDefaultServices());
+            serviceCollection.AddInstance<IFakeStartupCallback>(this);
+            var services = serviceCollection.BuildServiceProvider();
+            var manager = services.GetService<IStartupManager>();
+
+            var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithConfigureServices");
+
+            var app = new ApplicationBuilder(services);
+
+            startup.Invoke(app);
+
+            Assert.True(app.ApplicationServices.GetService<IOptionsAccessor<FakeOptions>>().Options.Flag);
 
             Assert.Equal(2, _configurationMethodCalledList.Count);
         }
