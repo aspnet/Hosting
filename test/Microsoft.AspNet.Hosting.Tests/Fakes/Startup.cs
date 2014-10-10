@@ -14,12 +14,12 @@ namespace Microsoft.AspNet.Hosting.Fakes
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.ConfigureOptions<FakeOptions>(o => o.Configured = true);
+            services.Configure<FakeOptions>(o => o.Configured = true);
         }
 
         public void ConfigureServicesDev(IServiceCollection services)
         {
-            services.ConfigureOptions<FakeOptions>(o =>
+            services.Configure<FakeOptions>(o =>
             {
                 o.Configured = true;
                 o.Environment = "Dev";
@@ -28,7 +28,7 @@ namespace Microsoft.AspNet.Hosting.Fakes
 
         public void ConfigureServicesRetail(IServiceCollection services)
         {
-            services.ConfigureOptions<FakeOptions>(o =>
+            services.Configure<FakeOptions>(o =>
             {
                 o.Configured = true;
                 o.Environment = "Retail";
@@ -37,14 +37,14 @@ namespace Microsoft.AspNet.Hosting.Fakes
 
         public static void ConfigureServicesStatic(IServiceCollection services)
         {
-            services.ConfigureOptions<FakeOptions>(o =>
+            services.Configure<FakeOptions>(o =>
             {
                 o.Configured = true;
                 o.Environment = "Static";
             });
         }
 
-        public void Configure(IApplicationBuilder builder)
+        public virtual void Configure(IApplicationBuilder builder)
         {
         }
     }
