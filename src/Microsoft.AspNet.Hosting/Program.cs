@@ -57,6 +57,14 @@ namespace Microsoft.AspNet.Hosting
 
             var services = serviceCollection.BuildServiceProvider(_serviceProvider);
 
+            // The application name is a "good enough" mechanism to identify this application
+            // on the machine and to prevent subkeys from being shared across multiple applications
+            // by default.
+            services.ConfigureOptions<DataProtectionOptions>(options =>
+            {
+                options.ApplicationDiscriminator = appEnv.ApplicationName;
+            });
+
             var context = new HostingContext()
             {
                 Services = services,
