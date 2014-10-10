@@ -20,7 +20,7 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             builder.UseServices(serviceCollection => { });
 
-            var optionsAccessor = builder.ApplicationServices.GetService<IOptionsAccessor<object>>();
+            var optionsAccessor = builder.ApplicationServices.GetService<IOptions<object>>();
             Assert.NotNull(optionsAccessor);
         }
 
@@ -39,7 +39,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             });
 
             Assert.Same(serviceProvider, builder.ApplicationServices);
-            var optionsAccessor = builder.ApplicationServices.GetService<IOptionsAccessor<object>>();
+            var optionsAccessor = builder.ApplicationServices.GetService<IOptions<object>>();
             Assert.NotNull(optionsAccessor);
         }
     }
