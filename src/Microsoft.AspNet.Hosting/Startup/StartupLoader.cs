@@ -38,7 +38,7 @@ namespace Microsoft.AspNet.Hosting.Startup
                 {
                     throw new Exception(string.Format("TODO: {0} or {1} method not found",
                         methodNameWithEnv,
-                        methodName));
+                        methodNameWithNoEnv));
 
                 }
                 return null;

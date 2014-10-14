@@ -31,12 +31,12 @@ namespace Microsoft.AspNet.Builder
             });
         }
 
-        public static IApplicationBuilder UseServices(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseRequestServices(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware(typeof(ContainerMiddleware));
         }
 
-        public static IApplicationBuilder UseServices(this IApplicationBuilder builder, IServiceProvider applicationServices)
+        public static IApplicationBuilder UseRequestServices(this IApplicationBuilder builder, IServiceProvider applicationServices)
         {
             builder.ApplicationServices = applicationServices;
 

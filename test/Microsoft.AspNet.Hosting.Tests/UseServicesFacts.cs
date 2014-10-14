@@ -7,6 +7,8 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
 using Xunit;
+using Microsoft.AspNet.Http;
+using Microsoft.AspNet.PipelineCore;
 
 namespace Microsoft.AspNet.Hosting.Tests
 {

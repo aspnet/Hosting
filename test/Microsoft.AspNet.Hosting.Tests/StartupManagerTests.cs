@@ -82,8 +82,8 @@ namespace Microsoft.AspNet.Hosting
             Assert.False(options.Configured); // REVIEW: why doesn't the ConfigureServices ConfigureOptions get run?
         }
 
-        [Fact(Skip = "DataProtection registers default Options services; need to figure out what to do with this test.")]
-        public void StartupClassDoesNotRegisterOptionsWithNoConfigureServices()
+        [Fact]
+        public void StartupWithNoConfigureThrows()
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.Add(HostingServices.GetDefaultServices());
@@ -91,14 +91,8 @@ namespace Microsoft.AspNet.Hosting
             var services = serviceCollection.BuildServiceProvider();
             var manager = services.GetService<IStartupManager>();
 
-            var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", "NoServices");
-
-            var app = new ApplicationBuilder(services);
-
-            startup.Invoke(app);
-
-            var ex = Assert.Throws<Exception>(() => app.ApplicationServices.GetService<IOptions<FakeOptions>>());
-            Assert.True(ex.Message.Contains("No service for type 'Microsoft.Framework.OptionsModel.IOptions"));
+            var ex = Assert.Throws<Exception>(() => manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", "Boom"));
+            Assert.True(ex.Message.Contains("ConfigureBoom or Configure method not found"));
         }
 
         public void ConfigurationMethodCalled(object instance)
