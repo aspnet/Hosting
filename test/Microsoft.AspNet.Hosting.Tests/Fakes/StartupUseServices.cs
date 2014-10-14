@@ -12,7 +12,7 @@ namespace Microsoft.AspNet.Hosting.Fakes
         {
         }
 
-        public void ConfigureServicesUseServices(IServiceCollection services)
+        public void ConfigureUseServicesServices(IServiceCollection services)
         {
             services.Configure<FakeOptions>(o => o.Configured = true);
             services.AddTransient<IFakeService, FakeService>();

@@ -17,7 +17,7 @@ namespace Microsoft.AspNet.Hosting.Fakes
             services.Configure<FakeOptions>(o => o.Configured = true);
         }
 
-        public void ConfigureServicesDev(IServiceCollection services)
+        public void ConfigureDevServices(IServiceCollection services)
         {
             services.Configure<FakeOptions>(o =>
             {
@@ -26,7 +26,7 @@ namespace Microsoft.AspNet.Hosting.Fakes
             });
         }
 
-        public void ConfigureServicesRetail(IServiceCollection services)
+        public void ConfigureRetailServices(IServiceCollection services)
         {
             services.Configure<FakeOptions>(o =>
             {
@@ -35,7 +35,7 @@ namespace Microsoft.AspNet.Hosting.Fakes
             });
         }
 
-        public static void ConfigureServicesStatic(IServiceCollection services)
+        public static void ConfigureStaticServices(IServiceCollection services)
         {
             services.Configure<FakeOptions>(o =>
             {
