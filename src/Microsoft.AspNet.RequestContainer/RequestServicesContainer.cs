@@ -90,7 +90,6 @@ namespace Microsoft.AspNet.RequestContainer
             }
 
             var serviceProvider = httpContext.ApplicationServices ?? services;
-
             if (serviceProvider == null)
             {
                 throw new InvalidOperationException("TODO: services and httpContext.ApplicationServices are both null!");
