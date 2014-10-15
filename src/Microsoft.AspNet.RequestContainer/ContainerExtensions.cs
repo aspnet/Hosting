@@ -61,7 +61,6 @@ namespace Microsoft.AspNet.Builder
         {
             var serviceCollection = new ServiceCollection();
 
-            serviceCollection.Add(OptionsServices.GetDefaultServices());
             builder.ApplicationServices = configureServices(serviceCollection);
 
             return builder.UseMiddleware(typeof(ContainerMiddleware));
