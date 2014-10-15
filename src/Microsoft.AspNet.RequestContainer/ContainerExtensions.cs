@@ -51,7 +51,6 @@ namespace Microsoft.AspNet.Builder
             // TODO: remove this once IHttpContextAccessor service is added
             serviceCollection.AddContextAccessor();
 
-            // REVIEW: serviceCollection has the merged services, manifests are lost after this
             builder.ApplicationServices = configureServices(serviceCollection);
 
             return builder.UseMiddleware<ContainerMiddleware>();
