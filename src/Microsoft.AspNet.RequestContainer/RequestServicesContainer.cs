@@ -4,6 +4,7 @@
 using System;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
+
 namespace Microsoft.AspNet.RequestContainer
 {
     public class RequestServicesContainer : IDisposable
@@ -63,7 +64,10 @@ namespace Microsoft.AspNet.RequestContainer
                 return null;
             }
 
-            // REVIEW: Can we assume ApplicationServices is not null??  If not, what should behavior be when it is null?
+            if (httpContext.ApplicationServices == null)
+            {
+                throw new InvalidOperationException("TODO: httpContext.ApplicationServices is null!");
+            }
 
             // Matches constructor of RequestContainer
             var rootServiceProvider = httpContext.ApplicationServices.GetService<IServiceProvider>();
