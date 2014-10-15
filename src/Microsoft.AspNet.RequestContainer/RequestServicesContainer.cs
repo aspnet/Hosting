@@ -2,6 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+#if ASPNET50
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting;
+#endif
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
 
@@ -54,6 +58,28 @@ namespace Microsoft.AspNet.RequestContainer
         private IContextAccessor<HttpContext> ScopeContextAccessor { get; set; }
         private IContextAccessor<HttpContext> AppContextAccessor { get; set; }
 
+        private const string LogicalDataKey = "__HttpContext_Current__";
+        private static HttpContext AccessRootHttpContext()
+        {
+#if ASPNET50
+            var handle = CallContext.LogicalGetData(LogicalDataKey) as ObjectHandle;
+            return handle != null ? handle.Unwrap() as HttpContext : null;
+#else
+            throw new Exception("TODO: CallContext not available");
+#endif 
+        }
+
+        private static HttpContext ExchangeRootHttpContext(HttpContext httpContext)
+        {
+#if ASPNET50
+            var prior = CallContext.LogicalGetData(LogicalDataKey) as ObjectHandle;
+            CallContext.LogicalSetData(LogicalDataKey, new ObjectHandle(httpContext));
+            return prior != null ? prior.Unwrap() as HttpContext : null;
+#else
+            return null;
+#endif
+        }
+
         // CONSIDER: this could be an extension method on HttpContext instead
         public static RequestServicesContainer EnsureRequestServices(HttpContext httpContext, IServiceProvider services)
         {
@@ -75,7 +101,7 @@ namespace Microsoft.AspNet.RequestContainer
             var rootHttpContextAccessor = serviceProvider.GetRequiredService<IContextAccessor<HttpContext>>();
             var rootServiceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
-            rootHttpContextAccessor.SetContextSource(ContainerMiddleware.AccessRootHttpContext, ContainerMiddleware.ExchangeRootHttpContext);
+            rootHttpContextAccessor.SetContextSource(AccessRootHttpContext, ExchangeRootHttpContext);
 
             // Pre Scope setup
             var priorApplicationServices = serviceProvider;
@@ -138,7 +164,5 @@ namespace Microsoft.AspNet.RequestContainer
             Dispose(true);
         }
         #endregion
-
     }
-
 }
