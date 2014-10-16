@@ -40,6 +40,9 @@ namespace Microsoft.AspNet.Hosting
         [InlineData("Dev")]
         [InlineData("Retail")]
         [InlineData("Static")]
+        [InlineData("StaticProvider")]
+        [InlineData("Provider")]
+        [InlineData("ProviderArgs")]
         public void StartupClassAddsConfigureServicesToApplicationServices(string environment)
         {
             var serviceCollection = new ServiceCollection();
