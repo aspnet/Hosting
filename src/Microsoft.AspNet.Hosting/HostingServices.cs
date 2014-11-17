@@ -16,12 +16,12 @@ namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
-        public static IEnumerable<IServiceDescriptor> GetDefaultServices(bool addManifest = true)
+        public static IEnumerable<IServiceDescriptor> GetDefaultServices()
         {
-            return GetDefaultServices(new Configuration(), addManifest);
+            return GetDefaultServices(new Configuration());
         }
 
-        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration, bool addManifest = true)
+        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
         {
             var describer = new ServiceDescriber(configuration);
 
@@ -38,10 +38,7 @@ namespace Microsoft.AspNet.Hosting
 
             yield return describer.Instance<IApplicationLifetime>(new ApplicationLifetime());
 
-            if (addManifest)
-            {
-                yield return describer.Singleton<IServiceManifest, HostingManifest>();
-            }
+            yield return describer.Singleton<IServiceManifest, HostingManifest>();
 
             // TODO: Remove the below services and push the responsibility to frameworks to add
 
@@ -56,24 +53,24 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-
-        // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
-        public static readonly Type[] DefaultServices = new Type[] {
-            typeof(IHostingEngine),
-            typeof(IServerManager),
-            typeof(IStartupManager),
-            typeof(IStartupLoaderProvider),
-            typeof(IApplicationBuilderFactory),
-            typeof(IHttpContextFactory),
-            typeof(ITypeActivator),
-            typeof(IApplicationLifetime),
-            // TODO: should remove logger?
-            typeof(ILoggerFactory)
-        };
-
         private class HostingManifest : IServiceManifest
         {
-            public IEnumerable<Type> Services { get { return DefaultServices; } }
+            // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
+            private static readonly Type[] _services = new Type[] {
+                typeof(IHostingEngine),
+                typeof(IServerManager),
+                typeof(IStartupManager),
+                typeof(IStartupLoaderProvider),
+                typeof(IApplicationBuilderFactory),
+                typeof(IStartupLoaderProvider),
+                typeof(IHttpContextFactory),
+                typeof(ITypeActivator),
+                typeof(IApplicationLifetime),
+                // TODO: should remove logger?
+                typeof(ILoggerFactory)
+            };
+
+            public IEnumerable<Type> Services { get { return _services; } }
         }
     }
 }

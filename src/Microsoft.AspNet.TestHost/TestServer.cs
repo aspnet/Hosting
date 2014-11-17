@@ -13,8 +13,6 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
-using Microsoft.Framework.DependencyInjection.ServiceLookup;
-using System.Collections.Generic;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -51,16 +49,6 @@ namespace Microsoft.AspNet.TestHost
             return Create(provider: CallContextServiceLocator.Locator.ServiceProvider, app: app);
         }
 
-        private class ServiceManifest : IServiceManifest
-        {
-            public ServiceManifest(IEnumerable<Type> services)
-            {
-                Services = services;
-            }
-
-            public IEnumerable<Type> Services { get; private set; }
-        }
-
         public static TestServer Create(IServiceProvider provider, Action<IApplicationBuilder> app)
         {
             var appEnv = provider.GetRequiredService<IApplicationEnvironment>();
@@ -74,19 +62,8 @@ namespace Microsoft.AspNet.TestHost
             var collection = new ServiceCollection();
             collection.Add(HostingServices.GetDefaultServices());
             collection.AddInstance<IHostingEnvironment>(hostingEnv);
-            collection.Import(provider);
-
-            var services = new HashSet<Type>(HostingServices.DefaultServices);
-            services.Add(typeof(IHostingEnvironment));
-            // TODO: add fallback manifest as well
-
-            collection.AddInstance<IServiceManifest>(new ServiceManifest(services));
 
             var appServices = collection.BuildServiceProvider();
-
-            var othermanifest = provider.GetService<IServiceManifest>();
-
-            var manifest = appServices.GetService<IServiceManifest>();
 
             var config = new Configuration();
             return new TestServer(config, appServices, app);
