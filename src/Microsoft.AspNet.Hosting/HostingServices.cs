@@ -16,27 +16,6 @@ namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
-
-        private class HostingManifest : IServiceManifest
-        {
-            // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
-            private static readonly Type[] _services = new Type[] {
-                typeof(IHostingEngine),
-                typeof(IServerManager),
-                typeof(IStartupManager),
-                typeof(IStartupLoaderProvider),
-                typeof(IApplicationBuilderFactory),
-                typeof(IStartupLoaderProvider),
-                typeof(IHttpContextFactory),
-                typeof(ITypeActivator),
-                typeof(IApplicationLifetime),
-                // TODO: should remove logger?
-                typeof(ILoggerFactory)
-            };
-
-            public IEnumerable<Type> Services { get { return _services; } }
-        }
-
         public static IEnumerable<IServiceDescriptor> GetDefaultServices()
         {
             return GetDefaultServices(new Configuration());
@@ -72,6 +51,26 @@ namespace Microsoft.AspNet.Hosting
             {
                 yield return service;
             }
+        }
+
+        private class HostingManifest : IServiceManifest
+        {
+            // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
+            private static readonly Type[] _services = new Type[] {
+                typeof(IHostingEngine),
+                typeof(IServerManager),
+                typeof(IStartupManager),
+                typeof(IStartupLoaderProvider),
+                typeof(IApplicationBuilderFactory),
+                typeof(IStartupLoaderProvider),
+                typeof(IHttpContextFactory),
+                typeof(ITypeActivator),
+                typeof(IApplicationLifetime),
+                // TODO: should remove logger?
+                typeof(ILoggerFactory)
+            };
+
+            public IEnumerable<Type> Services { get { return _services; } }
         }
     }
 }

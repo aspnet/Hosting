@@ -7,8 +7,6 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
 using Xunit;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.PipelineCore;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Hosting.Builder;

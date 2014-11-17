@@ -81,8 +81,9 @@ namespace Microsoft.AspNet.Hosting
             Assert.Equal(services, app.ApplicationServices);
         }
 
+        // REVIEW: With the manifest change, Since the ConfigureServices are not imported, UseServices will mask what's in ConfigureServices
         [Fact]
-        public void StartupClassWithConfigureServicesAndUseServicesAddsBothToServices()
+        public void StartupClassWithConfigureServicesAndUseServicesHidesConfigureServices()
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.Add(HostingServices.GetDefaultServices());
@@ -96,12 +97,12 @@ namespace Microsoft.AspNet.Hosting
             startup.Invoke(app);
 
             Assert.NotNull(app.ApplicationServices.GetRequiredService<FakeService>());
-            Assert.NotNull(app.ApplicationServices.GetRequiredService<IFakeService>());
+            Assert.Null(app.ApplicationServices.GetService<IFakeService>());
 
             var options = app.ApplicationServices.GetRequiredService<IOptions<FakeOptions>>().Options;
             Assert.NotNull(options);
             Assert.Equal("Configured", options.Message);
-            Assert.False(options.Configured); // REVIEW: why doesn't the ConfigureServices ConfigureOptions get run?
+            Assert.False(options.Configured); // Options never resolved from inner containers
         }
 
         [Fact]

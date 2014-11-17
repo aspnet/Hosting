@@ -45,7 +45,7 @@ namespace Microsoft.AspNet.Builder
             // TODO: should remove OptionServices here soon...
             serviceCollection.Add(OptionsServices.GetDefaultServices());
 
-            // Ipmort services from hosting/KRE as fallback
+            // Import services from hosting/KRE as fallback
             serviceCollection.Import(builder.ApplicationServices);
 
             builder.ApplicationServices = configureServices(serviceCollection);
