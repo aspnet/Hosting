@@ -9,17 +9,39 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
+using System;
 
 namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
+
+        internal class HostingManifest : IServiceManifest
+        {
+            // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
+            private static readonly Type[] _services = new Type[] {
+                typeof(IHostingEngine),
+                typeof(IServerManager),
+                typeof(IStartupManager),
+                typeof(IStartupLoaderProvider),
+                typeof(IApplicationBuilderFactory),
+                typeof(IStartupLoaderProvider),
+                typeof(IHttpContextFactory),
+                typeof(ITypeActivator),
+                typeof(IApplicationLifetime),
+                // TODO: should remove logger?
+                typeof(ILoggerFactory)
+            };
+
+            public IEnumerable<Type> Services { get { return _services; } }
+        }
+
         public static IEnumerable<IServiceDescriptor> GetDefaultServices()
         {
             return GetDefaultServices(new Configuration());
         }
 
-        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
+            public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
         {
             var describer = new ServiceDescriber(configuration);
 
@@ -35,6 +57,8 @@ namespace Microsoft.AspNet.Hosting
             yield return describer.Singleton<ITypeActivator, TypeActivator>();
 
             yield return describer.Instance<IApplicationLifetime>(new ApplicationLifetime());
+
+            // TODO: Remove the below services and push the responsibility to frameworks to add
 
             // TODO: Do we expect this to be provide by the runtime eventually?
             yield return describer.Singleton<ILoggerFactory, LoggerFactory>();

@@ -14,6 +14,9 @@ namespace Microsoft.AspNet.Hosting
             var serviceCollection = new ServiceCollection();
             serviceCollection.Add(HostingServices.GetDefaultServices());
 
+            // Allows hosting services to be imported as fallback services
+            serviceCollection.AddSingleton<HostingServices.HostingManifest>();
+
             var context = new HostingContext
             {
                 Services = serviceCollection.BuildServiceProvider()
