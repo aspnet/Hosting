@@ -34,7 +34,7 @@ namespace Microsoft.AspNet.Builder
             return builder.UseServices(serviceCollection =>
             {
                 configureServices(serviceCollection);
-                return serviceCollection.BuildServiceProvider(builder.ApplicationServices);
+                return serviceCollection.BuildServiceProvider();
             });
         }
 
@@ -42,7 +42,12 @@ namespace Microsoft.AspNet.Builder
         {
             var serviceCollection = new ServiceCollection();
 
+            // TODO: should remove OptionServices here soon...
             serviceCollection.Add(OptionsServices.GetDefaultServices());
+
+            // Ipmort services from hosting/KRE as fallback
+            serviceCollection.Import(builder.ApplicationServices);
+
             builder.ApplicationServices = configureServices(serviceCollection);
 
             return builder.UseMiddleware<ContainerMiddleware>();

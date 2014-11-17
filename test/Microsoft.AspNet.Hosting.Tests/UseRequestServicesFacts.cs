@@ -7,6 +7,11 @@ using Microsoft.Framework.DependencyInjection.Fallback;
 using Xunit;
 using Microsoft.AspNet.PipelineCore;
 using Microsoft.AspNet.RequestContainer;
+using System;
+using Microsoft.Framework.Logging;
+using Microsoft.AspNet.Hosting.Builder;
+using Microsoft.AspNet.Hosting.Startup;
+using Microsoft.AspNet.Hosting.Server;
 
 namespace Microsoft.AspNet.Hosting.Tests
 {
@@ -78,6 +83,29 @@ namespace Microsoft.AspNet.Hosting.Tests
             builder.Build().Invoke(context);
             Assert.False(foundRequestServicesBefore);
             Assert.True(foundRequestServicesAfter);
+        }
+
+        [Theory]
+        [InlineData(typeof(IHostingEngine))]
+        [InlineData(typeof(IServerManager))]
+        [InlineData(typeof(IStartupManager))]
+        [InlineData(typeof(IStartupLoaderProvider))]
+        [InlineData(typeof(IApplicationBuilderFactory))]
+        [InlineData(typeof(IStartupLoaderProvider))]
+        [InlineData(typeof(IHttpContextFactory))]
+        [InlineData(typeof(ITypeActivator))]
+        [InlineData(typeof(IApplicationLifetime))]
+        [InlineData(typeof(ILoggerFactory))]
+        public void UseRequestServicesHostingImportedServicesAreDefined(Type service)
+        {
+            var baseServiceProvider = new ServiceCollection()
+                .Add(HostingServices.GetDefaultServices())
+                .BuildServiceProvider();
+            var builder = new ApplicationBuilder(baseServiceProvider);
+
+            builder.UseRequestServices();
+
+            Assert.NotNull(builder.ApplicationServices.GetRequiredService(service));
         }
 
     }

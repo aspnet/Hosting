@@ -63,7 +63,7 @@ namespace Microsoft.AspNet.TestHost
             collection.Add(HostingServices.GetDefaultServices());
             collection.AddInstance<IHostingEnvironment>(hostingEnv);
 
-            var appServices = collection.BuildServiceProvider(provider);
+            var appServices = collection.BuildServiceProvider();
 
             var config = new Configuration();
             return new TestServer(config, appServices, app);

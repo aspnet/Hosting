@@ -1,22 +1,23 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections.Generic;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
 
-        internal class HostingManifest : IServiceManifest
+        private class HostingManifest : IServiceManifest
         {
             // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
             private static readonly Type[] _services = new Type[] {
@@ -57,6 +58,8 @@ namespace Microsoft.AspNet.Hosting
             yield return describer.Singleton<ITypeActivator, TypeActivator>();
 
             yield return describer.Instance<IApplicationLifetime>(new ApplicationLifetime());
+
+            yield return describer.Singleton<IServiceManifest, HostingManifest>();
 
             // TODO: Remove the below services and push the responsibility to frameworks to add
 

@@ -9,6 +9,10 @@ using Microsoft.Framework.OptionsModel;
 using Xunit;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.PipelineCore;
+using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
+using Microsoft.AspNet.Hosting.Builder;
+using Microsoft.Framework.Logging;
 
 namespace Microsoft.AspNet.Hosting.Tests
 {
@@ -36,7 +40,7 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             builder.UseServices(serviceCollection =>
             {
-                serviceProvider = serviceCollection.BuildServiceProvider(builder.ApplicationServices);
+                serviceProvider = serviceCollection.BuildServiceProvider();
                 return serviceProvider;
             });
 
@@ -44,5 +48,27 @@ namespace Microsoft.AspNet.Hosting.Tests
             var optionsAccessor = builder.ApplicationServices.GetRequiredService<IOptions<object>>();
             Assert.NotNull(optionsAccessor);
         }
+
+        [Theory]
+        [InlineData(typeof(IHostingEngine))]
+        [InlineData(typeof(IServerManager))]
+        [InlineData(typeof(IStartupManager))]
+        [InlineData(typeof(IStartupLoaderProvider))]
+        [InlineData(typeof(IApplicationBuilderFactory))]
+        [InlineData(typeof(IStartupLoaderProvider))]
+        [InlineData(typeof(IHttpContextFactory))]
+        [InlineData(typeof(ITypeActivator))]
+        [InlineData(typeof(IApplicationLifetime))]
+        [InlineData(typeof(ILoggerFactory))]
+        public void UseServicesHostingImportedServicesAreDefined(Type service)
+        {
+            var baseServiceProvider = new ServiceCollection().Add(HostingServices.GetDefaultServices()).BuildServiceProvider();
+            var builder = new ApplicationBuilder(baseServiceProvider);
+
+            builder.UseServices(serviceCollection => { });
+
+            Assert.NotNull(builder.ApplicationServices.GetRequiredService(service));
+        }
+
     }
 }
