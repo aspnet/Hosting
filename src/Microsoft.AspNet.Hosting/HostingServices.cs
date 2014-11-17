@@ -21,7 +21,7 @@ namespace Microsoft.AspNet.Hosting
             return GetDefaultServices(new Configuration());
         }
 
-            public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
+        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
         {
             var describer = new ServiceDescriber(configuration);
 
