@@ -48,7 +48,9 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(Action<IApplicationBuilder> app)
         {
-            return Create(provider: CallContextServiceLocator.Locator.ServiceProvider, app: app);
+            var services = new ServiceCollection();
+            services.Import(CallContextServiceLocator.Locator.ServiceProvider);
+            return Create(services, app: app);
         }
 
         private class ServiceManifest : IServiceManifest
@@ -61,33 +63,16 @@ namespace Microsoft.AspNet.TestHost
             public IEnumerable<Type> Services { get; private set; }
         }
 
-        public static TestServer Create(IServiceProvider provider, Action<IApplicationBuilder> app)
+        public static TestServer Create(IServiceCollection services, Action<IApplicationBuilder> app)
         {
-            var appEnv = provider.GetRequiredService<IApplicationEnvironment>();
+            services.Add(HostingServices.GetDefaultServices(false));
+            services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
 
-            var hostingEnv = new HostingEnvironment()
-            {
-                EnvironmentName = DefaultEnvironmentName,
-                WebRoot = HostingUtilities.GetWebRoot(appEnv.ApplicationBasePath),
-            };
+            var servicesSet = new HashSet<Type>(HostingServices.DefaultServices);
+            servicesSet.Add(typeof(IHostingEnvironment));
+            services.AddInstance<IServiceManifest>(new ServiceManifest(servicesSet));
 
-            var collection = new ServiceCollection();
-            collection.Add(HostingServices.GetDefaultServices(false));
-            collection.AddInstance<IHostingEnvironment>(hostingEnv);
-            collection.Import(provider);
-
-            var services = new HashSet<Type>(HostingServices.DefaultServices);
-            services.Add(typeof(IHostingEnvironment));
-            // TODO: add fallback manifest as well
-
-            collection.AddInstance<IServiceManifest>(new ServiceManifest(services));
-
-            var appServices = collection.BuildServiceProvider();
-
-            var othermanifest = provider.GetService<IServiceManifest>();
-
-            var manifest = appServices.GetService<IServiceManifest>();
-
+            var appServices = services.BuildServiceProvider();
             var config = new Configuration();
             return new TestServer(config, appServices, app);
         }
@@ -156,6 +141,18 @@ namespace Microsoft.AspNet.TestHost
             {
                 get { return TestServer.ServerName; }
             }
+        }
+
+        private class TestHostingEnvironment : IHostingEnvironment
+        {
+            public TestHostingEnvironment(IApplicationEnvironment appEnv)
+            {
+                WebRoot = HostingUtilities.GetWebRoot(appEnv.ApplicationBasePath);
+            }
+
+            public string EnvironmentName { get { return DefaultEnvironmentName; } }
+
+            public string WebRoot { get; private set; }
         }
     }
 }

@@ -20,25 +20,12 @@ namespace Microsoft.AspNet.TestHost
 {
     public class TestServerTests
     {
-        private class TestManifest : IServiceManifest
-        {
-            public IEnumerable<Type> Services
-            {
-                get
-                {
-                    return new Type[] { typeof(IApplicationEnvironment) };
-                }
-            }
-        }
-
         [Fact]
         public void CreateWithDelegate()
         {
             // Arrange
             var services = new ServiceCollection()
-                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
-                .AddSingleton<IServiceManifest, TestManifest>()
-                .BuildServiceProvider();
+                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>();
 
             // Act & Assert
             Assert.DoesNotThrow(() => TestServer.Create(services, app => { }));
@@ -48,8 +35,7 @@ namespace Microsoft.AspNet.TestHost
         public void ThrowsIfNoApplicationEnvironmentIsRegisteredWithTheProvider()
         {
             // Arrange
-            var services = new ServiceCollection()
-                .BuildServiceProvider();
+            var services = new ServiceCollection();
 
             // Act & Assert
             Assert.Throws<Exception>(() => TestServer.Create(services, new Startup().Configuration));
