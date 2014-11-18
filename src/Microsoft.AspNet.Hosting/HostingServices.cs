@@ -1,16 +1,14 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Collections.Generic;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
-using System;
-using System.Collections.Generic;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -38,11 +36,6 @@ namespace Microsoft.AspNet.Hosting
 
             yield return describer.Instance<IApplicationLifetime>(new ApplicationLifetime());
 
-            //if (addManifest)
-            //{
-            //    yield return describer.Singleton<IServiceManifest, HostingManifest>();
-            //}
-
             // TODO: Remove the below services and push the responsibility to frameworks to add
 
             // TODO: Do we expect this to be provide by the runtime eventually?
@@ -55,25 +48,5 @@ namespace Microsoft.AspNet.Hosting
                 yield return service;
             }
         }
-
-
-        // This should match GetDefaultServices, consider moving this into a dictionary so we can query based on keys
-        public static readonly Type[] DefaultServices = new Type[] {
-            typeof(IHostingEngine),
-            typeof(IServerManager),
-            typeof(IStartupManager),
-            typeof(IStartupLoaderProvider),
-            typeof(IApplicationBuilderFactory),
-            typeof(IHttpContextFactory),
-            typeof(ITypeActivator),
-            typeof(IApplicationLifetime),
-            // TODO: should remove logger?
-            typeof(ILoggerFactory)
-        };
-
-        //private class HostingManifest : IServiceManifest
-        //{
-        //    public IEnumerable<Type> Services { get { return DefaultServices; } }
-        //}
     }
 }
