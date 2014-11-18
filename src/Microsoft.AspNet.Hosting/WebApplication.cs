@@ -16,7 +16,7 @@ namespace Microsoft.AspNet.Hosting
 
             var context = new HostingContext
             {
-                Services = serviceCollection.BuildServiceProvider()
+                Services = serviceCollection.BuildFallbackServiceProvider()
             };
 
             var engine = context.Services.GetRequiredService<IHostingEngine>();

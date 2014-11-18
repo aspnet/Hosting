@@ -60,13 +60,12 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData(typeof(ILoggerFactory))]
         public void UseServicesHostingImportedServicesAreDefined(Type service)
         {
-            var baseServiceProvider = new ServiceCollection().Add(HostingServices.GetDefaultServices()).BuildServiceProvider();
+            var baseServiceProvider = new ServiceCollection().Add(HostingServices.GetDefaultServices()).BuildFallbackServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             builder.UseServices(serviceCollection => { });
 
             Assert.NotNull(builder.ApplicationServices.GetRequiredService(service));
         }
-
     }
 }

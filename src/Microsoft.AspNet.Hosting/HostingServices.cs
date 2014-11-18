@@ -16,12 +16,12 @@ namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
-        public static IEnumerable<IServiceDescriptor> GetDefaultServices(bool addManifest = true)
+        public static IEnumerable<IServiceDescriptor> GetDefaultServices()
         {
-            return GetDefaultServices(new Configuration(), addManifest);
+            return GetDefaultServices(new Configuration());
         }
 
-        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration, bool addManifest = true)
+        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration)
         {
             var describer = new ServiceDescriber(configuration);
 
@@ -38,10 +38,10 @@ namespace Microsoft.AspNet.Hosting
 
             yield return describer.Instance<IApplicationLifetime>(new ApplicationLifetime());
 
-            if (addManifest)
-            {
-                yield return describer.Singleton<IServiceManifest, HostingManifest>();
-            }
+            //if (addManifest)
+            //{
+            //    yield return describer.Singleton<IServiceManifest, HostingManifest>();
+            //}
 
             // TODO: Remove the below services and push the responsibility to frameworks to add
 
@@ -71,9 +71,9 @@ namespace Microsoft.AspNet.Hosting
             typeof(ILoggerFactory)
         };
 
-        private class HostingManifest : IServiceManifest
-        {
-            public IEnumerable<Type> Services { get { return DefaultServices; } }
-        }
+        //private class HostingManifest : IServiceManifest
+        //{
+        //    public IEnumerable<Type> Services { get { return DefaultServices; } }
+        //}
     }
 }
