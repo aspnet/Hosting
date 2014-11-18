@@ -47,7 +47,7 @@ namespace Microsoft.AspNet.Hosting
             serviceCollection.Add(HostingServices.GetDefaultServices(config));
             serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
 
-            var services = serviceCollection.BuildServiceProvider();
+            var services = serviceCollection.BuildFallbackServiceProvider();
 
             var context = new HostingContext()
             {
