@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -11,6 +12,7 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
+using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Runtime;
 using Xunit;
 
@@ -18,12 +20,24 @@ namespace Microsoft.AspNet.TestHost
 {
     public class TestServerTests
     {
+        private class TestManifest : IServiceManifest
+        {
+            public IEnumerable<Type> Services
+            {
+                get
+                {
+                    return new Type[] { typeof(IApplicationEnvironment) };
+                }
+            }
+        }
+
         [Fact]
         public void CreateWithDelegate()
         {
             // Arrange
             var services = new ServiceCollection()
                 .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
+                .AddSingleton<IServiceManifest, TestManifest>()
                 .BuildServiceProvider();
 
             // Act & Assert

@@ -72,7 +72,7 @@ namespace Microsoft.AspNet.TestHost
             };
 
             var collection = new ServiceCollection();
-            collection.Add(HostingServices.GetDefaultServices());
+            collection.Add(HostingServices.GetDefaultServices(false));
             collection.AddInstance<IHostingEnvironment>(hostingEnv);
             collection.Import(provider);
 
