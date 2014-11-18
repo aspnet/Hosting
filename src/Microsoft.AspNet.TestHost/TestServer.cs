@@ -15,6 +15,7 @@ using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -53,24 +54,11 @@ namespace Microsoft.AspNet.TestHost
             return Create(services, app: app);
         }
 
-        private class ServiceManifest : IServiceManifest
-        {
-            public ServiceManifest(IEnumerable<Type> services)
-            {
-                Services = services;
-            }
-
-            public IEnumerable<Type> Services { get; private set; }
-        }
-
         public static TestServer Create(IServiceCollection services, Action<IApplicationBuilder> app)
         {
             services.Add(HostingServices.GetDefaultServices(false));
             services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
-
-            var servicesSet = new HashSet<Type>(HostingServices.DefaultServices);
-            servicesSet.Add(typeof(IHostingEnvironment));
-            services.AddInstance<IServiceManifest>(new ServiceManifest(servicesSet));
+            services.AddInstance<IServiceManifest>(new ServiceManifest(services));
 
             var appServices = services.BuildServiceProvider();
             var config = new Configuration();
@@ -154,5 +142,18 @@ namespace Microsoft.AspNet.TestHost
 
             public string WebRoot { get; private set; }
         }
+
+        private class ServiceManifest : IServiceManifest
+        {
+            public ServiceManifest(IServiceCollection services)
+            {
+                // REVIEW: Dedupe services, also drop generics, should we also drop scopes or blowup?  since this is test code
+                Services = services.Where(s => s.ServiceType.GenericTypeArguments.Length == 0).Select(s => s.ServiceType).Distinct();
+            }
+
+            public IEnumerable<Type> Services { get; private set; }
+        }
+
+
     }
 }
