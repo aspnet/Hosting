@@ -44,6 +44,7 @@ namespace Microsoft.AspNet.Builder
 
             // TODO: should remove OptionServices here soon...
             serviceCollection.Add(OptionsServices.GetDefaultServices());
+            serviceCollection.AddScoped(typeof(IContextAccessor<>), typeof(ContextAccessor<>));
 
             // Import services from hosting/KRE as fallback
             serviceCollection.Import(builder.ApplicationServices);

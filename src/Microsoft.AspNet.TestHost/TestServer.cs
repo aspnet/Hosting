@@ -51,7 +51,7 @@ namespace Microsoft.AspNet.TestHost
         {
             var services = new ServiceCollection();
             services.Import(CallContextServiceLocator.Locator.ServiceProvider);
-            return Create(services, app: app);
+            return Create(services, app);
         }
 
         public static TestServer Create(IServiceCollection services, Action<IApplicationBuilder> app)

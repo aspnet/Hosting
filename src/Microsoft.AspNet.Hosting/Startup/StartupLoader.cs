@@ -154,6 +154,8 @@ namespace Microsoft.AspNet.Hosting.Startup
                     var services = new ServiceCollection();
                     // TODO: remove adding options
                     services.Add(OptionsServices.GetDefaultServices());
+                    services.AddScoped(typeof(IContextAccessor<>), typeof(ContextAccessor<>));
+
                     services.Import(builder.ApplicationServices);
                     if (servicesMethod.ReturnType == typeof(IServiceProvider))
                     {

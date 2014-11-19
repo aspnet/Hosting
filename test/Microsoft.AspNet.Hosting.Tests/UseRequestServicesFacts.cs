@@ -22,7 +22,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         {
             var baseServiceProvider = new ServiceCollection()
                 .Add(HostingServices.GetDefaultServices())
-                .BuildServiceProvider();
+                .BuildFallbackServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             bool foundRequestServicesBefore = false;
@@ -52,7 +52,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         {
             var baseServiceProvider = new ServiceCollection()
                 .Add(HostingServices.GetDefaultServices())
-                .BuildServiceProvider();
+                .BuildFallbackServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             bool foundRequestServicesBefore = false;
@@ -100,7 +100,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         {
             var baseServiceProvider = new ServiceCollection()
                 .Add(HostingServices.GetDefaultServices())
-                .BuildServiceProvider();
+                .BuildFallbackServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             builder.UseRequestServices();
