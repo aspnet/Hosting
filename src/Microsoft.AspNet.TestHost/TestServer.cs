@@ -11,6 +11,7 @@ using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
+using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
@@ -52,9 +53,15 @@ namespace Microsoft.AspNet.TestHost
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
         {
             var services = new ServiceCollection();
-            services.Import(serviceProvider);
+            var manifest = serviceProvider.GetService<IServiceManifest>();
+            if (manifest != null)
+            {
+                services.Import(serviceProvider);
+            }
             services.Add(HostingServices.GetDefaultServices());
             services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
+            services.AddInstance(HostingServices.BuildManifest(serviceProvider));
+
 
             var appServices = new TestHostServiceProvider(serviceProvider, services.BuildServiceProvider());
             var config = new Configuration();

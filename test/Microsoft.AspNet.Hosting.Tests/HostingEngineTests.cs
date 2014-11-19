@@ -34,6 +34,7 @@ namespace Microsoft.AspNet.Hosting
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.Add(HostingServices.GetDefaultServices());
+            serviceCollection.AddInstance(HostingServices.BuildManifest());
             var services = serviceCollection.BuildServiceProvider();
 
             var engine = services.GetRequiredService<IHostingEngine>();

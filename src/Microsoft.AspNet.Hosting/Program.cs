@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
+using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 
 namespace Microsoft.AspNet.Hosting
@@ -44,10 +45,12 @@ namespace Microsoft.AspNet.Hosting
             };
 
             var serviceCollection = new ServiceCollection();
+            serviceCollection.Import(_serviceProvider);
             serviceCollection.Add(HostingServices.GetDefaultServices(config));
             serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
+            serviceCollection.AddInstance(HostingServices.BuildManifest(_serviceProvider));
 
-            var services = serviceCollection.BuildFallbackServiceProvider();
+            var services = serviceCollection.BuildServiceProvider();
 
             var context = new HostingContext()
             {
