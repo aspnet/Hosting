@@ -62,7 +62,6 @@ namespace Microsoft.AspNet.TestHost
             services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
             services.AddInstance(HostingServices.BuildManifest(serviceProvider));
 
-
             var appServices = new TestHostServiceProvider(serviceProvider, services.BuildServiceProvider());
             var config = new Configuration();
             return new TestServer(config, appServices, app);

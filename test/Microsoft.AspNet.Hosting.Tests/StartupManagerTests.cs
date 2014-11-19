@@ -9,6 +9,7 @@ using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
+using Microsoft.Framework.Runtime.Infrastructure;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Tests
@@ -84,10 +85,12 @@ namespace Microsoft.AspNet.Hosting.Tests
         }
 
         // REVIEW: With the manifest change, Since the ConfigureServices are not imported, UseServices will mask what's in ConfigureServices
-        [Fact(Skip = "Review broken")]
+        // This will throw since ConfigureServices consumes manifest and then UseServices will blow up
+        [Fact(Skip = "This fails now")]
         public void StartupClassWithConfigureServicesAndUseServicesHidesConfigureServices()
         {
             var serviceCollection = new ServiceCollection();
+            serviceCollection.Import(CallContextServiceLocator.Locator.ServiceProvider);
             serviceCollection.Add(HostingServices.GetDefaultServices());
             serviceCollection.AddInstance(HostingServices.BuildManifest());
             var services = serviceCollection.BuildServiceProvider();

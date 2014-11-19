@@ -1,18 +1,17 @@
 ﻿// Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using Microsoft.AspNet.Builder;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.DependencyInjection.Fallback;
-using Xunit;
+using Microsoft.AspNet.Hosting.Builder;
+using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.PipelineCore;
 using Microsoft.AspNet.RequestContainer;
-using System;
+using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
-using Microsoft.AspNet.Hosting.Builder;
-using Microsoft.AspNet.Hosting.Startup;
-using Microsoft.AspNet.Hosting.Server;
-using Microsoft.AspNet.Testing;
+using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Tests
 {
@@ -108,6 +107,5 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             Assert.NotNull(builder.ApplicationServices.GetRequiredService(service));
         }
-
     }
 }

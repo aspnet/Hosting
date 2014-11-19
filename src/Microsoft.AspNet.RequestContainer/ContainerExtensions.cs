@@ -17,12 +17,16 @@ namespace Microsoft.AspNet.Builder
             return builder.UseMiddleware<ContainerMiddleware>();
         }
 
+        // Review: what do we use these for?
         public static IApplicationBuilder UseRequestServices(this IApplicationBuilder builder, IServiceProvider applicationServices)
         {
+            // REVIEW: should this be doing fallback?
             builder.ApplicationServices = applicationServices;
 
             return builder.UseMiddleware<ContainerMiddleware>();
         }
+
+        // Note: Manifests are lost after UseServices, services are flattened into ApplicationServices
 
         public static IApplicationBuilder UseServices(this IApplicationBuilder builder, IEnumerable<IServiceDescriptor> applicationServices)
         {
@@ -42,13 +46,14 @@ namespace Microsoft.AspNet.Builder
         {
             var serviceCollection = new ServiceCollection();
 
+            // Import services from hosting/KRE as fallback
+            serviceCollection.Import(builder.ApplicationServices);
+
             // TODO: should remove OptionServices here soon...
             serviceCollection.Add(OptionsServices.GetDefaultServices());
             serviceCollection.AddScoped(typeof(IContextAccessor<>), typeof(ContextAccessor<>));
 
-            // Import services from hosting/KRE as fallback
-            serviceCollection.Import(builder.ApplicationServices);
-
+            // REVIEW: serviceCollection has the merged services, manifests are lost after this
             builder.ApplicationServices = configureServices(serviceCollection);
 
             return builder.UseMiddleware<ContainerMiddleware>();

@@ -6,17 +6,17 @@ using Microsoft.AspNet.Builder;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
+using Microsoft.Framework.Runtime.Infrastructure;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Tests
 {
     public class UseServicesFacts
     {
-        [Fact(Skip = "needs review")]
+        [Fact]
         public void OptionsAccessorCanBeResolvedAfterCallingUseServicesWithAction()
         {
-            var baseServiceProvider = new ServiceCollection().BuildServiceProvider();
-            var builder = new ApplicationBuilder(baseServiceProvider);
+            var builder = new ApplicationBuilder(CallContextServiceLocator.Locator.ServiceProvider);
 
             builder.UseServices(serviceCollection => { });
 
@@ -25,11 +25,10 @@ namespace Microsoft.AspNet.Hosting.Tests
         }
 
 
-        [Fact(Skip = "needs review")]
+        [Fact]
         public void OptionsAccessorCanBeResolvedAfterCallingUseServicesWithFunc()
         {
-            var baseServiceProvider = new ServiceCollection().BuildServiceProvider();
-            var builder = new ApplicationBuilder(baseServiceProvider);
+            var builder = new ApplicationBuilder(CallContextServiceLocator.Locator.ServiceProvider);
             IServiceProvider serviceProvider = null;
 
             builder.UseServices(serviceCollection =>
