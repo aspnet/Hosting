@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.AspNet.TestHost
 {
-    public class TestHostServiceProvider : IServiceProvider
+    internal class TestHostServiceProvider : IServiceProvider
     {
         private readonly IServiceProvider _fallback;
         private readonly IServiceProvider _services;
