@@ -49,17 +49,16 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(Action<IApplicationBuilder> app)
         {
-            var services = new ServiceCollection();
-            services.Import(CallContextServiceLocator.Locator.ServiceProvider);
-            return Create(services, app);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, app);
         }
 
-        public static TestServer Create(IServiceCollection services, Action<IApplicationBuilder> app)
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
         {
+            var services = new ServiceCollection();
             services.Add(HostingServices.GetDefaultServices());
             services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
 
-            var appServices = services.BuildFallbackServiceProvider();
+            var appServices = new DelegatingServiceProvider(serviceProvider, services.BuildServiceProvider());
             var config = new Configuration();
             return new TestServer(config, appServices, app);
         }
@@ -141,5 +140,23 @@ namespace Microsoft.AspNet.TestHost
 
             public string WebRoot { get; private set; }
         }
+
+        private class DelegatingServiceProvider : IServiceProvider
+        {
+            private IServiceProvider _fallback;
+            private IServiceProvider _services;
+
+            public DelegatingServiceProvider(IServiceProvider fallback, IServiceProvider services)
+            {
+                _fallback = fallback;
+                _services = services;
+            }
+
+            public object GetService(Type serviceType)
+            {
+                return _services.GetService(serviceType) ?? _fallback.GetService(serviceType);
+            }
+        }
+
     }
 }
