@@ -13,9 +13,6 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
-using Microsoft.Framework.DependencyInjection.ServiceLookup;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -55,6 +52,7 @@ namespace Microsoft.AspNet.TestHost
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
         {
             var services = new ServiceCollection();
+            services.Import(serviceProvider);
             services.Add(HostingServices.GetDefaultServices());
             services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
 

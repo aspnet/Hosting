@@ -25,7 +25,8 @@ namespace Microsoft.AspNet.TestHost
         {
             // Arrange
             var services = new ServiceCollection()
-                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>();
+                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
+                .BuildServiceProvider();
 
             // Act & Assert
             Assert.DoesNotThrow(() => TestServer.Create(services, app => { }));
@@ -35,7 +36,7 @@ namespace Microsoft.AspNet.TestHost
         public void ThrowsIfNoApplicationEnvironmentIsRegisteredWithTheProvider()
         {
             // Arrange
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().BuildServiceProvider();
 
             // Act & Assert
             Assert.Throws<Exception>(() => TestServer.Create(services, new Startup().Configuration));
