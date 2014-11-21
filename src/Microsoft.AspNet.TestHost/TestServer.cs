@@ -133,57 +133,5 @@ namespace Microsoft.AspNet.TestHost
         {
             public ConfigureTestHostingEnvironment() : base(env => env.EnvironmentName = DefaultEnvironmentName) { }
         }
-
-        //public static IServiceProvider BuildFallbackServiceProvider(IEnumerable<IServiceDescriptor> services, IServiceProvider fallback)
-        //{
-        //    var sc = new ServiceCollection();
-        //    var manifest = fallback.GetService<IServiceManifest>();
-        //    if (manifest != null)
-        //    {
-        //        sc.Import(fallback);
-        //    }
-        //    sc.Add(services);
-
-        //    // Build the manifest
-        //    var manifestTypes = services.Where(t => t.ServiceType.GetTypeInfo().GenericTypeParameters.Length == 0
-        //            && t.ServiceType != typeof(IServiceManifest)
-        //            && t.ServiceType != typeof(IServiceProvider))
-        //            .Select(t => t.ServiceType).Distinct();
-        //    sc.AddInstance<IServiceManifest>(new ServiceManifest(manifestTypes, manifest));
-        //    return new DelegatingServiceProvider(fallback, sc.BuildServiceProvider());
-        //}
-
-        //// KRE replacer
-        //private class TestServiceProvider : IServiceProvider
-        //{
-        //    private readonly IServiceProvider _fallback;
-        //    private readonly IServiceProvider _services;
-
-        //    public TestServiceProvider(IServiceProvider fallback, IServiceProvider services)
-        //    {
-        //        _fallback = fallback;
-        //        _services = services;
-        //    }
-
-        //    public object GetService(Type serviceType)
-        //    {
-        //        return _services.GetService(serviceType) ?? _fallback.GetService(serviceType);
-        //    }
-        //}
-
-        //private class ServiceManifest : IServiceManifest
-        //{
-        //    public ServiceManifest(IEnumerable<Type> services, IServiceManifest fallback = null)
-        //    {
-        //        Services = services;
-        //        if (fallback != null)
-        //        {
-        //            Services = Services.Concat(fallback.Services).Distinct();
-        //        }
-        //    }
-
-        //    public IEnumerable<Type> Services { get; private set; }
-        //}
-
     }
 }
