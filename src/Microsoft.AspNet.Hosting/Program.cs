@@ -67,7 +67,15 @@ namespace Microsoft.AspNet.Hosting
 
             var ignored = Task.Run(() =>
             {
-                Console.WriteLine("Started");
+                var serverUrl = config.Get("server.urls");
+                if (serverUrl != null)
+                {
+                    Console.WriteLine("Started on " + serverUrl);
+                }
+                else
+                {
+                    Console.WriteLine("Started");
+                }
                 Console.ReadLine();
                 appShutdownService.RequestShutdown();
             });
