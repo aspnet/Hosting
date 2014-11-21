@@ -19,6 +19,6 @@ namespace Microsoft.AspNet.Hosting
 
         public string EnvironmentName { get; set; }
 
-        public string WebRoot { get; private set; }
+        public string WebRoot { get; set; }
     }
 }
