@@ -2,7 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
@@ -11,7 +14,6 @@ using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
-using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
@@ -52,17 +54,11 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
         {
-            var services = new ServiceCollection();
-            var manifest = serviceProvider.GetService<IServiceManifest>();
-            if (manifest != null)
-            {
-                services.Import(serviceProvider);
-            }
-            services.Add(HostingServices.GetDefaultServices());
-            services.AddSingleton<IHostingEnvironment, TestHostingEnvironment>();
-            services.AddInstance(HostingServices.BuildManifest(serviceProvider));
+            var services = HostingServices.Create(serviceProvider);
+            services.AddSingleton<IConfigureHostingEnvironment, ConfigureTestHostingEnvironment>();
 
-            var appServices = new TestHostServiceProvider(serviceProvider, services.BuildServiceProvider());
+            //var appServices = BuildFallbackServiceProvider(services, serviceProvider);
+            var appServices = services.BuildServiceProvider();
             var config = new Configuration();
             return new TestServer(config, appServices, app);
         }
@@ -133,16 +129,61 @@ namespace Microsoft.AspNet.TestHost
             }
         }
 
-        private class TestHostingEnvironment : IHostingEnvironment
+        private class ConfigureTestHostingEnvironment : ConfigureHostingEnvironment
         {
-            public TestHostingEnvironment(IApplicationEnvironment appEnv)
-            {
-                WebRoot = HostingUtilities.GetWebRoot(appEnv.ApplicationBasePath);
-            }
-
-            public string EnvironmentName { get { return DefaultEnvironmentName; } }
-
-            public string WebRoot { get; private set; }
+            public ConfigureTestHostingEnvironment() : base(env => env.EnvironmentName = DefaultEnvironmentName) { }
         }
+
+        //public static IServiceProvider BuildFallbackServiceProvider(IEnumerable<IServiceDescriptor> services, IServiceProvider fallback)
+        //{
+        //    var sc = new ServiceCollection();
+        //    var manifest = fallback.GetService<IServiceManifest>();
+        //    if (manifest != null)
+        //    {
+        //        sc.Import(fallback);
+        //    }
+        //    sc.Add(services);
+
+        //    // Build the manifest
+        //    var manifestTypes = services.Where(t => t.ServiceType.GetTypeInfo().GenericTypeParameters.Length == 0
+        //            && t.ServiceType != typeof(IServiceManifest)
+        //            && t.ServiceType != typeof(IServiceProvider))
+        //            .Select(t => t.ServiceType).Distinct();
+        //    sc.AddInstance<IServiceManifest>(new ServiceManifest(manifestTypes, manifest));
+        //    return new DelegatingServiceProvider(fallback, sc.BuildServiceProvider());
+        //}
+
+        //// KRE replacer
+        //private class TestServiceProvider : IServiceProvider
+        //{
+        //    private readonly IServiceProvider _fallback;
+        //    private readonly IServiceProvider _services;
+
+        //    public TestServiceProvider(IServiceProvider fallback, IServiceProvider services)
+        //    {
+        //        _fallback = fallback;
+        //        _services = services;
+        //    }
+
+        //    public object GetService(Type serviceType)
+        //    {
+        //        return _services.GetService(serviceType) ?? _fallback.GetService(serviceType);
+        //    }
+        //}
+
+        //private class ServiceManifest : IServiceManifest
+        //{
+        //    public ServiceManifest(IEnumerable<Type> services, IServiceManifest fallback = null)
+        //    {
+        //        Services = services;
+        //        if (fallback != null)
+        //        {
+        //            Services = Services.Concat(fallback.Services).Distinct();
+        //        }
+        //    }
+
+        //    public IEnumerable<Type> Services { get; private set; }
+        //}
+
     }
 }

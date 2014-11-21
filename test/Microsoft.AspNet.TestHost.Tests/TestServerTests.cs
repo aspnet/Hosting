@@ -24,9 +24,7 @@ namespace Microsoft.AspNet.TestHost
         public void CreateWithDelegate()
         {
             // Arrange
-            var services = new ServiceCollection()
-                .AddSingleton<IApplicationEnvironment, TestApplicationEnvironment>()
-                .BuildServiceProvider();
+            var services = HostingServices.Create().BuildServiceProvider();
 
             // Act & Assert
             Assert.DoesNotThrow(() => TestServer.Create(services, app => { }));

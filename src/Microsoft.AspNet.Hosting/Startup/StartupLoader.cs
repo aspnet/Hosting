@@ -151,12 +151,11 @@ namespace Microsoft.AspNet.Hosting.Startup
             {
                 if (servicesMethod != null)
                 {
-                    var services = new ServiceCollection();
+                    var services = HostingServices.Create(builder.ApplicationServices);
                     // TODO: remove adding options
                     services.Add(OptionsServices.GetDefaultServices());
                     services.AddScoped(typeof(IContextAccessor<>), typeof(ContextAccessor<>));
 
-                    services.Import(builder.ApplicationServices);
                     if (servicesMethod.ReturnType == typeof(IServiceProvider))
                     {
                         // IServiceProvider ConfigureServices(IServiceCollection)

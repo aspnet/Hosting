@@ -9,7 +9,6 @@ using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
-using Microsoft.Framework.Runtime.Infrastructure;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Tests
@@ -46,10 +45,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData("ProviderArgs")]
         public void StartupClassAddsConfigureServicesToApplicationServices(string environment)
         {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(HostingServices.GetDefaultServices());
-            serviceCollection.AddInstance(HostingServices.BuildManifest());
-            var services = serviceCollection.BuildServiceProvider();
+            var services = HostingServices.Create().BuildServiceProvider();
             var manager = services.GetRequiredService<IStartupManager>();
 
             var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", environment ?? "");
@@ -69,10 +65,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData("FallbackProvider")]
         public void StartupClassConfigureServicesThatFallsbackToApplicationServices(string env)
         {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(HostingServices.GetDefaultServices());
-            serviceCollection.AddInstance(HostingServices.BuildManifest());
-            var services = serviceCollection.BuildServiceProvider();
+            var services = HostingServices.Create().BuildServiceProvider();
             var manager = services.GetRequiredService<IStartupManager>();
 
             var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", env);
@@ -86,14 +79,10 @@ namespace Microsoft.AspNet.Hosting.Tests
 
         // REVIEW: With the manifest change, Since the ConfigureServices are not imported, UseServices will mask what's in ConfigureServices
         // This will throw since ConfigureServices consumes manifest and then UseServices will blow up
-        [Fact(Skip = "This fails now")]
+        [Fact(Skip = "Review Failure")]
         public void StartupClassWithConfigureServicesAndUseServicesHidesConfigureServices()
         {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Import(CallContextServiceLocator.Locator.ServiceProvider);
-            serviceCollection.Add(HostingServices.GetDefaultServices());
-            serviceCollection.AddInstance(HostingServices.BuildManifest());
-            var services = serviceCollection.BuildServiceProvider();
+            var services = HostingServices.Create().BuildServiceProvider();
             var manager = services.GetRequiredService<IStartupManager>();
 
             var startup = manager.LoadStartup("Microsoft.AspNet.Hosting.Tests", "UseServices");
@@ -114,8 +103,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupWithNoConfigureThrows()
         {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(HostingServices.GetDefaultServices());
+            var serviceCollection = HostingServices.Create();
             serviceCollection.AddInstance<IFakeStartupCallback>(this);
             var services = serviceCollection.BuildServiceProvider();
             var manager = services.GetRequiredService<IStartupManager>();

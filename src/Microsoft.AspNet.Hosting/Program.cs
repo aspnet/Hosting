@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
-using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 
 namespace Microsoft.AspNet.Hosting
@@ -26,6 +25,8 @@ namespace Microsoft.AspNet.Hosting
             _serviceProvider = serviceProvider;
         }
 
+
+
         public void Main(string[] args)
         {
             var config = new Configuration();
@@ -36,21 +37,11 @@ namespace Microsoft.AspNet.Hosting
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
 
-            var appEnv = _serviceProvider.GetRequiredService<IApplicationEnvironment>();
-
-            var hostingEnv = new HostingEnvironment()
-            {
-                EnvironmentName = config.Get(EnvironmentKey) ?? DefaultEnvironmentName,
-                WebRoot = HostingUtilities.GetWebRoot(appEnv.ApplicationBasePath),
-            };
-
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Import(_serviceProvider);
-            serviceCollection.Add(HostingServices.GetDefaultServices(config));
-            serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
-            serviceCollection.AddInstance(HostingServices.BuildManifest(_serviceProvider));
-
+            var serviceCollection = HostingServices.Create(_serviceProvider, config);
             var services = serviceCollection.BuildServiceProvider();
+
+            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
+            var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
 
             var context = new HostingContext()
             {

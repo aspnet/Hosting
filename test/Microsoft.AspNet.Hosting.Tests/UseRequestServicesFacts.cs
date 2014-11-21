@@ -20,9 +20,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void RequestServicesAvailableOnlyAfterRequestServices()
         {
-            var baseServiceProvider = new ServiceCollection()
-                .Add(HostingServices.GetDefaultServices())
-                .BuildServiceProvider();
+            var baseServiceProvider = HostingServices.Create().BuildServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             bool foundRequestServicesBefore = false;
@@ -50,9 +48,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData(false)]
         public void EnsureRequestServicesSetsRequestServices(bool initializeApplicationServices)
         {
-            var baseServiceProvider = new ServiceCollection()
-                .Add(HostingServices.GetDefaultServices())
-                .BuildServiceProvider();
+            var baseServiceProvider = HostingServices.Create().BuildServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             bool foundRequestServicesBefore = false;
@@ -98,9 +94,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData(typeof(ILoggerFactory))]
         public void UseRequestServicesHostingImportedServicesAreDefined(Type service)
         {
-            var baseServiceProvider = new ServiceCollection()
-                .Add(HostingServices.GetDefaultServices())
-                .BuildServiceProvider();
+            var baseServiceProvider = HostingServices.Create().BuildServiceProvider();
             var builder = new ApplicationBuilder(baseServiceProvider);
 
             builder.UseRequestServices();
