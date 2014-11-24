@@ -11,7 +11,6 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
@@ -24,7 +23,6 @@ namespace Microsoft.AspNet.Hosting
             var manifest = fallbackProvider.GetRequiredService<IServiceManifest>();
             foreach (var service in manifest.Services)
             {
-                // REVIEW: should this be Singleton instead?
                 services.AddTransient(service, sp => fallbackProvider.GetService(service));
             }
             return services;
@@ -39,45 +37,49 @@ namespace Microsoft.AspNet.Hosting
         {
             configuration = configuration ?? new Configuration();
             var services = Import(fallbackServices);
-            services.Add(GetDefaultServices(configuration));
+            services.AddHosting(configuration);
             services.AddSingleton<IServiceManifest>(sp => new HostingManifest(fallbackServices));
             services.AddInstance<IConfigureHostingEnvironment>(new ConfigureHostingEnvironment(configuration));
             return services;
         }
 
-        // REVIEW: make this private?
-        public static IEnumerable<IServiceDescriptor> GetDefaultServices(IConfiguration configuration = null)
+        // REVIEW: Logging doesn't depend on DI, where should this live?
+        public static IServiceCollection AddLogging(this IServiceCollection services, IConfiguration config = null)
+        {
+            var describe = new ServiceDescriber(config ?? new Configuration());
+            services.TryAdd(describe.Singleton<ILoggerFactory, LoggerFactory>());
+            return services;
+        }
+
+        public static IServiceCollection AddHosting(this IServiceCollection services, IConfiguration configuration = null)
         {
             configuration = configuration ?? new Configuration();
             var describer = new ServiceDescriber(configuration);
 
-            yield return describer.Transient<IHostingEngine, HostingEngine>();
-            yield return describer.Transient<IServerManager, ServerManager>();
+            services.TryAdd(describer.Transient<IHostingEngine, HostingEngine>());
+            services.TryAdd(describer.Transient<IServerManager, ServerManager>());
 
-            yield return describer.Transient<IStartupManager, StartupManager>();
-            yield return describer.Transient<IStartupLoaderProvider, StartupLoaderProvider>();
+            services.TryAdd(describer.Transient<IStartupManager, StartupManager>());
+            services.TryAdd(describer.Transient<IStartupLoaderProvider, StartupLoaderProvider>());
 
-            yield return describer.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>();
-            yield return describer.Transient<IHttpContextFactory, HttpContextFactory>();
+            services.TryAdd(describer.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
+            services.TryAdd(describer.Transient<IHttpContextFactory, HttpContextFactory>());
 
-            yield return describer.Instance<IApplicationLifetime>(new ApplicationLifetime());
+            services.TryAdd(describer.Instance<IApplicationLifetime>(new ApplicationLifetime()));
 
-            // These three services as exported in the manifest
-            yield return describer.Singleton<ITypeActivator, TypeActivator>();
-            yield return describer.Singleton<IHostingEnvironment, HostingEnvironment>();
+            services.AddTypeActivator(configuration);
             // TODO: Do we expect this to be provide by the runtime eventually?
-            yield return describer.Singleton<ILoggerFactory, LoggerFactory>();
+            services.AddLogging(configuration);
+            // REVIEW: okay to use existing hosting environment/httpcontext if specified?
+            services.TryAdd(describer.Singleton<IHostingEnvironment, HostingEnvironment>());
 
-            // TODO: Remove the below services and push the responsibility to frameworks to add
+            // TODO: Remove this once we have IHttpContextAccessor
+            services.AddContextAccessor(configuration);
 
-            yield return describer.Scoped(typeof(IContextAccessor<>), typeof(ContextAccessor<>));
-
-            foreach (var service in OptionsServices.GetDefaultServices())
-            {
-                yield return service;
-            }
+            return services;
         }
 
+        // Manifest exposes the fallback manifest in addition to ITypeActivator, IHostingEnvironment, and ILoggerFactory
         private class HostingManifest : IServiceManifest
         {
             public HostingManifest(IServiceProvider fallback)
