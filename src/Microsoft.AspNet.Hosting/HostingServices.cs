@@ -46,14 +46,13 @@ namespace Microsoft.AspNet.Hosting
         // REVIEW: Logging doesn't depend on DI, where should this live?
         public static IServiceCollection AddLogging(this IServiceCollection services, IConfiguration config = null)
         {
-            var describe = new ServiceDescriber(config ?? new Configuration());
+            var describe = new ServiceDescriber(config);
             services.TryAdd(describe.Singleton<ILoggerFactory, LoggerFactory>());
             return services;
         }
 
         public static IServiceCollection AddHosting(this IServiceCollection services, IConfiguration configuration = null)
         {
-            configuration = configuration ?? new Configuration();
             var describer = new ServiceDescriber(configuration);
 
             services.TryAdd(describer.Transient<IHostingEngine, HostingEngine>());
