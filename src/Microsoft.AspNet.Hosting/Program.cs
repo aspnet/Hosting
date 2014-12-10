@@ -38,6 +38,7 @@ namespace Microsoft.AspNet.Hosting
             var serverShutdown = host.Start();
             var loggerFactory = host.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var appShutdownService = host.ApplicationServices.GetRequiredService<IApplicationShutdown>();
+            var hostingKeepAlive = host.ApplicationServices.GetRequiredService<IHostingKeepAlive>();
             var shutdownHandle = new ManualResetEvent(false);
 
             appShutdownService.ShutdownRequested.Register(() =>
@@ -56,8 +57,7 @@ namespace Microsoft.AspNet.Hosting
 
             var ignored = Task.Run(() =>
             {
-                Console.WriteLine("Started");
-                Console.ReadLine();
+                hostingKeepAlive.Hold();
                 appShutdownService.RequestShutdown();
             });
 
