@@ -16,7 +16,7 @@ namespace Microsoft.AspNet.RequestContainer
         public RequestServicesContainer(
             HttpContext context,
             IServiceScopeFactory scopeFactory,
-            IContextAccessor<HttpContext> appContextAccessor,
+            IHttpContextAccessor appContextAccessor,
             IServiceProvider appServiceProvider)
         {
             if (scopeFactory == null)
@@ -40,7 +40,7 @@ namespace Microsoft.AspNet.RequestContainer
 
             // Begin the scope
             Scope = scopeFactory.CreateScope();
-            ScopeContextAccessor = Scope.ServiceProvider.GetRequiredService<IContextAccessor<HttpContext>>();
+            ScopeContextAccessor = Scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
 
             Context.ApplicationServices = appServiceProvider;
             Context.RequestServices = Scope.ServiceProvider;
@@ -55,8 +55,8 @@ namespace Microsoft.AspNet.RequestContainer
         private HttpContext PriorAppHttpContext { get; set; }
         private HttpContext PriorScopeHttpContext { get; set; }
         private IServiceScope Scope { get; set; }
-        private IContextAccessor<HttpContext> ScopeContextAccessor { get; set; }
-        private IContextAccessor<HttpContext> AppContextAccessor { get; set; }
+        private IHttpContextAccessor ScopeContextAccessor { get; set; }
+        private IHttpContextAccessor AppContextAccessor { get; set; }
 
         private const string LogicalDataKey = "__HttpContext_Current__";
         private static HttpContext AccessRootHttpContext()
@@ -97,10 +97,10 @@ namespace Microsoft.AspNet.RequestContainer
 
             // Matches constructor of RequestContainer
             var rootServiceProvider = serviceProvider.GetRequiredService<IServiceProvider>();
-            var rootHttpContextAccessor = serviceProvider.GetRequiredService<IContextAccessor<HttpContext>>();
+            var rootHttpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             var rootServiceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
-            rootHttpContextAccessor.SetContextSource(AccessRootHttpContext, ExchangeRootHttpContext);
+            rootHttpContextAccessor.SetSource(AccessRootHttpContext, ExchangeRootHttpContext);
 
             // Pre Scope setup
             var priorApplicationServices = serviceProvider;
@@ -115,7 +115,7 @@ namespace Microsoft.AspNet.RequestContainer
             {
                 appServiceProvider = priorApplicationServices;
                 appServiceScopeFactory = priorApplicationServices.GetRequiredService<IServiceScopeFactory>();
-                appHttpContextAccessor = priorApplicationServices.GetRequiredService<IContextAccessor<HttpContext>>();
+                appHttpContextAccessor = priorApplicationServices.GetRequiredService<IHttpContextAccessor>();
             }
 
             // Creates the scope and does the service swaps

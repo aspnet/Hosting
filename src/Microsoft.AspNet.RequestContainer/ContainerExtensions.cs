@@ -51,7 +51,6 @@ namespace Microsoft.AspNet.Builder
             // TODO: remove this once IHttpContextAccessor service is added
             serviceCollection.AddContextAccessor();
 
-            serviceCollection.Add(OptionsServices.GetDefaultServices());
             builder.ApplicationServices = configureServices(serviceCollection);
 
             return builder.UseMiddleware<ContainerMiddleware>();
