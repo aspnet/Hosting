@@ -4,10 +4,9 @@
 using System;
 using Microsoft.AspNet.Http;
 
-// Where should this live
-namespace Microsoft.AspNet.RequestContainer
+namespace Microsoft.AspNet.Hosting
 {
-    public class HttpContextAccessor
+    public class HttpContextAccessor : IHttpContextAccessor
     {
         private ContextSource _source;
         private HttpContext _value;
@@ -36,7 +35,7 @@ namespace Microsoft.AspNet.RequestContainer
             return prior;
         }
 
-        public IDisposable SeHttpContextSource(Func<HttpContext> access, Func<HttpContext, HttpContext> exchange)
+        public IDisposable SetSource(Func<HttpContext> access, Func<HttpContext, HttpContext> exchange)
         {
             var prior = _source;
             _source = new ContextSource(access, exchange);

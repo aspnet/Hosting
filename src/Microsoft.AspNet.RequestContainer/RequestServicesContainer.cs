@@ -8,6 +8,7 @@ using System.Runtime.Remoting;
 #endif
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.AspNet.Hosting;
 
 namespace Microsoft.AspNet.RequestContainer
 {

@@ -4,7 +4,7 @@
 using System;
 using Microsoft.AspNet.Http;
 
-namespace Microsoft.AspNet.RequestContainer
+namespace Microsoft.AspNet.Hosting
 {
     public interface IHttpContextAccessor
     {
