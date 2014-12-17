@@ -3,15 +3,12 @@
 
 using System;
 using Microsoft.AspNet.Http;
+using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public interface IHttpContextAccessor
+    public interface IHttpContextAccessor : IContextAccessor<HttpContext>
     {
-        HttpContext Value { get; }
-
-        HttpContext SetValue(HttpContext value);
-
         IDisposable SetSource(Func<HttpContext> access, Func<HttpContext, HttpContext> exchange);
     }
 }
