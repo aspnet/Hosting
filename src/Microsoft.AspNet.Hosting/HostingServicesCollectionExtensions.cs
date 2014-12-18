@@ -35,7 +35,6 @@ namespace Microsoft.Framework.DependencyInjection
 
             services.TryAdd(describer.Instance<IApplicationLifetime>(new ApplicationLifetime()));
 
-            services.AddTypeActivator(configuration);
             // TODO: Do we expect this to be provide by the runtime eventually?
             services.AddLogging(configuration);
             services.TryAdd(describer.Singleton<IHostingEnvironment, HostingEnvironment>());

@@ -89,7 +89,6 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData(typeof(IApplicationBuilderFactory))]
         [InlineData(typeof(IStartupLoaderProvider))]
         [InlineData(typeof(IHttpContextFactory))]
-        [InlineData(typeof(ITypeActivator))]
         [InlineData(typeof(IApplicationLifetime))]
         [InlineData(typeof(ILoggerFactory))]
         [InlineData(typeof(IHttpContextAccessor))]

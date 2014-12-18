@@ -39,13 +39,13 @@ namespace Microsoft.AspNet.Hosting
             return services;
         }
 
-        // Manifest exposes the fallback manifest in addition to ITypeActivator, IHostingEnvironment, and ILoggerFactory
+        // Manifest exposes the fallback manifest in addition to IHostingEnvironment, ILoggerFactory and IHttpContextAccessor
         private class HostingManifest : IServiceManifest
         {
             public HostingManifest(IServiceProvider fallback)
             {
                 var manifest = fallback.GetRequiredService<IServiceManifest>();
-                Services = new Type[] { typeof(ITypeActivator), typeof(IHostingEnvironment), typeof(ILoggerFactory), typeof(IHttpContextAccessor) }
+                Services = new Type[] { typeof(IHostingEnvironment), typeof(ILoggerFactory), typeof(IHttpContextAccessor) }
                     .Concat(manifest.Services).Distinct();
             }
 
