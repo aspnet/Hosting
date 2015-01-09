@@ -2,73 +2,72 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+#if ASPNET50
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting;
+#elif ASPNETCORE50
+using System.Threading;
+#endif
 using Microsoft.AspNet.Http;
 
 namespace Microsoft.AspNet.Hosting
 {
     public class HttpContextAccessor : IHttpContextAccessor
     {
-        private ContextSource _source;
         private HttpContext _value;
 
-        public HttpContextAccessor()
-        {
-            _source = new ContextSource();
-        }
+        public bool IsRootContext { get; set; }
 
         public HttpContext Value
         {
             get
             {
-                return _source.Access != null ? _source.Access() : _value;
+                return IsRootContext ? AccessRootHttpContext() : _value;
             }
         }
 
         public HttpContext SetValue(HttpContext value)
         {
-            if (_source.Exchange != null)
+            if (IsRootContext)
             {
-                return _source.Exchange(value);
+                return ExchangeRootHttpContext(value);
             }
             var prior = _value;
             _value = value;
             return prior;
         }
 
-        public IDisposable SetSource(Func<HttpContext> access, Func<HttpContext, HttpContext> exchange)
+#if ASPNET50
+        private const string LogicalDataKey = "__HttpContext_Current__";
+#elif ASPNETCORE50
+        private static AsyncLocal<HttpContext> _httpContextCurrent = new AsyncLocal<HttpContext>();
+#endif
+
+        private static HttpContext AccessRootHttpContext()
         {
-            var prior = _source;
-            _source = new ContextSource(access, exchange);
-            return new Disposable(this, prior);
+#if ASPNET50
+            var handle = CallContext.LogicalGetData(LogicalDataKey) as ObjectHandle;
+            return handle != null ? handle.Unwrap() as HttpContext : null;
+#elif ASPNETCORE50
+            return _httpContextCurrent.Value;
+#else
+            throw new Exception("TODO: CallContext not available");
+#endif
         }
 
-        struct ContextSource
+        private static HttpContext ExchangeRootHttpContext(HttpContext httpContext)
         {
-            public ContextSource(Func<HttpContext> access, Func<HttpContext, HttpContext> exchange)
-            {
-                Access = access;
-                Exchange = exchange;
-            }
-
-            public readonly Func<HttpContext> Access;
-            public readonly Func<HttpContext, HttpContext> Exchange;
-        }
-
-        class Disposable : IDisposable
-        {
-            private readonly HttpContextAccessor _contextAccessor;
-            private readonly ContextSource _source;
-
-            public Disposable(HttpContextAccessor contextAccessor, ContextSource source)
-            {
-                _contextAccessor = contextAccessor;
-                _source = source;
-            }
-
-            public void Dispose()
-            {
-                _contextAccessor._source = _source;
-            }
+#if ASPNET50
+            var prior = CallContext.LogicalGetData(LogicalDataKey) as ObjectHandle;
+            CallContext.LogicalSetData(LogicalDataKey, new ObjectHandle(httpContext));
+            return prior != null ? prior.Unwrap() as HttpContext : null;
+#elif ASPNETCORE50
+            var prior = _httpContextCurrent.Value;
+            _httpContextCurrent.Value = httpContext;
+            return prior;
+#else
+            return null;
+#endif
         }
     }
 }

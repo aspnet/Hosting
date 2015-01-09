@@ -38,7 +38,6 @@ namespace Microsoft.Framework.DependencyInjection
             services.AddTypeActivator(configuration);
             // TODO: Do we expect this to be provide by the runtime eventually?
             services.AddLogging(configuration);
-            // REVIEW: okay to use existing hosting environment/httpcontext if specified?
             services.TryAdd(describer.Singleton<IHostingEnvironment, HostingEnvironment>());
             services.TryAdd(describer.Scoped<IHttpContextAccessor, HttpContextAccessor>());
 
