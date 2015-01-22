@@ -53,6 +53,38 @@ namespace Microsoft.AspNet.TestHost
             Assert.Equal("HasContext:True", result);
         }
 
+        public class ContextHolder
+        {
+            public ContextHolder(IHttpContextAccessor accessor)
+            {
+                Accessor = accessor;
+            }
+
+            public IHttpContextAccessor Accessor { get; set; }
+        }
+
+        [Fact]
+        public async Task CanAddNewHostServices()
+        {
+            var services = HostingServices.Create().BuildServiceProvider();
+            var newHostServices = new ServiceCollection();
+            newHostServices.AddSingleton<ContextHolder>();
+            TestServer server = TestServer.Create(services, app =>
+            {
+                var a = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
+
+                app.Run(context =>
+                {
+                    var b = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
+                    var accessor = app.ApplicationServices.GetRequiredService<ContextHolder>();
+                    return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.Value != null));
+                });
+            }, newHostServices);
+
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("HasContext:True", result);
+        }
+
         [Fact]
         public async Task CreateInvokesApp()
         {

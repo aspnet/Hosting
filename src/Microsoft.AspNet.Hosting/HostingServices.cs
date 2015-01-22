@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.DependencyInjection.Fallback;
+using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
@@ -14,9 +16,9 @@ namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
-        private static IServiceCollection Import(IServiceProvider fallbackProvider)
+        private static IServiceCollection Import(IServiceProvider fallbackProvider, IServiceCollection additionalHostServices)
         {
-            var services = new ServiceCollection();
+            var services = additionalHostServices ?? new ServiceCollection();
             var manifest = fallbackProvider.GetRequiredService<IServiceManifest>();
             foreach (var service in manifest.Services)
             {
@@ -25,24 +27,25 @@ namespace Microsoft.AspNet.Hosting
             return services;
         }
 
-        public static IServiceCollection Create(IConfiguration configuration = null)
+        // REVIEW: should additionalHostServices be an IServiceProvider??
+        public static IServiceCollection Create(IConfiguration configuration = null, IServiceCollection additionalHostServices = null)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configuration);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configuration, additionalHostServices);
         }
 
-        public static IServiceCollection Create(IServiceProvider fallbackServices, IConfiguration configuration = null)
+        public static IServiceCollection Create(IServiceProvider fallbackServices, IConfiguration configuration = null, IServiceCollection additionalHostServices = null)
         {
             configuration = configuration ?? new Configuration();
-            var services = Import(fallbackServices);
+            var services = Import(fallbackServices, additionalHostServices);
             services.AddHosting(configuration);
-            services.AddSingleton<IServiceManifest>(sp => new HostingManifest(fallbackServices));
+            services.AddSingleton<IServiceManifest>(sp => new HostingManifest(fallbackServices, additionalHostServices));
             return services;
         }
 
         // Manifest exposes the fallback manifest in addition to ITypeActivator, IHostingEnvironment, and ILoggerFactory
         private class HostingManifest : IServiceManifest
         {
-            public HostingManifest(IServiceProvider fallback)
+            public HostingManifest(IServiceProvider fallback, IServiceCollection additionalHostServices = null)
             {
                 var manifest = fallback.GetRequiredService<IServiceManifest>();
                 Services = new Type[] {
@@ -51,7 +54,12 @@ namespace Microsoft.AspNet.Hosting
                     typeof(ILoggerFactory),
                     typeof(IHttpContextAccessor),
                     typeof(IApplicationLifetime)
-                }.Concat(manifest.Services).Distinct();
+                }.Concat(manifest.Services);
+                if (additionalHostServices != null)
+                {
+                    Services = Services.Concat(additionalHostServices.Select(s => s.ServiceType));
+                }
+                Services = Services.Distinct();
             }
 
             public IEnumerable<Type> Services { get; private set; }
