@@ -65,14 +65,16 @@ namespace Microsoft.AspNet.Hosting.Tests
                     typeof(IFakeService),
                 }));
 
-            var additionalHostServices = new ServiceCollection();
             var instance = new FakeService();
             var factoryInstance = new FakeFactoryService(instance);
-            additionalHostServices.AddSingleton<IFakeSingletonService, FakeService>();
-            additionalHostServices.AddInstance<IFakeServiceInstance>(instance);
-            additionalHostServices.AddSingleton<IFactoryService>(serviceProvider => factoryInstance);
 
-            var services = HostingServices.Create(fallbackServices.BuildServiceProvider(), /*config*/ null, additionalHostServices);
+            var services = HostingServices.Create(fallbackServices.BuildServiceProvider(), /*config*/ null,
+                additionalHostServices =>
+                {
+                    additionalHostServices.AddSingleton<IFakeSingletonService, FakeService>();
+                    additionalHostServices.AddInstance<IFakeServiceInstance>(instance);
+                    additionalHostServices.AddSingleton<IFactoryService>(serviceProvider => factoryInstance);
+                });
 
             // Act
             var provider = services.BuildServiceProvider();
@@ -102,10 +104,8 @@ namespace Microsoft.AspNet.Hosting.Tests
                     typeof(IFakeService),
                 }));
 
-            var additionalHostServices = new ServiceCollection();
-            additionalHostServices.AddSingleton<IFakeService, FakeService>(); // override fallback service
-
-            var services = HostingServices.Create(fallbackServices.BuildServiceProvider(), /*config*/ null, additionalHostServices);
+            var services = HostingServices.Create(fallbackServices.BuildServiceProvider(), /*config*/ null, 
+                additionalHostServices => additionalHostServices.AddSingleton<IFakeService, FakeService>());
 
             // Act
             var provider = services.BuildServiceProvider();
