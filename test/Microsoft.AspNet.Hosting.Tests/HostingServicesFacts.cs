@@ -81,6 +81,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var singleton = provider.GetRequiredService<IFakeSingletonService>();
             var transient = provider.GetRequiredService<IFakeService>();
             var factory = provider.GetRequiredService<IFactoryService>();
+            var manifest = provider.GetRequiredService<IServiceManifest>();
 
             // Assert
             Assert.Same(singleton, provider.GetRequiredService<IFakeSingletonService>());
@@ -90,6 +91,9 @@ namespace Microsoft.AspNet.Hosting.Tests
             Assert.Same(factory.FakeService, instance);
             Assert.Null(provider.GetService<INonexistentService>());
             Assert.Null(provider.GetService<IFakeScopedService>()); // Make sure we don't leak non manifest services
+            Assert.Contains(typeof(IFakeSingletonService), manifest.Services);
+            Assert.Contains(typeof(IFakeServiceInstance), manifest.Services);
+            Assert.Contains(typeof(IFactoryService), manifest.Services);
         }
 
         [Fact]
