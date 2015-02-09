@@ -15,13 +15,20 @@ namespace Microsoft.AspNet.Hosting
 {
     public static class HostingServices
     {
-        private static void Import(IServiceCollection services, IServiceProvider fallbackProvider)
+        private static IServiceCollection Import(IServiceProvider fallbackProvider, Action<IServiceCollection> configureHostServices)
         {
+            var services = new ServiceCollection();
+            if (configureHostServices != null)
+            {
+                configureHostServices(services);
+            }
             var manifest = fallbackProvider.GetRequiredService<IServiceManifest>();
             foreach (var service in manifest.Services)
             {
                 services.AddTransient(service, sp => fallbackProvider.GetService(service));
             }
+            services.AddSingleton<IServiceManifest>(sp => new HostingManifest(services));
+            return services;
         }
 
         public static IServiceCollection Create(IConfiguration configuration = null, Action<IServiceCollection> configureHostServices = null)
@@ -31,24 +38,15 @@ namespace Microsoft.AspNet.Hosting
 
         public static IServiceCollection Create(IServiceProvider fallbackServices, IConfiguration configuration = null, Action<IServiceCollection> configureHostServices = null)
         {
-            IEnumerable<Type> additionalHostServices = null;
-            var services = new ServiceCollection();
-            if (configureHostServices != null)
-            {
-                configureHostServices(services);
-                additionalHostServices = services.Select(s => s.ServiceType);
-            }
-            Import(services, fallbackServices);
-            configuration = configuration ?? new Configuration();
+            var services = Import(fallbackServices, configureHostServices);
             services.AddHosting(configuration);
-            services.AddSingleton<IServiceManifest>(sp => new HostingManifest(fallbackServices, additionalHostServices));
             return services;
         }
 
         // Manifest exposes the fallback manifest in addition to ITypeActivator, IHostingEnvironment, and ILoggerFactory
         private class HostingManifest : IServiceManifest
         {
-            public HostingManifest(IServiceProvider fallback, IEnumerable<Type> additionalHostServices = null)
+            public HostingManifest(IServiceCollection hostServices)
             {
                 var manifest = fallback.GetRequiredService<IServiceManifest>();
                 Services = new Type[] {
@@ -57,12 +55,7 @@ namespace Microsoft.AspNet.Hosting
                     typeof(ILoggerFactory),
                     typeof(IHttpContextAccessor),
                     typeof(IApplicationLifetime)
-                }.Concat(manifest.Services);
-                if (additionalHostServices != null)
-                {
-                    Services = Services.Concat(additionalHostServices);
-                }
-                Services = Services.Distinct();
+                }.Concat(hostServices.Select(s => s.ServiceType)).Distinct();
             }
 
             public IEnumerable<Type> Services { get; private set; }
