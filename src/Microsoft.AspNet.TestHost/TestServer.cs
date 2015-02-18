@@ -45,12 +45,22 @@ namespace Microsoft.AspNet.TestHost
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
 
-        public static TestServer Create(Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices = null)
+        public static TestServer Create(Action<IApplicationBuilder> app)
+        {
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureHostServices: null);
+        }
+
+        public static TestServer Create(Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices)
         {
             return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureHostServices);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices = null)
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
+        {
+            return Create(serviceProvider, app, configureHostServices: null);
+        }
+
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices)
         {
             var appServices = HostingServices.Create(serviceProvider, configureHostServices).BuildServiceProvider();
             var config = new Configuration();
