@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
@@ -31,12 +30,32 @@ namespace Microsoft.AspNet.Hosting
             return services;
         }
 
-        public static IServiceCollection Create(IConfiguration configuration = null, Action<IServiceCollection> configureHostServices = null)
+        public static IServiceCollection Create()
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configuration, configureHostServices);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices: null, configuration: null);
         }
 
-        public static IServiceCollection Create(IServiceProvider fallbackServices, IConfiguration configuration = null, Action<IServiceCollection> configureHostServices = null)
+        public static IServiceCollection Create(IServiceProvider fallbackServices)
+        {
+            return Create(fallbackServices, configureHostServices: null, configuration: null);
+        }
+
+        public static IServiceCollection Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureHostServices)
+        {
+            return Create(fallbackServices, configureHostServices, configuration: null);
+        }
+
+        public static IServiceCollection Create(Action<IServiceCollection> configureHostServices, IConfiguration configuration)
+        {
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices, configuration);
+        }
+
+        public static IServiceCollection Create(IServiceProvider fallbackServices, IConfiguration configuration)
+        {
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices: null, configuration: configuration);
+        }
+
+        public static IServiceCollection Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureHostServices, IConfiguration configuration)
         {
             var services = Import(fallbackServices, configureHostServices);
             services.AddHosting(configuration);

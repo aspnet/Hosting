@@ -52,7 +52,7 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices = null)
         {
-            var appServices = HostingServices.Create(serviceProvider, /*config*/ null, configureHostServices).BuildServiceProvider();
+            var appServices = HostingServices.Create(serviceProvider, configureHostServices).BuildServiceProvider();
             var config = new Configuration();
             return new TestServer(config, appServices, app);
         }
