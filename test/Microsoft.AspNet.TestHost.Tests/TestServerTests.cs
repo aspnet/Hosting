@@ -73,7 +73,7 @@ namespace Microsoft.AspNet.TestHost
                 {
                     var b = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
                     var accessor = app.ApplicationServices.GetRequiredService<ContextHolder>();
-                    return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.Value != null));
+                    return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.HttpContext != null));
                 });
             }, newHostServices => newHostServices.AddSingleton<ContextHolder>());
 

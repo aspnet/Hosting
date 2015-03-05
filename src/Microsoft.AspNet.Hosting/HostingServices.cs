@@ -67,7 +67,6 @@ namespace Microsoft.AspNet.Hosting
         {
             public HostingManifest(IServiceCollection hostServices)
             {
-                var manifest = fallback.GetRequiredService<IServiceManifest>();
                 Services = new Type[] {
                     typeof(ITypeActivator),
                     typeof(IHostingEnvironment),
