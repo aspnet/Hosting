@@ -10,6 +10,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Logging;
 using Xunit;
 
 namespace Microsoft.AspNet.TestHost
@@ -34,6 +35,22 @@ namespace Microsoft.AspNet.TestHost
 
             // Act & Assert
             Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Startup().Configuration));
+        }
+
+        [Fact]
+        public async Task CanAccessLogger()
+        {
+            TestServer server = TestServer.Create(app =>
+            {
+                app.Run(context =>
+                {
+                    var logger = app.ApplicationServices.GetRequiredService<ILogger<HttpContext>>();
+                    return context.Response.WriteAsync("FoundLogger:" + (logger != null));
+                });
+            });
+
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("FoundLogger:True", result);
         }
 
         [Fact]
