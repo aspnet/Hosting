@@ -11,21 +11,6 @@ namespace Microsoft.AspNet.Builder
 {
     public static class ContainerExtensions
     {
-        public static IApplicationBuilder UseRequestServices(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<ContainerMiddleware>();
-        }
-
-        // Review: what do we use these for?
-
-        public static IApplicationBuilder UseRequestServices(this IApplicationBuilder builder, IServiceProvider applicationServices)
-        {
-            // REVIEW: should this be doing fallback?
-            builder.ApplicationServices = applicationServices;
-
-            return builder.UseMiddleware<ContainerMiddleware>();
-        }
-
         // Note: Manifests are lost after UseServices, services are flattened into ApplicationServices
 
         public static IApplicationBuilder UseServices(this IApplicationBuilder builder, IServiceCollection applicationServices)

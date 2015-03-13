@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -35,6 +36,21 @@ namespace Microsoft.AspNet.TestHost
 
             // Act & Assert
             Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Startup().Configuration));
+        }
+
+        [Fact]
+        public async Task RequestServicesAutoCreated()
+        {
+            TestServer server = TestServer.Create(app =>
+            {
+                app.Run(context =>
+                {
+                    return context.Response.WriteAsync("RequestServices:" + (context.RequestServices != null));
+                });
+            });
+
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("RequestServices:True", result);
         }
 
         [Fact]
