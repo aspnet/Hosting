@@ -135,6 +135,23 @@ namespace Microsoft.AspNet.Hosting.Tests
         }
 
         [Fact]
+        public void StartupClassWithConfigureServicesThatReturnsNullUsesExistingAppServices()
+        {
+            var serviceCollection = HostingServices.Create();
+            var services = serviceCollection.BuildServiceProvider();
+            var loader = services.GetRequiredService<IStartupLoader>();
+
+            var app = new ApplicationBuilder(services);
+
+            var diagnosticMessages = new List<string>();
+            var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithNullConfigureServices", diagnosticMessages);
+
+            startup.Invoke(app);
+
+            Assert.Same(services, app.ApplicationServices);
+        }
+
+        [Fact]
         public void StartupClassWithConfigureServicesShouldMakeServiceAvailableInConfigure()
         {
             var serviceCollection = HostingServices.Create();

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
@@ -96,7 +97,11 @@ namespace Microsoft.AspNet.Hosting
 
             EnsureApplicationStartup(context);
 
+            // This will ensure RequestServices are populated
+            context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
+
             context.ApplicationStartup.Invoke(context.Builder);
+
             context.ApplicationDelegate = context.Builder.Build();
         }
 
