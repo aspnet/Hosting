@@ -10,6 +10,7 @@ using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
+using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -21,22 +22,27 @@ namespace Microsoft.AspNet.Hosting
         private readonly IHttpContextFactory _httpContextFactory;
         private readonly IHttpContextAccessor _contextAccessor;
 
+        // Move everything except startupLoader to get them after configureServices
         public HostingEngine(
-            IServerLoader serverManager,
-            IStartupLoader startupLoader,
-            IApplicationBuilderFactory builderFactory,
-            IHttpContextFactory httpContextFactory,
-            IHttpContextAccessor contextAccessor)
+            //IServerLoader serverManager,
+            IStartupLoader startupLoader
+            //,
+            //IApplicationBuilderFactory builderFactory,
+            //IHttpContextFactory httpContextFactory,
+            //IHttpContextAccessor contextAccessor
+            )
         {
-            _serverManager = serverManager;
             _startupLoader = startupLoader;
-            _builderFactory = builderFactory;
-            _httpContextFactory = httpContextFactory;
-            _contextAccessor = contextAccessor;
+            //_serverManager = serverManager;
+            //_builderFactory = builderFactory;
+            //_httpContextFactory = httpContextFactory;
+            //_contextAccessor = contextAccessor;
         }
 
         public IDisposable Start(HostingContext context)
         {
+            EnsureApplicationStartup(context);
+
             EnsureBuilder(context);
             EnsureServerFactory(context);
             InitalizeServerFactory(context);
@@ -88,6 +94,17 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
+        private void EnsureHostingServices(HostingContext context)
+        {
+            if (context.HostingServices != null)
+            {
+                return;
+            }
+            var services = new ServiceCollection();
+            services.AddHosting(context.Configuration);
+            context.HostingServices = services;
+        }
+
         private void EnsureApplicationDelegate(HostingContext context)
         {
             if (context.ApplicationDelegate != null)
@@ -100,9 +117,16 @@ namespace Microsoft.AspNet.Hosting
             // This will ensure RequestServices are populated
             context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
 
-            context.ApplicationStartup.Invoke(context.Builder);
+            EnsureHostingServices(context);
+            context.Builder.ApplicationServices = context.ApplicationStartup.ConfigureServices(context.Builder, context.HostingServices);
+            context.ApplicationStartup.Configure(context.Builder);
 
             context.ApplicationDelegate = context.Builder.Build();
+        }
+
+        private void InvokeApplicationStartupFilter(HostingContext context)
+        {
+
         }
 
         private void EnsureApplicationStartup(HostingContext context)

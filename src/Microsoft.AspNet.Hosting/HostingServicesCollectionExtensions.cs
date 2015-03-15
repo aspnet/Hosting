@@ -18,13 +18,13 @@ namespace Microsoft.Framework.DependencyInjection
 
         public static IServiceCollection AddHosting(this IServiceCollection services, IConfiguration configuration)
         {
-            services.TryAdd(ServiceDescriptor.Transient<IHostingEngine, HostingEngine>());
-            services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
+            //services.TryAdd(ServiceDescriptor.Transient<IHostingEngine, HostingEngine>());
+            //services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
 
-            services.TryAdd(ServiceDescriptor.Transient<IStartupLoader, StartupLoader>());
+            //services.TryAdd(ServiceDescriptor.Transient<IStartupLoader, StartupLoader>());
 
-            services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
-            services.TryAdd(ServiceDescriptor.Transient<IHttpContextFactory, HttpContextFactory>());
+            //services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
+            //services.TryAdd(ServiceDescriptor.Transient<IHttpContextFactory, HttpContextFactory>());
 
             services.TryAdd(ServiceDescriptor.Instance<IApplicationLifetime>(new ApplicationLifetime()));
 

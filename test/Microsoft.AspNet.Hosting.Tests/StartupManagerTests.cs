@@ -29,7 +29,9 @@ namespace Microsoft.AspNet.Hosting.Tests
             var diagnosticMessages = new List<string>();
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithServices", diagnosticMessages);
 
-            startup.Invoke(new ApplicationBuilder(services));
+            var app = new ApplicationBuilder(services);
+            app.ApplicationServices = startup.ConfigureServices(app, null);
+            startup.Configure(app);
 
             Assert.Equal(2, _configurationMethodCalledList.Count);
         }
@@ -52,8 +54,8 @@ namespace Microsoft.AspNet.Hosting.Tests
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", environment ?? "", diagnosticMesssages);
 
             var app = new ApplicationBuilder(services);
-
-            startup.Invoke(app);
+            app.ApplicationServices = startup.ConfigureServices(app, null);
+            startup.Configure(app);
 
             var options = app.ApplicationServices.GetRequiredService<IOptions<FakeOptions>>().Options;
             Assert.NotNull(options);
@@ -73,8 +75,8 @@ namespace Microsoft.AspNet.Hosting.Tests
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", env, diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-
-            startup.Invoke(app);
+            app.ApplicationServices = startup.ConfigureServices(app, null);
+            startup.Configure(app);
 
             Assert.Equal(services, app.ApplicationServices);
         }
@@ -91,8 +93,8 @@ namespace Microsoft.AspNet.Hosting.Tests
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", "UseServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-
-            startup.Invoke(app);
+            app.ApplicationServices = startup.ConfigureServices(app, null);
+            startup.Configure(app);
 
             Assert.NotNull(app.ApplicationServices.GetRequiredService<FakeService>());
             Assert.Null(app.ApplicationServices.GetService<IFakeService>());
@@ -126,10 +128,9 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithConfigureServicesNotResolved", diagnosticMessages);
 
-
             var app = new ApplicationBuilder(services);
 
-            var ex = Assert.Throws<Exception>(() => startup.Invoke(app));
+            var ex = Assert.Throws<Exception>(() => startup.ConfigureServices(app, null));
 
             Assert.Equal("Could not resolve a service of type 'System.Int32' for the parameter 'notAService' of method 'Configure' on type 'Microsoft.AspNet.Hosting.Fakes.StartupWithConfigureServicesNotResolved'.", ex.Message);
         }
@@ -141,12 +142,12 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
             var loader = services.GetRequiredService<IStartupLoader>();
 
-            var app = new ApplicationBuilder(services);
-
             var diagnosticMessages = new List<string>();
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithNullConfigureServices", diagnosticMessages);
 
-            startup.Invoke(app);
+            var app = new ApplicationBuilder(services);
+            app.ApplicationServices = startup.ConfigureServices(app, null);
+            startup.Configure(app);
 
             Assert.Same(services, app.ApplicationServices);
         }
@@ -158,12 +159,12 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
             var loader = services.GetRequiredService<IStartupLoader>();
 
-            var app = new ApplicationBuilder(services);
-
             var diagnosticMessages = new List<string>();
             var startup = loader.LoadStartup("Microsoft.AspNet.Hosting.Tests", "WithConfigureServices", diagnosticMessages);
 
-            startup.Invoke(app);
+            var app = new ApplicationBuilder(services);
+            app.ApplicationServices = startup.ConfigureServices(app, null);
+            startup.Configure(app);
 
             var foo = app.ApplicationServices.GetRequiredService<StartupWithConfigureServices.IFoo>();
             Assert.True(foo.Invoked);

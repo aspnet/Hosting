@@ -8,6 +8,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -36,7 +37,8 @@ namespace Microsoft.AspNet.TestHost
                 ApplicationLifetime = applicationLifetime,
                 Configuration = config,
                 ServerFactory = this,
-                ApplicationStartup = appStartup
+                // REVIEW: fix this stuff
+                ApplicationStartup = new ApplicationStartup(new ConfigureDelegate(null/*appStartup.Method*/), configureServices: null, startupInstance: null)
             };
 
             var engine = serviceProvider.GetRequiredService<IHostingEngine>();

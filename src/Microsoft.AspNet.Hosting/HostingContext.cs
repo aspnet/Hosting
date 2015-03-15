@@ -4,7 +4,9 @@
 using System;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -17,8 +19,10 @@ namespace Microsoft.AspNet.Hosting
 
         public string ApplicationName { get; set; }
         public string EnvironmentName { get; set; }
-        public Action<IApplicationBuilder> ApplicationStartup { get; set; }
+        public ApplicationStartup ApplicationStartup { get; set; }
         public RequestDelegate ApplicationDelegate { get; set; }
+
+        public IServiceCollection HostingServices { get; set; }
 
         public string ServerFactoryLocation { get; set; }
         public IServerFactory ServerFactory { get; set; }

@@ -20,75 +20,75 @@ namespace Microsoft.AspNet.Hosting.Startup
             _services = services;
         }
 
-        private MethodInfo FindMethod(Type startupType, string methodName, string environmentName, Type returnType = null, bool required = true)
-        {
-            var methodNameWithEnv = string.Format(CultureInfo.InvariantCulture, methodName, environmentName);
-            var methodNameWithNoEnv = string.Format(CultureInfo.InvariantCulture, methodName, "");
-            var methodInfo = startupType.GetMethod(methodNameWithEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
-                ?? startupType.GetMethod(methodNameWithNoEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-            if (methodInfo == null)
-            {
-                if (required)
-                {
-                    throw new Exception(string.Format("A method named '{0}' or '{1}' in the type '{2}' could not be found.",
-                        methodNameWithEnv,
-                        methodNameWithNoEnv,
-                        startupType.FullName));
+        //private MethodInfo FindMethod(Type startupType, string methodName, string environmentName, Type returnType = null, bool required = true)
+        //{
+        //    var methodNameWithEnv = string.Format(CultureInfo.InvariantCulture, methodName, environmentName);
+        //    var methodNameWithNoEnv = string.Format(CultureInfo.InvariantCulture, methodName, "");
+        //    var methodInfo = startupType.GetMethod(methodNameWithEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+        //        ?? startupType.GetMethod(methodNameWithNoEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+        //    if (methodInfo == null)
+        //    {
+        //        if (required)
+        //        {
+        //            throw new Exception(string.Format("A method named '{0}' or '{1}' in the type '{2}' could not be found.",
+        //                methodNameWithEnv,
+        //                methodNameWithNoEnv,
+        //                startupType.FullName));
 
-                }
-                return null;
-            }
-            if (returnType != null && methodInfo.ReturnType != returnType)
-            {
-                if (required)
-                {
-                    throw new Exception(string.Format("The '{0}' method in the type '{1}' must have a return type of '{2}'.",
-                        methodInfo.Name,
-                        startupType.FullName,
-                        returnType.Name));
-                }
-                return null;
-            }
-            return methodInfo;
-        }
+        //        }
+        //        return null;
+        //    }
+        //    if (returnType != null && methodInfo.ReturnType != returnType)
+        //    {
+        //        if (required)
+        //        {
+        //            throw new Exception(string.Format("The '{0}' method in the type '{1}' must have a return type of '{2}'.",
+        //                methodInfo.Name,
+        //                startupType.FullName,
+        //                returnType.Name));
+        //        }
+        //        return null;
+        //    }
+        //    return methodInfo;
+        //}
 
-        private object Invoke(MethodInfo methodInfo, object instance, IApplicationBuilder builder, IServiceCollection services = null)
-        {
-            var serviceProvider = builder.ApplicationServices ?? _services;
-            var parameterInfos = methodInfo.GetParameters();
-            var parameters = new object[parameterInfos.Length];
-            for (var index = 0; index != parameterInfos.Length; ++index)
-            {
-                var parameterInfo = parameterInfos[index];
-                if (parameterInfo.ParameterType == typeof(IApplicationBuilder))
-                {
-                    parameters[index] = builder;
-                }
-                else if (services != null && parameterInfo.ParameterType == typeof(IServiceCollection))
-                {
-                    parameters[index] = services;
-                }
-                else
-                {
-                    try
-                    {
-                        parameters[index] = serviceProvider.GetRequiredService(parameterInfo.ParameterType);
-                    }
-                    catch (Exception)
-                    {
-                        throw new Exception(string.Format(
-                            "Could not resolve a service of type '{0}' for the parameter '{1}' of method '{2}' on type '{3}'.",
-                            parameterInfo.ParameterType.FullName,
-                            parameterInfo.Name,
-                            methodInfo.Name,
-                            methodInfo.DeclaringType.FullName));
-                    }
-                }
-            }
-            return methodInfo.Invoke(instance, parameters);
-        }
+        //private object Invoke(MethodInfo methodInfo, object instance, IApplicationBuilder builder, IServiceCollection services = null)
+        //{
+        //    var serviceProvider = builder.ApplicationServices ?? _services;
+        //    var parameterInfos = methodInfo.GetParameters();
+        //    var parameters = new object[parameterInfos.Length];
+        //    for (var index = 0; index != parameterInfos.Length; ++index)
+        //    {
+        //        var parameterInfo = parameterInfos[index];
+        //        if (parameterInfo.ParameterType == typeof(IApplicationBuilder))
+        //        {
+        //            parameters[index] = builder;
+        //        }
+        //        else if (services != null && parameterInfo.ParameterType == typeof(IServiceCollection))
+        //        {
+        //            parameters[index] = services;
+        //        }
+        //        else
+        //        {
+        //            try
+        //            {
+        //                parameters[index] = serviceProvider.GetRequiredService(parameterInfo.ParameterType);
+        //            }
+        //            catch (Exception)
+        //            {
+        //                throw new Exception(string.Format(
+        //                    "Could not resolve a service of type '{0}' for the parameter '{1}' of method '{2}' on type '{3}'.",
+        //                    parameterInfo.ParameterType.FullName,
+        //                    parameterInfo.Name,
+        //                    methodInfo.Name,
+        //                    methodInfo.DeclaringType.FullName));
+        //            }
+        //        }
+        //    }
+        //    return methodInfo.Invoke(instance, parameters);
+        //}
 
-        public Action<IApplicationBuilder> LoadStartup(
+        public ApplicationStartup LoadStartup(
             string applicationName,
             string environmentName,
             IList<string> diagnosticMessages)
@@ -137,38 +137,64 @@ namespace Microsoft.AspNet.Hosting.Startup
                     applicationName));
             }
 
-            var configureMethod = FindMethod(type, "Configure{0}", environmentName, typeof(void), required: true);
-            var servicesMethod = FindMethod(type, "Configure{0}Services", environmentName, typeof(IServiceProvider), required: false)
-                ?? FindMethod(type, "Configure{0}Services", environmentName, typeof(void), required: false);
+            var configureMethod = ApplicationStartup.FindConfigureDelegate(type, environmentName);
+            //FindMethod(type, "Configure{0}", environmentName, typeof(void), required: true);
+            var servicesMethod = ApplicationStartup.FindConfigureServicesDelegate(type, environmentName);
 
             object instance = null;
-            if (!configureMethod.IsStatic || (servicesMethod != null && !servicesMethod.IsStatic))
+            if (!configureMethod.MethodInfo.IsStatic || (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic))
             {
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(_services, type);
             }
-            return builder =>
-            {
-                if (servicesMethod != null)
-                {
-                    var services = HostingServices.Create(builder.ApplicationServices);
-                    if (servicesMethod.ReturnType == typeof(IServiceProvider))
-                    {
-                        // IServiceProvider ConfigureServices(IServiceCollection)
-                        builder.ApplicationServices = (Invoke(servicesMethod, instance, builder, services) as IServiceProvider)
-                            ?? builder.ApplicationServices;
-                    }
-                    else
-                    {
-                        // void ConfigureServices(IServiceCollection)
-                        Invoke(servicesMethod, instance, builder, services);
-                        if (builder != null)
-                        {
-                            builder.ApplicationServices = services.BuildServiceProvider();
-                        }
-                    }
-                }
-                Invoke(configureMethod, instance, builder);
-            };
+
+            return new ApplicationStartup(configureMethod, servicesMethod, instance);
+            //if (servicesMethod != null)
+            //{
+            //    if (servicesMethod.ReturnType == typeof(IServiceProvider))
+            //    {
+            //        // IServiceProvider ConfigureServices(IServiceCollection)
+            //        startup.ConfigureServices = 
+            //        builder.ApplicationServices = (Invoke(servicesMethod, instance, builder, services) as IServiceProvider)
+            //            ?? builder.ApplicationServices;
+            //    }
+            //    else
+            //    {
+            //        // void ConfigureServices(IServiceCollection)
+            //        Invoke(servicesMethod, instance, builder, services);
+            //        if (builder != null)
+            //        {
+            //            builder.ApplicationServices = services.BuildServiceProvider();
+            //        }
+            //    }
+            //}
+            //Invoke(configureMethod, instance, builder);
+
+        //}
+
+
+            //return builder =>
+            //{
+            //    if (servicesMethod != null)
+            //    {
+            //        var services = HostingServices.Create(builder.ApplicationServices);
+            //        if (servicesMethod.ReturnType == typeof(IServiceProvider))
+            //        {
+            //            // IServiceProvider ConfigureServices(IServiceCollection)
+            //            builder.ApplicationServices = (Invoke(servicesMethod, instance, builder, services) as IServiceProvider)
+            //                ?? builder.ApplicationServices;
+            //        }
+            //        else
+            //        {
+            //            // void ConfigureServices(IServiceCollection)
+            //            Invoke(servicesMethod, instance, builder, services);
+            //            if (builder != null)
+            //            {
+            //                builder.ApplicationServices = services.BuildServiceProvider();
+            //            }
+            //        }
+            //    }
+            //    Invoke(configureMethod, instance, builder);
+            //};
         }
     }
 }
