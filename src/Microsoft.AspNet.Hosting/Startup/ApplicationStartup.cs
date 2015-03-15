@@ -73,7 +73,7 @@ namespace Microsoft.AspNet.Hosting.Startup
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(services, type);
             }
 
-            return new StartupMethods(configureMethod.Build(instance), servicesMethod.Build(instance, services));
+            return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
         }
 
 

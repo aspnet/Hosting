@@ -54,6 +54,7 @@ namespace Microsoft.AspNet.Hosting.Startup
                     }
                 }
             }
+            MethodInfo.Invoke(instance, parameters);
         }
     }
 }

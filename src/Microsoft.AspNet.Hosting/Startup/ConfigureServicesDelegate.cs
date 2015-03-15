@@ -18,12 +18,12 @@ namespace Microsoft.AspNet.Hosting.Startup
 
         public MethodInfo MethodInfo { get; }
 
-        public ConfigureServicesDelegate Build(object instance, IServiceProvider serviceProvider)
+        public ConfigureServicesDelegate Build(object instance)
         {
-            return services => Invoke(instance, serviceProvider, services);
+            return services => Invoke(instance, services);
         }
 
-        private IServiceProvider Invoke(object instance, IServiceProvider serviceProvider, IServiceCollection exportServices)
+        private IServiceProvider Invoke(object instance, IServiceCollection exportServices)
         {
             var parameterInfos = MethodInfo.GetParameters();
             var parameters = new object[parameterInfos.Length];

@@ -2,11 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
@@ -27,8 +24,6 @@ namespace Microsoft.AspNet.Hosting
             {
                 configureHostServices(services);
             }
-
-            services.AddSingleton<IServiceManifest>(sp => new HostingManifest(services));
 
             return services;
         }
@@ -68,22 +63,6 @@ namespace Microsoft.AspNet.Hosting
             var services = Import(fallbackServices, configureHostServices);
             services.AddHosting(configuration);
             return services;
-        }
-
-        // Manifest exposes the fallback manifest in addition to ITypeActivator, IHostingEnvironment, and ILoggerFactory
-        private class HostingManifest : IServiceManifest
-        {
-            public HostingManifest(IServiceCollection hostServices)
-            {
-                Services = new Type[] {
-                    typeof(IHostingEnvironment),
-                    typeof(ILoggerFactory),
-                    typeof(IHttpContextAccessor),
-                    typeof(IApplicationLifetime)
-                }.Concat(hostServices.Select(s => s.ServiceType)).Distinct();
-            }
-
-            public IEnumerable<Type> Services { get; private set; }
         }
     }
 }

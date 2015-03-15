@@ -81,7 +81,6 @@ namespace Microsoft.AspNet.Hosting.Tests
             var singleton = provider.GetRequiredService<IFakeSingletonService>();
             var transient = provider.GetRequiredService<IFakeService>();
             var factory = provider.GetRequiredService<IFactoryService>();
-            var manifest = provider.GetRequiredService<IServiceManifest>();
 
             // Assert
             Assert.Same(singleton, provider.GetRequiredService<IFakeSingletonService>());
@@ -91,9 +90,6 @@ namespace Microsoft.AspNet.Hosting.Tests
             Assert.Same(factory.FakeService, instance);
             Assert.Null(provider.GetService<INonexistentService>());
             Assert.Null(provider.GetService<IFakeScopedService>()); // Make sure we don't leak non manifest services
-            Assert.Contains(typeof(IFakeSingletonService), manifest.Services);
-            Assert.Contains(typeof(IFakeServiceInstance), manifest.Services);
-            Assert.Contains(typeof(IFactoryService), manifest.Services);
         }
 
         [Fact]
@@ -117,33 +113,6 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             // Assert
             Assert.Same(singleton, provider.GetRequiredService<IFakeService>());
-        }
-
-        [Fact]
-        public void CreateAdditionalServices_IncludesServicesInManifest()
-        {
-            // Arrange
-            var fallbackServices = new ServiceCollection();
-            fallbackServices.AddTransient<IFakeService, FakeService>();
-            fallbackServices.AddInstance<IServiceManifest>(new ServiceManifest(
-                new Type[] {
-                    typeof(IFakeService),
-                }));
-            var expectedInstance = new FakeService();
-            var services = HostingServices.Create(
-                fallbackServices.BuildServiceProvider(),
-                additionalHostServices => additionalHostServices.AddInstance<IFakeServiceInstance>(expectedInstance));
-
-            // Act
-            var provider = services.BuildServiceProvider();
-            var instance = provider.GetRequiredService<IFakeServiceInstance>();
-            var anotherInstance = provider.GetRequiredService<IFakeServiceInstance>();
-            var manifest = provider.GetRequiredService<IServiceManifest>();
-
-            // Assert
-            Assert.Same(expectedInstance, instance);
-            Assert.Same(expectedInstance, anotherInstance);
-            Assert.Contains(typeof(IFakeServiceInstance), manifest.Services);
         }
 
         [Fact]
