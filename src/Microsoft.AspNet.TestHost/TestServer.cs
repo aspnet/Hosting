@@ -37,7 +37,7 @@ namespace Microsoft.AspNet.TestHost
                 ApplicationLifetime = applicationLifetime,
                 Configuration = config,
                 ServerFactory = this,
-                ApplicationStartup = new ApplicationStartup(appStartup, configureServices: null)
+                StartupMethods = new StartupMethods(appStartup, configureServices: null)
             };
 
             var engine = serviceProvider.GetRequiredService<IHostingEngine>();

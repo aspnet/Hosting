@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
@@ -121,9 +119,9 @@ namespace Microsoft.AspNet.Hosting
             }
 
             // This will ensure RequestServices are populated, TODO implement StartupFilter
-            context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
+            //context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
 
-            context.ApplicationStartup.Configure(context.Builder);
+            context.StartupMethods.ConfigureDelegate(context.Builder);
 
             context.ApplicationDelegate = context.Builder.Build();
         }
@@ -132,23 +130,21 @@ namespace Microsoft.AspNet.Hosting
         {
         }
 
-        private void EnsureApplicationStartup(HostingContext context)
+        private void EnsureStartupMethods(HostingContext context)
         {
-            if (context.ApplicationStartup != null)
+            if (context.StartupMethods != null)
             {
                 return;
             }
 
             var diagnosticMessages = new List<string>();
-            Debugger.Launch();
-
-            context.ApplicationStartup = ApplicationStartup.LoadStartup(
+            context.StartupMethods = ApplicationStartup.LoadStartupMethods(
                 _fallbackServices,
                 context.ApplicationName,
                 context.EnvironmentName,
                 diagnosticMessages);
 
-            if (context.ApplicationStartup == null)
+            if (context.StartupMethods == null)
             {
                 throw new ArgumentException(
                     diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
@@ -162,9 +158,9 @@ namespace Microsoft.AspNet.Hosting
             {
                 return;
             }
-            EnsureApplicationStartup(context);
+            EnsureStartupMethods(context);
             EnsureHostingServices(context);
-            context.ApplicationServices = context.ApplicationStartup.ConfigureServices(_fallbackServices, context.HostingServices);
+            context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(context.HostingServices);
         }
 
         private class Disposable : IDisposable

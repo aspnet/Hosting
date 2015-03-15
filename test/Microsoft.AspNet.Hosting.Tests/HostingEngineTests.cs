@@ -39,7 +39,6 @@ namespace Microsoft.AspNet.Hosting
                 ApplicationName = "Microsoft.AspNet.Hosting.Tests"
             };
 
-            Debugger.Launch();
             var engineStart = new HostingEngine().Start(context);
 
             Assert.NotNull(engineStart);

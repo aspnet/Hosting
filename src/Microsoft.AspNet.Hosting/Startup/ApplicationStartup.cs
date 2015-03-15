@@ -6,37 +6,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Microsoft.AspNet.Builder;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
-    public class ApplicationStartup
+    public static class ApplicationStartup
     {
-        // TODO: switch to ConfigureDelegate eventually
-        public ApplicationStartup(Action<IApplicationBuilder> configure, ConfigureServicesDelegate configureServices)
-        {
-            ConfigureDelegate = configure;
-            ConfigureServicesDelegate = configureServices;
-        }
+        internal static ConfigureServicesDelegate DefaultBuildServiceProvider = s => s.BuildServiceProvider();
 
-        public ConfigureServicesDelegate ConfigureServicesDelegate { get; }
-        public Action<IApplicationBuilder> ConfigureDelegate { get; }
-
-        // REVIEW: need to revisit the import implications here (are services the exported services?)
-        public IServiceProvider ConfigureServices(IServiceProvider fallbackServices, IServiceCollection services)
-        {
-            return ConfigureServicesDelegate == null
-                ? (services != null) ? services.BuildServiceProvider() : fallbackServices
-                : ConfigureServicesDelegate(services);
-        }
-
-        public void Configure(IApplicationBuilder builder)
-        {
-            ConfigureDelegate(builder);
-        }
-
-        public static ApplicationStartup LoadStartup(
+        public static StartupMethods LoadStartupMethods(
             IServiceProvider services,
             string applicationName,
             string environmentName,
@@ -95,7 +73,7 @@ namespace Microsoft.AspNet.Hosting.Startup
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(services, type);
             }
 
-            return new ApplicationStartup(configureMethod.Build(instance), servicesMethod.Build(instance, services));
+            return new StartupMethods(configureMethod.Build(instance), servicesMethod.Build(instance, services));
         }
 
 

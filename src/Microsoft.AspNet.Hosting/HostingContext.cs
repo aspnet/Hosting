@@ -19,7 +19,7 @@ namespace Microsoft.AspNet.Hosting
 
         public string ApplicationName { get; set; }
         public string EnvironmentName { get; set; }
-        public ApplicationStartup ApplicationStartup { get; set; }
+        public StartupMethods StartupMethods { get; set; }
         public RequestDelegate ApplicationDelegate { get; set; }
 
         public IServiceCollection HostingServices { get; set; }
