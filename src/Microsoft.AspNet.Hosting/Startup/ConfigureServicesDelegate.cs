@@ -3,55 +3,41 @@
 
 using System;
 using System.Reflection;
-using Microsoft.AspNet.Builder;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
-    public class ConfigureServicesDelegate
+    public delegate IServiceProvider ConfigureServicesDelegate(IServiceCollection services);
+
+    public class ConfigureServicesBuilder
     {
-        public ConfigureServicesDelegate(MethodInfo configureServices)
+        public ConfigureServicesBuilder(MethodInfo configureServices)
         {
             MethodInfo = configureServices;
         }
 
         public MethodInfo MethodInfo { get; }
 
-        public IServiceProvider Invoke(object instance, IApplicationBuilder builder, IServiceCollection services)
+        public ConfigureServicesDelegate Build(object instance, IServiceProvider serviceProvider)
         {
-            var serviceProvider = builder.ApplicationServices;
+            return services => Invoke(instance, serviceProvider, services);
+        }
+
+        private IServiceProvider Invoke(object instance, IServiceProvider serviceProvider, IServiceCollection exportServices)
+        {
             var parameterInfos = MethodInfo.GetParameters();
             var parameters = new object[parameterInfos.Length];
             for (var index = 0; index != parameterInfos.Length; ++index)
             {
                 var parameterInfo = parameterInfos[index];
-                if (parameterInfo.ParameterType == typeof(IApplicationBuilder))
+                if (exportServices != null && parameterInfo.ParameterType == typeof(IServiceCollection))
                 {
-                    parameters[index] = builder;
-                }
-                else if (services != null && parameterInfo.ParameterType == typeof(IServiceCollection))
-                {
-                    parameters[index] = services;
-                }
-                else
-                {
-                    try
-                    {
-                        parameters[index] = serviceProvider.GetRequiredService(parameterInfo.ParameterType);
-                    }
-                    catch (Exception)
-                    {
-                        throw new Exception(string.Format(
-                            "Could not resolve a service of type '{0}' for the parameter '{1}' of method '{2}' on type '{3}'.",
-                            parameterInfo.ParameterType.FullName,
-                            parameterInfo.Name,
-                            MethodInfo.Name,
-                            MethodInfo.DeclaringType.FullName));
-                    }
+                    parameters[index] = exportServices;
                 }
             }
 
-            return MethodInfo.Invoke(instance, parameters) as IServiceProvider ?? builder.ApplicationServices;
+            // REVIEW: We null ref if exportServices is null, cuz it should not be null
+            return MethodInfo.Invoke(instance, parameters) as IServiceProvider ?? exportServices.BuildServiceProvider();
         }
     }
 }

@@ -8,17 +8,26 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
-    public class ConfigureDelegate
+    // TODO: replace all Action<IApplicationBuilder> eventually with this
+    public delegate void ConfigureDelegate(IApplicationBuilder builder);
+
+    public class ConfigureBuilder
     {
-        public ConfigureDelegate(MethodInfo configureServices)
+        public ConfigureBuilder(MethodInfo configure)
         {
-            MethodInfo = configureServices;
+            MethodInfo = configure;
         }
 
         public MethodInfo MethodInfo { get; }
 
-        public void Invoke(object instance, IServiceProvider serviceProvider, IApplicationBuilder builder)
+        public Action<IApplicationBuilder> Build(object instance)
         {
+            return builder => Invoke(instance, builder);
+        }
+
+        private void Invoke(object instance, IApplicationBuilder builder)
+        {
+            var serviceProvider = builder.ApplicationServices;
             var parameterInfos = MethodInfo.GetParameters();
             var parameters = new object[parameterInfos.Length];
             for (var index = 0; index != parameterInfos.Length; ++index)

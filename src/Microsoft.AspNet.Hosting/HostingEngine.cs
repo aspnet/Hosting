@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.AspNet.Builder;
@@ -11,29 +12,37 @@ using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
     public class HostingEngine : IHostingEngine
     {
-        private readonly IServerLoader _serverManager;
-        private readonly IApplicationBuilderFactory _builderFactory;
-        private readonly IHttpContextFactory _httpContextFactory;
-        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IServiceProvider _fallbackServices;
+        private readonly Action<IServiceCollection> _additionalServices;
+        private IServerLoader _serverLoader;
+        private IApplicationBuilderFactory _builderFactory;
+        private IHttpContextFactory _httpContextFactory;
+        private IHttpContextAccessor _contextAccessor;
 
         // Move everything except startupLoader to get them after configureServices
-        public HostingEngine() : this(additionalServices: null) { }
+        public HostingEngine() : this(fallbackServices: null, additionalServices: null) { }
 
-        public HostingEngine(Action<IServiceCollection> additionalServices)
+        public HostingEngine(IServiceProvider fallbackServices) : this(fallbackServices, additionalServices: null) { }
+
+        public HostingEngine(Action<IServiceCollection> additionalServices) : this(fallbackServices : null, additionalServices: additionalServices) { }
+
+        public HostingEngine(IServiceProvider fallbackServices, Action<IServiceCollection> additionalServices)
         {
-            Services = HostingServices.Create(additionalServices).BuildServiceProvider();
+            _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            _additionalServices = additionalServices;
         }
-
-        public IServiceProvider Services { get; }
 
         public IDisposable Start(HostingContext context)
         {
             EnsureApplicationStartup(context);
+
+            EnsureApplicationServices(context);
 
             EnsureBuilder(context);
             EnsureServerFactory(context);
@@ -60,6 +69,11 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
+            if (_builderFactory == null)
+            {
+                EnsureApplicationServices(context);
+                _builderFactory = context.ApplicationServices.GetRequiredService<IApplicationBuilderFactory>();
+            }
             context.Builder = _builderFactory.CreateBuilder();
         }
 
@@ -70,7 +84,12 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
-            context.ServerFactory = _serverManager.LoadServerFactory(context.ServerFactoryLocation);
+            if (_serverLoader == null)
+            {
+                EnsureApplicationServices(context);
+                _serverLoader = context.ApplicationServices.GetRequiredService<IServerLoader>();
+            }
+            context.ServerFactory = _serverLoader.LoadServerFactory(context.ServerFactoryLocation);
         }
 
         private void InitalizeServerFactory(HostingContext context)
@@ -92,9 +111,8 @@ namespace Microsoft.AspNet.Hosting
             {
                 return;
             }
-            var services = new ServiceCollection();
-            services.AddHosting(context.Configuration);
-            context.HostingServices = services;
+            context.HostingServices = HostingServices.Create(_fallbackServices, _additionalServices)
+                .AddHosting(context.Configuration);
         }
 
         private void EnsureApplicationDelegate(HostingContext context)
@@ -104,15 +122,14 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
-            EnsureApplicationStartup(context);
+            EnsureApplicationServices(context);
 
-            // This will ensure RequestServices are populated
+            context.Builder.ApplicationServices = context.ApplicationServices;
+
+            // This will ensure RequestServices are populated, TODO implement StartupFilter
             context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
 
-            // REVIEW: this is prob not right, but needs to be the exported services
-            EnsureHostingServices(context);
-            context.Builder.ApplicationServices = context.ApplicationStartup.ConfigureServices(context.Builder, context.HostingServices);
-            context.ApplicationStartup.Configure(Services, context.Builder);
+            context.ApplicationStartup.Configure(context.Builder);
 
             context.ApplicationDelegate = context.Builder.Build();
         }
@@ -130,8 +147,10 @@ namespace Microsoft.AspNet.Hosting
             }
 
             var diagnosticMessages = new List<string>();
+            Debugger.Launch();
+
             context.ApplicationStartup = ApplicationStartup.LoadStartup(
-                Services,
+                _fallbackServices,
                 context.ApplicationName,
                 context.EnvironmentName,
                 diagnosticMessages);
@@ -142,6 +161,19 @@ namespace Microsoft.AspNet.Hosting
                     diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
                     nameof(context));
             }
+        }
+
+        private void EnsureApplicationServices(HostingContext context)
+        {
+            if (context.ApplicationServices != null)
+            {
+                return;
+            }
+            EnsureApplicationStartup(context);
+            // REVIEW: revisit this
+            EnsureHostingServices(context);
+
+            context.ApplicationServices = context.ApplicationStartup.ConfigureServices(_fallbackServices, context.HostingServices);
         }
 
         private class Disposable : IDisposable

@@ -13,29 +13,27 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public class ApplicationStartup
     {
-        public ApplicationStartup(ConfigureDelegate configure, ConfigureServicesDelegate configureServices, object startupInstance)
+        // TODO: switch to ConfigureDelegate eventually
+        public ApplicationStartup(Action<IApplicationBuilder> configure, ConfigureServicesDelegate configureServices)
         {
-            Instance = startupInstance;
-            ConfigureMethod = configure;
-            ConfigureServicesMethod = configureServices;
+            ConfigureDelegate = configure;
+            ConfigureServicesDelegate = configureServices;
         }
 
-        public ConfigureServicesDelegate ConfigureServicesMethod { get; }
-        public ConfigureDelegate ConfigureMethod { get; }
-
-        public object Instance { get; }
+        public ConfigureServicesDelegate ConfigureServicesDelegate { get; }
+        public Action<IApplicationBuilder> ConfigureDelegate { get; }
 
         // REVIEW: need to revisit the import implications here (are services the exported services?)
-        public IServiceProvider ConfigureServices(IApplicationBuilder builder, IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceProvider fallbackServices, IServiceCollection services)
         {
-            return ConfigureServicesMethod == null
-                ? (services != null) ? services.BuildServiceProvider() : builder.ApplicationServices
-                : ConfigureServicesMethod.Invoke(Instance, builder, services);
+            return ConfigureServicesDelegate == null
+                ? (services != null) ? services.BuildServiceProvider() : fallbackServices
+                : ConfigureServicesDelegate(services);
         }
 
-        public void Configure(IServiceProvider services, IApplicationBuilder builder)
+        public void Configure(IApplicationBuilder builder)
         {
-            ConfigureMethod.Invoke(Instance, services, builder);
+            ConfigureDelegate(builder);
         }
 
         public static ApplicationStartup LoadStartup(
@@ -52,7 +50,7 @@ namespace Microsoft.AspNet.Hosting.Startup
             var assembly = Assembly.Load(new AssemblyName(applicationName));
             if (assembly == null)
             {
-                throw new Exception(String.Format("The assembly '{0}' failed to load.", applicationName));
+                throw new InvalidOperationException(String.Format("The assembly '{0}' failed to load.", applicationName));
             }
 
             var startupNameWithEnv = "Startup" + environmentName;
@@ -82,14 +80,14 @@ namespace Microsoft.AspNet.Hosting.Startup
 
             if (type == null)
             {
-                throw new Exception(String.Format("A type named '{0}' or '{1}' could not be found in assembly '{2}'.",
+                throw new InvalidOperationException(String.Format("A type named '{0}' or '{1}' could not be found in assembly '{2}'.",
                     startupNameWithEnv,
                     startupNameWithoutEnv,
                     applicationName));
             }
 
-            var configureMethod = ApplicationStartup.FindConfigureDelegate(type, environmentName);
-            var servicesMethod = ApplicationStartup.FindConfigureServicesDelegate(type, environmentName);
+            var configureMethod = FindConfigureDelegate(type, environmentName);
+            var servicesMethod = FindConfigureServicesDelegate(type, environmentName);
 
             object instance = null;
             if (!configureMethod.MethodInfo.IsStatic || (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic))
@@ -97,21 +95,21 @@ namespace Microsoft.AspNet.Hosting.Startup
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(services, type);
             }
 
-            return new ApplicationStartup(configureMethod, servicesMethod, instance);
+            return new ApplicationStartup(configureMethod.Build(instance), servicesMethod.Build(instance, services));
         }
 
 
-        public static ConfigureDelegate FindConfigureDelegate(Type startupType, string environmentName)
+        public static ConfigureBuilder FindConfigureDelegate(Type startupType, string environmentName)
         {
             var configureMethod = FindMethod(startupType, "Configure{0}", environmentName, typeof(void), required: true);
-            return new ConfigureDelegate(configureMethod);
+            return new ConfigureBuilder(configureMethod);
         }
 
-        public static ConfigureServicesDelegate FindConfigureServicesDelegate(Type startupType, string environmentName)
+        public static ConfigureServicesBuilder FindConfigureServicesDelegate(Type startupType, string environmentName)
         {
             var servicesMethod = FindMethod(startupType, "Configure{0}Services", environmentName, typeof(IServiceProvider), required: false)
                 ?? FindMethod(startupType, "Configure{0}Services", environmentName, typeof(void), required: false);
-            return servicesMethod == null ? null : new ConfigureServicesDelegate(servicesMethod);
+            return servicesMethod == null ? null : new ConfigureServicesBuilder(servicesMethod);
         }
 
         private static MethodInfo FindMethod(Type startupType, string methodName, string environmentName, Type returnType = null, bool required = true)
@@ -124,7 +122,7 @@ namespace Microsoft.AspNet.Hosting.Startup
             {
                 if (required)
                 {
-                    throw new Exception(string.Format("A method named '{0}' or '{1}' in the type '{2}' could not be found.",
+                    throw new InvalidOperationException(string.Format("A method named '{0}' or '{1}' in the type '{2}' could not be found.",
                         methodNameWithEnv,
                         methodNameWithNoEnv,
                         startupType.FullName));
@@ -136,7 +134,7 @@ namespace Microsoft.AspNet.Hosting.Startup
             {
                 if (required)
                 {
-                    throw new Exception(string.Format("The '{0}' method in the type '{1}' must have a return type of '{2}'.",
+                    throw new InvalidOperationException(string.Format("The '{0}' method in the type '{1}' must have a return type of '{2}'.",
                         methodInfo.Name,
                         startupType.FullName,
                         returnType.Name));

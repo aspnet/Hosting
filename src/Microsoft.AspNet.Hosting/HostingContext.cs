@@ -24,6 +24,9 @@ namespace Microsoft.AspNet.Hosting
 
         public IServiceCollection HostingServices { get; set; }
 
+        // Result of ConfigureServices
+        public IServiceProvider ApplicationServices { get; set; }
+
         public string ServerFactoryLocation { get; set; }
         public IServerFactory ServerFactory { get; set; }
         public IServerInformation Server { get; set; }

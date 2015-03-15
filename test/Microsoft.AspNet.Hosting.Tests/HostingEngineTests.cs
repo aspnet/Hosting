@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
@@ -18,7 +19,7 @@ namespace Microsoft.AspNet.Hosting
     {
         private readonly IList<StartInstance> _startInstances = new List<StartInstance>();
 
-        [Fact]
+        [Fact(Skip = "No longer true, DELETE?")]
         public void HostingEngineCanBeResolvedWithDefaultServices()
         {
             var services = HostingServices.Create().BuildServiceProvider();
@@ -31,19 +32,15 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void HostingEngineCanBeStarted()
         {
-            var services = HostingServices.Create().BuildServiceProvider();
-
-            var engine = services.GetRequiredService<IHostingEngine>();
-            var applicationLifetime = services.GetRequiredService<IApplicationLifetime>();
-
             var context = new HostingContext
             {
-                ApplicationLifetime = applicationLifetime,
+                ApplicationLifetime = new ApplicationLifetime(),
                 ServerFactory = this,
                 ApplicationName = "Microsoft.AspNet.Hosting.Tests"
             };
 
-            var engineStart = engine.Start(context);
+            Debugger.Launch();
+            var engineStart = new HostingEngine().Start(context);
 
             Assert.NotNull(engineStart);
             Assert.Equal(1, _startInstances.Count);
