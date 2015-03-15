@@ -8,7 +8,6 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
-
     public class ConfigureServicesDelegate
     {
         public ConfigureServicesDelegate(MethodInfo configureServices)
@@ -52,20 +51,7 @@ namespace Microsoft.AspNet.Hosting.Startup
                 }
             }
 
-            // IServiceProvider ConfigureServices(IServiceCollection, ...)
-            if (MethodInfo.ReturnType == typeof(IServiceProvider))
-            {
-                return (IServiceProvider)MethodInfo.Invoke(instance, parameters);
-            }
-            // void ConfigureServices(IServiceCollection, ...)
-            else
-            {
-                // REVIEW: this will work even if their ConfigureServices does nothing
-                MethodInfo.Invoke(instance, parameters);
-
-                // REVIEW: is builder.ApplicationServices the proper default if no IServiceCollection at all??
-                return services != null ? services.BuildServiceProvider() : builder.ApplicationServices;
-            }
+            return MethodInfo.Invoke(instance, parameters) as IServiceProvider ?? builder.ApplicationServices;
         }
     }
 }

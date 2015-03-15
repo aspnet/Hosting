@@ -17,27 +17,19 @@ namespace Microsoft.AspNet.Hosting
     public class HostingEngine : IHostingEngine
     {
         private readonly IServerLoader _serverManager;
-        private readonly IStartupLoader _startupLoader;
         private readonly IApplicationBuilderFactory _builderFactory;
         private readonly IHttpContextFactory _httpContextFactory;
         private readonly IHttpContextAccessor _contextAccessor;
 
         // Move everything except startupLoader to get them after configureServices
-        public HostingEngine(
-            //IServerLoader serverManager,
-            IStartupLoader startupLoader
-            //,
-            //IApplicationBuilderFactory builderFactory,
-            //IHttpContextFactory httpContextFactory,
-            //IHttpContextAccessor contextAccessor
-            )
+        public HostingEngine() : this(additionalServices: null) { }
+
+        public HostingEngine(Action<IServiceCollection> additionalServices)
         {
-            _startupLoader = startupLoader;
-            //_serverManager = serverManager;
-            //_builderFactory = builderFactory;
-            //_httpContextFactory = httpContextFactory;
-            //_contextAccessor = contextAccessor;
+            Services = HostingServices.Create(additionalServices).BuildServiceProvider();
         }
+
+        public IServiceProvider Services { get; }
 
         public IDisposable Start(HostingContext context)
         {
@@ -117,9 +109,10 @@ namespace Microsoft.AspNet.Hosting
             // This will ensure RequestServices are populated
             context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
 
+            // REVIEW: this is prob not right, but needs to be the exported services
             EnsureHostingServices(context);
             context.Builder.ApplicationServices = context.ApplicationStartup.ConfigureServices(context.Builder, context.HostingServices);
-            context.ApplicationStartup.Configure(context.Builder);
+            context.ApplicationStartup.Configure(Services, context.Builder);
 
             context.ApplicationDelegate = context.Builder.Build();
         }
@@ -137,7 +130,8 @@ namespace Microsoft.AspNet.Hosting
             }
 
             var diagnosticMessages = new List<string>();
-            context.ApplicationStartup = _startupLoader.LoadStartup(
+            context.ApplicationStartup = ApplicationStartup.LoadStartup(
+                Services,
                 context.ApplicationName,
                 context.EnvironmentName,
                 diagnosticMessages);

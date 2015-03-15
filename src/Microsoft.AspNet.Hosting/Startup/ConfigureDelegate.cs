@@ -17,10 +17,8 @@ namespace Microsoft.AspNet.Hosting.Startup
 
         public MethodInfo MethodInfo { get; }
 
-        // REVIEW: need to ensure builder.ApplicationServices should NEVER be null anymore
-        public void Invoke(object instance, IApplicationBuilder builder)
+        public void Invoke(object instance, IServiceProvider serviceProvider, IApplicationBuilder builder)
         {
-            var serviceProvider = builder.ApplicationServices;
             var parameterInfos = MethodInfo.GetParameters();
             var parameters = new object[parameterInfos.Length];
             for (var index = 0; index != parameterInfos.Length; ++index)
