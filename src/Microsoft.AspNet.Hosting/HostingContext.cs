@@ -12,7 +12,6 @@ namespace Microsoft.AspNet.Hosting
 {
     public class HostingContext
     {
-        public IApplicationLifetime ApplicationLifetime { get; set; }
         public IConfiguration Configuration { get; set; }
 
         public IApplicationBuilder Builder { get; set; }

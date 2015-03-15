@@ -28,7 +28,7 @@ namespace Microsoft.AspNet.TestHost
             TestServer.Create(services, app => { });
         }
 
-        [Fact]
+        [Fact(Skip = "No longer throws")]
         public void ThrowsIfNoApplicationEnvironmentIsRegisteredWithTheProvider()
         {
             // Arrange
@@ -108,7 +108,8 @@ namespace Microsoft.AspNet.TestHost
                     var accessor = app.ApplicationServices.GetRequiredService<ContextHolder>();
                     return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.HttpContext != null));
                 });
-            }, newHostServices => newHostServices.AddSingleton<ContextHolder>());
+            },
+            services => services.AddSingleton<ContextHolder>().BuildServiceProvider());
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("HasContext:True", result);

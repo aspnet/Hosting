@@ -22,8 +22,6 @@ namespace Microsoft.Framework.DependencyInjection
             services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
             services.TryAdd(ServiceDescriptor.Transient<IHttpContextFactory, HttpContextFactory>());
 
-            services.TryAdd(ServiceDescriptor.Instance<IApplicationLifetime>(new ApplicationLifetime()));
-
             // TODO: Do we expect this to be provide by the runtime eventually?
             services.AddLogging();
             services.TryAdd(ServiceDescriptor.Singleton<IHostingEnvironment, HostingEnvironment>());

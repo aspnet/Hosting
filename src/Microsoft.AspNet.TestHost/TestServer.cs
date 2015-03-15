@@ -26,46 +26,43 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IApplicationBuilder> appStartup)
+        public TestServer(IConfiguration config, Action<IApplicationBuilder> appStartup, ConfigureServicesDelegate configureServices)
         {
-            var appEnv = serviceProvider.GetRequiredService<IApplicationEnvironment>();
-            var applicationLifetime = serviceProvider.GetRequiredService<IApplicationLifetime>();
+            //var appEnv = serviceProvider.GetRequiredService<IApplicationEnvironment>();
+            //var applicationLifetime = serviceProvider.GetRequiredService<IApplicationLifetime>();
 
             HostingContext hostContext = new HostingContext()
             {
-                ApplicationName = appEnv.ApplicationName,
-                ApplicationLifetime = applicationLifetime,
+                ApplicationName = "Test App",
                 Configuration = config,
                 ServerFactory = this,
-                StartupMethods = new StartupMethods(appStartup, configureServices: null)
+                StartupMethods = new StartupMethods(appStartup, configureServices: configureServices)
             };
 
-            var engine = serviceProvider.GetRequiredService<IHostingEngine>();
-            _appInstance = engine.Start(hostContext);
+            _appInstance = new HostingEngine().Start(hostContext);
         }
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
 
         public static TestServer Create(Action<IApplicationBuilder> app)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureHostServices: null);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureServices: null);
         }
 
-        public static TestServer Create(Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices)
+        public static TestServer Create(Action<IApplicationBuilder> app, ConfigureServicesDelegate configureServices)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureHostServices);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureServices);
         }
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
         {
-            return Create(serviceProvider, app, configureHostServices: null);
+            return Create(serviceProvider, app, configureServices: null);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app, Action<IServiceCollection> configureHostServices)
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app, ConfigureServicesDelegate configureServices)
         {
-            var appServices = HostingServices.Create(serviceProvider, configureHostServices).BuildServiceProvider();
             var config = new Configuration();
-            return new TestServer(config, appServices, app);
+            return new TestServer(config, app, configureServices);
         }
 
         public HttpMessageHandler CreateHandler()

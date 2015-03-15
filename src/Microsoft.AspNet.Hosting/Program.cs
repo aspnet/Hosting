@@ -38,11 +38,9 @@ namespace Microsoft.AspNet.Hosting
 
             var appEnv = services.GetRequiredService<IApplicationEnvironment>();
             var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
-            var applicationLifetime = services.GetRequiredService<IApplicationLifetime>();
 
             var context = new HostingContext()
             {
-                ApplicationLifetime = applicationLifetime,
                 Configuration = config,
                 ServerFactoryLocation = config.Get("server"), // TODO: Key names
                 ApplicationName = config.Get("app")  // TODO: Key names
@@ -50,12 +48,12 @@ namespace Microsoft.AspNet.Hosting
                 EnvironmentName = hostingEnv.EnvironmentName,
             };
 
-            var engine = services.GetRequiredService<IHostingEngine>();
-            var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEvent(false);
-
+            var engine = new HostingEngine(_serviceProvider);
+ 
             var serverShutdown = engine.Start(context);
+            var loggerFactory = context.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            var appShutdownService = context.ApplicationServices.GetRequiredService<IApplicationShutdown>();
+            var shutdownHandle = new ManualResetEvent(false);
 
             appShutdownService.ShutdownRequested.Register(() =>
             {

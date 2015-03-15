@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
@@ -14,14 +15,13 @@ using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public class HostingEngine : IHostingEngine
+    public class HostingEngine
     {
         private readonly IServiceProvider _fallbackServices;
         private readonly Action<IServiceCollection> _additionalServices;
+        private readonly ApplicationLifetime _appLifetime;
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
-        private IHttpContextFactory _httpContextFactory;
-        private IHttpContextAccessor _contextAccessor;
 
         // Move everything except startupLoader to get them after configureServices
         public HostingEngine() : this(fallbackServices: null, additionalServices: null) { }
@@ -34,6 +34,7 @@ namespace Microsoft.AspNet.Hosting
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             _additionalServices = additionalServices;
+            _appLifetime = new ApplicationLifetime();
         }
 
         public IDisposable Start(HostingContext context)
@@ -44,16 +45,17 @@ namespace Microsoft.AspNet.Hosting
             InitalizeServerFactory(context);
             EnsureApplicationDelegate(context);
 
-            var applicationLifetime = (ApplicationLifetime)context.ApplicationLifetime;
-            var pipeline = new PipelineInstance(_httpContextFactory, context.ApplicationDelegate, _contextAccessor);
+            var contextFactory = context.ApplicationServices.GetRequiredService<IHttpContextFactory>();
+            var contextAccessor = context.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
+            var pipeline = new PipelineInstance(contextFactory, context.ApplicationDelegate, contextAccessor);
             var server = context.ServerFactory.Start(context.Server, pipeline.Invoke);
 
             return new Disposable(() =>
             {
-                applicationLifetime.NotifyStopping();
+                _appLifetime.NotifyStopping();
                 server.Dispose();
                 pipeline.Dispose();
-                applicationLifetime.NotifyStopped();
+                _appLifetime.NotifyStopped();
             });
         }
 
@@ -109,6 +111,8 @@ namespace Microsoft.AspNet.Hosting
             }
             context.HostingServices = HostingServices.Create(_fallbackServices, _additionalServices)
                 .AddHosting(context.Configuration);
+            // REVIEW: jamming in app lifetime
+            context.HostingServices.TryAdd(ServiceDescriptor.Instance<IApplicationLifetime>(_appLifetime));
         }
 
         private void EnsureApplicationDelegate(HostingContext context)
@@ -119,7 +123,7 @@ namespace Microsoft.AspNet.Hosting
             }
 
             // This will ensure RequestServices are populated, TODO implement StartupFilter
-            //context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
+            context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
 
             context.StartupMethods.ConfigureDelegate(context.Builder);
 

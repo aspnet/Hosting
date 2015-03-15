@@ -19,22 +19,11 @@ namespace Microsoft.AspNet.Hosting
     {
         private readonly IList<StartInstance> _startInstances = new List<StartInstance>();
 
-        [Fact(Skip = "No longer true, DELETE?")]
-        public void HostingEngineCanBeResolvedWithDefaultServices()
-        {
-            var services = HostingServices.Create().BuildServiceProvider();
-
-            var engine = services.GetRequiredService<IHostingEngine>();
-
-            Assert.NotNull(engine);
-        }
-
         [Fact]
         public void HostingEngineCanBeStarted()
         {
             var context = new HostingContext
             {
-                ApplicationLifetime = new ApplicationLifetime(),
                 ServerFactory = this,
                 ApplicationName = "Microsoft.AspNet.Hosting.Tests"
             };
