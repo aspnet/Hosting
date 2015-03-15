@@ -40,10 +40,7 @@ namespace Microsoft.AspNet.Hosting
 
         public IDisposable Start(HostingContext context)
         {
-            EnsureApplicationStartup(context);
-
             EnsureApplicationServices(context);
-
             EnsureBuilder(context);
             EnsureServerFactory(context);
             InitalizeServerFactory(context);
@@ -69,12 +66,13 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
+            EnsureApplicationServices(context);
             if (_builderFactory == null)
             {
-                EnsureApplicationServices(context);
                 _builderFactory = context.ApplicationServices.GetRequiredService<IApplicationBuilderFactory>();
             }
             context.Builder = _builderFactory.CreateBuilder();
+            context.Builder.ApplicationServices = context.ApplicationServices;
         }
 
         private void EnsureServerFactory(HostingContext context)
@@ -122,10 +120,6 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
-            EnsureApplicationServices(context);
-
-            context.Builder.ApplicationServices = context.ApplicationServices;
-
             // This will ensure RequestServices are populated, TODO implement StartupFilter
             context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
 
@@ -136,7 +130,6 @@ namespace Microsoft.AspNet.Hosting
 
         private void InvokeApplicationStartupFilter(HostingContext context)
         {
-
         }
 
         private void EnsureApplicationStartup(HostingContext context)
@@ -170,9 +163,7 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
             EnsureApplicationStartup(context);
-            // REVIEW: revisit this
             EnsureHostingServices(context);
-
             context.ApplicationServices = context.ApplicationStartup.ConfigureServices(_fallbackServices, context.HostingServices);
         }
 
