@@ -33,19 +33,11 @@ namespace Microsoft.AspNet.Hosting
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
 
-            var services = HostingServices.Create(_serviceProvider)
-                .BuildServiceProvider();
-
-            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
-            var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
-
             var context = new HostingContext()
             {
                 Configuration = config,
-                ServerFactoryLocation = config.Get("server"), // TODO: Key names
-                ApplicationName = config.Get("app")  // TODO: Key names
-                    ?? appEnv.ApplicationName,
-                EnvironmentName = hostingEnv.EnvironmentName,
+                ServerFactoryLocation = config.Get("server"),
+                ApplicationName = config.Get("app")
             };
 
             var engine = new HostingEngine(_serviceProvider);

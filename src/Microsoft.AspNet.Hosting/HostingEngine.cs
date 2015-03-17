@@ -18,8 +18,12 @@ namespace Microsoft.AspNet.Hosting
     public class HostingEngine
     {
         private const string EnvironmentKey = "ASPNET_ENV";
+
         private readonly IServiceProvider _fallbackServices;
         private readonly ApplicationLifetime _appLifetime;
+        private readonly IApplicationEnvironment _applicationEnvironment;
+        private readonly HostingEnvironment _hostingEnvironment;
+
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
 
@@ -30,6 +34,9 @@ namespace Microsoft.AspNet.Hosting
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             _appLifetime = new ApplicationLifetime();
+            _applicationEnvironment = fallbackServices.GetRequiredService<IApplicationEnvironment>();
+            _hostingEnvironment = new HostingEnvironment(_applicationEnvironment);
+            _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _appLifetime);
         }
 
         public IDisposable Start(HostingContext context)
@@ -43,7 +50,7 @@ namespace Microsoft.AspNet.Hosting
 
             var contextFactory = context.ApplicationServices.GetRequiredService<IHttpContextFactory>();
             var contextAccessor = context.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
-            var server = context.ServerFactory.Start(context.Server, 
+            var server = context.ServerFactory.Start(context.Server,
                 features =>
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
@@ -61,15 +68,17 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureContextDefaults(HostingContext context)
         {
-            var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
             if (context.ApplicationName == null)
             {
-                context.ApplicationName = appEnv.ApplicationName;
+                context.ApplicationName = _applicationEnvironment.ApplicationName;
             }
+
             if (context.EnvironmentName == null)
             {
                 context.EnvironmentName = context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
             }
+
+            _hostingEnvironment.EnvironmentName = context.EnvironmentName;
         }
 
         private void EnsureBuilder(HostingContext context)
@@ -79,11 +88,11 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
-            EnsureApplicationServices(context);
             if (_builderFactory == null)
             {
                 _builderFactory = context.ApplicationServices.GetRequiredService<IApplicationBuilderFactory>();
             }
+
             context.Builder = _builderFactory.CreateBuilder();
             context.Builder.ApplicationServices = context.ApplicationServices;
         }
@@ -97,9 +106,9 @@ namespace Microsoft.AspNet.Hosting
 
             if (_serverLoader == null)
             {
-                EnsureApplicationServices(context);
                 _serverLoader = context.ApplicationServices.GetRequiredService<IServerLoader>();
             }
+
             context.ServerFactory = _serverLoader.LoadServerFactory(context.ServerFactoryLocation);
         }
 
@@ -118,7 +127,7 @@ namespace Microsoft.AspNet.Hosting
 
         private IServiceCollection CreateHostingServices(HostingContext context)
         {
-            var services = HostingServices.Create(_fallbackServices);
+            var services = Import(_fallbackServices);
 
             // Copied from AddHosting (TODO: remove AddHosting)
             services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
@@ -135,7 +144,7 @@ namespace Microsoft.AspNet.Hosting
 
             // Jamming in app lifetime and hosting env since these must not be replaceable
             services.AddInstance<IApplicationLifetime>(_appLifetime);
-            services.AddSingleton<IHostingEnvironment, HostingEnvironment>();
+            services.AddInstance<IHostingEnvironment>(_hostingEnvironment);
 
             // Conjure up a RequestServices
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
@@ -191,8 +200,53 @@ namespace Microsoft.AspNet.Hosting
             {
                 return;
             }
+
             EnsureStartupMethods(context);
+
             context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices(context));
+        }
+
+        private static IServiceCollection Import(IServiceProvider fallbackProvider)
+        {
+            var services = new ServiceCollection();
+            var manifest = fallbackProvider.GetRequiredService<IServiceManifest>();
+            foreach (var service in manifest.Services)
+            {
+                services.AddTransient(service, sp => fallbackProvider.GetService(service));
+            }
+
+            return services;
+        }
+
+        private class WrappingServiceProvider : IServiceProvider
+        {
+            private readonly IServiceProvider _sp;
+            private readonly IHostingEnvironment _hostingEnvironment;
+            private readonly IApplicationLifetime _applicationLifetime;
+
+            public WrappingServiceProvider(IServiceProvider sp,
+                                           IHostingEnvironment hostingEnvironment,
+                                           IApplicationLifetime applicationLifetime)
+            {
+                _sp = sp;
+                _hostingEnvironment = hostingEnvironment;
+                _applicationLifetime = applicationLifetime;
+            }
+
+            public object GetService(Type serviceType)
+            {
+                if (serviceType == typeof(IHostingEnvironment))
+                {
+                    return _hostingEnvironment;
+                }
+
+                if (serviceType == typeof(IApplicationLifetime))
+                {
+                    return _applicationLifetime;
+                }
+
+                return _sp.GetService(serviceType);
+            }
         }
 
         private class Disposable : IDisposable
