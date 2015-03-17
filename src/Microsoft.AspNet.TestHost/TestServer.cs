@@ -11,8 +11,6 @@ using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.TestHost
@@ -26,43 +24,42 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        public TestServer(IConfiguration config, Action<IApplicationBuilder> appStartup, ConfigureServicesDelegate configureServices)
+        // REVIEW: we can configure services via AppStartup or via hostContext.Services
+        public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            //var appEnv = serviceProvider.GetRequiredService<IApplicationEnvironment>();
-            //var applicationLifetime = serviceProvider.GetRequiredService<IApplicationLifetime>();
-
             HostingContext hostContext = new HostingContext()
             {
                 ApplicationName = "Test App",
                 Configuration = config,
                 ServerFactory = this,
-                StartupMethods = new StartupMethods(appStartup, configureServices: configureServices)
+                StartupMethods = new StartupMethods(configureApp, configureServices: configureServices)
             };
 
-            _appInstance = new HostingEngine().Start(hostContext);
+            _appInstance = new HostingEngine(serviceProvider).Start(hostContext);
         }
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
 
-        public static TestServer Create(Action<IApplicationBuilder> app)
+        public static TestServer Create(Action<IApplicationBuilder> configureApp)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureServices: null);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices: null);
         }
 
-        public static TestServer Create(Action<IApplicationBuilder> app, ConfigureServicesDelegate configureServices)
+        public static TestServer Create(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, app, configureServices);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app)
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
         {
-            return Create(serviceProvider, app, configureServices: null);
+            return Create(serviceProvider, configureApp, configureServices: null);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> app, ConfigureServicesDelegate configureServices)
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
+            // REVIEW: do we need an overload that takes Config for Create?
             var config = new Configuration();
-            return new TestServer(config, app, configureServices);
+            return new TestServer(config, serviceProvider, configureApp, configureServices);
         }
 
         public HttpMessageHandler CreateHandler()
@@ -122,7 +119,7 @@ namespace Microsoft.AspNet.TestHost
         {
             public string Name
             {
-                get { return TestServer.ServerName; }
+                get { return ServerName; }
             }
         }
     }
