@@ -41,8 +41,6 @@ namespace Microsoft.AspNet.Hosting
 
             var context = new HostingContext()
             {
-                //FallbackServiceProvider = _serviceProvider,
-                //AdditionalHostingServices = services => {  }
                 Configuration = config,
                 ServerFactoryLocation = config.Get("server"), // TODO: Key names
                 ApplicationName = config.Get("app")  // TODO: Key names
