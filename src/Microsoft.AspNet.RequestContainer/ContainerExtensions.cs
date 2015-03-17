@@ -29,8 +29,7 @@ namespace Microsoft.AspNet.Builder
 
         public static IApplicationBuilder UseServices(this IApplicationBuilder builder, Func<IServiceCollection, IServiceProvider> configureServices)
         {
-            // Import services from hosting/DNX as fallback
-            var serviceCollection = HostingServices.Create(builder.ApplicationServices);
+            var serviceCollection = new ServiceCollection();
 
             builder.ApplicationServices = configureServices(serviceCollection);
 

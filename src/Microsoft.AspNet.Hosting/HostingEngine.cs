@@ -34,7 +34,7 @@ namespace Microsoft.AspNet.Hosting
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             _appLifetime = new ApplicationLifetime();
-            _applicationEnvironment = fallbackServices.GetRequiredService<IApplicationEnvironment>();
+            _applicationEnvironment = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
             _hostingEnvironment = new HostingEnvironment(_applicationEnvironment);
             _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _appLifetime);
         }
@@ -129,7 +129,6 @@ namespace Microsoft.AspNet.Hosting
         {
             var services = Import(_fallbackServices);
 
-            // Copied from AddHosting (TODO: remove AddHosting)
             services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
 
             services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());

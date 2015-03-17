@@ -3,14 +3,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime;
+using Microsoft.Framework.Runtime.Infrastructure;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting
@@ -37,6 +39,67 @@ namespace Microsoft.AspNet.Hosting
             engineStart.Dispose();
 
             Assert.Equal(1, _startInstances[0].DisposeCalls);
+        }
+
+        [Fact]
+        public void ApplicationNameDefaultsToApplicationEnvironmentName()
+        {
+            var context = new HostingContext
+            {
+                ServerFactory = this
+            };
+
+            var engine = new HostingEngine();
+
+            using (engine.Start(context))
+            {
+                Assert.Equal("Microsoft.AspNet.Hosting.Tests", context.ApplicationName);
+            }
+        }
+
+        [Fact]
+        public void EnvDefaultsToDevelopmentIfNoConfig()
+        {
+            var context = new HostingContext
+            {
+                ServerFactory = this
+            };
+
+            var engine = new HostingEngine();
+
+            using (engine.Start(context))
+            {
+                Assert.Equal("Development", context.EnvironmentName);
+                var env = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+                Assert.Equal("Development", env.EnvironmentName);
+            }
+        }
+
+        [Fact]
+        public void EnvDefaultsToDevelopmentConfigValueIfSpecified()
+        {
+            var vals = new Dictionary<string, string>
+            {
+                { "ASPNET_ENV", "Staging" }
+            };
+
+            var config = new Configuration()
+                .Add(new MemoryConfigurationSource(vals));
+
+            var context = new HostingContext
+            {
+                ServerFactory = this,
+                Configuration = config
+            };
+
+            var engine = new HostingEngine();
+
+            using (engine.Start(context))
+            {
+                Assert.Equal("Staging", context.EnvironmentName);
+                var env = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+                Assert.Equal("Staging", env.EnvironmentName);
+            }
         }
 
         [Fact]

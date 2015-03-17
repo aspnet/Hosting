@@ -20,7 +20,7 @@ namespace Microsoft.AspNet.TestHost
 
         public TestClientTests()
         {
-            _services = HostingServices.Create().BuildServiceProvider();
+            _services = new ServiceCollection().BuildServiceProvider();
 
             _server = TestServer.Create(_services, app => app.Run(ctx => Task.FromResult(0)));
         }

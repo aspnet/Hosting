@@ -20,7 +20,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupClassMayHaveHostingServicesInjected()
         {
-            var serviceCollection = new ServiceCollection().AddHosting();
+            var serviceCollection = new ServiceCollection();
             serviceCollection.AddInstance<IFakeStartupCallback>(this);
             var services = serviceCollection.BuildServiceProvider();
 
@@ -45,13 +45,13 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData("BaseClass")]
         public void StartupClassAddsConfigureServicesToApplicationServices(string environment)
         {
-            var services = HostingServices.Create().BuildServiceProvider();
+            var services = new ServiceCollection().BuildServiceProvider();
             var diagnosticMesssages = new List<string>();
 
             var startup = ApplicationStartup.LoadStartupMethods(services, "Microsoft.AspNet.Hosting.Tests", environment ?? "", diagnosticMesssages);
 
             var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(HostingServices.Create());
+            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
             startup.ConfigureDelegate(app);
 
             var options = app.ApplicationServices.GetRequiredService<IOptions<FakeOptions>>().Options;
@@ -83,13 +83,13 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact(Skip = "Review Failure")]
         public void StartupClassWithConfigureServicesAndUseServicesHidesConfigureServices()
         {
-            var services = HostingServices.Create().BuildServiceProvider();
+            var services = new ServiceCollection().BuildServiceProvider();
             var diagnosticMessages = new List<string>();
 
             var startup = ApplicationStartup.LoadStartupMethods(services, "Microsoft.AspNet.Hosting.Tests", "UseServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(HostingServices.Create());
+            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
             startup.ConfigureDelegate(app);
 
             Assert.NotNull(app.ApplicationServices.GetRequiredService<FakeService>());
@@ -104,7 +104,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupWithNoConfigureThrows()
         {
-            var serviceCollection = HostingServices.Create();
+            var serviceCollection = new ServiceCollection();
             serviceCollection.AddInstance<IFakeStartupCallback>(this);
             var services = serviceCollection.BuildServiceProvider();
             var diagnosticMessages = new List<string>();
@@ -113,10 +113,10 @@ namespace Microsoft.AspNet.Hosting.Tests
             Assert.Equal("A method named 'ConfigureBoom' or 'Configure' in the type 'Microsoft.AspNet.Hosting.Fakes.StartupBoom' could not be found.", ex.Message);
         }
 
-        [Fact(Skip = "No longer can inject into ConfigureServces")]
+        [Fact(Skip = "No longer can inject into ConfigureServices")]
         public void StartupWithConfigureServicesNotResolvedThrows()
         {
-            var serviceCollection = HostingServices.Create();
+            var serviceCollection = new ServiceCollection();
             var services = serviceCollection.BuildServiceProvider();
             var diagnosticMessages = new List<string>();
 
@@ -131,14 +131,14 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact(Skip = "Figure out what this should really do")]
         public void StartupClassWithConfigureServicesThatReturnsNullUsesExistingAppServices()
         {
-            var serviceCollection = HostingServices.Create();
+            var serviceCollection = new ServiceCollection();
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();
             var startup = ApplicationStartup.LoadStartupMethods(services, "Microsoft.AspNet.Hosting.Tests", "WithNullConfigureServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(HostingServices.Create());
+            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
             startup.ConfigureDelegate(app);
 
             Assert.Same(services, app.ApplicationServices);
@@ -147,7 +147,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupClassWithConfigureServicesShouldMakeServiceAvailableInConfigure()
         {
-            var serviceCollection = HostingServices.Create();
+            var serviceCollection = new ServiceCollection();
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();

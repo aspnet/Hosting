@@ -22,7 +22,7 @@ namespace Microsoft.AspNet.TestHost
         public void CreateWithDelegate()
         {
             // Arrange
-            var services = HostingServices.Create().BuildServiceProvider();
+            var services = new ServiceCollection().BuildServiceProvider();
 
             // Act & Assert (Does not throw)
             TestServer.Create(services, app => { });
