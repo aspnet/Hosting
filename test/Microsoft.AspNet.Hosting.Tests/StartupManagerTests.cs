@@ -12,7 +12,6 @@ using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Tests
 {
-
     public class StartupManagerTests : IFakeStartupCallback
     {
         private readonly IList<object> _configurationMethodCalledList = new List<object>();
