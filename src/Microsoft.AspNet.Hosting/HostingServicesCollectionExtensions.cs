@@ -24,11 +24,7 @@ namespace Microsoft.Framework.DependencyInjection
 
             // TODO: Do we expect this to be provide by the runtime eventually?
             services.AddLogging();
-            services.TryAdd(ServiceDescriptor.Singleton<IHostingEnvironment, HostingEnvironment>());
             services.TryAdd(ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>());
-
-            // REVIEW: don't try add because we pull out IEnumerable<IConfigureHostingEnvironment>?
-            services.AddInstance<IConfigureHostingEnvironment>(new ConfigureHostingEnvironment(configuration));
 
             return services;
         }

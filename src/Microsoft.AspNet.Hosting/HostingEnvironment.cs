@@ -10,17 +10,13 @@ namespace Microsoft.AspNet.Hosting
 {
     public class HostingEnvironment : IHostingEnvironment
     {
-        private const string DefaultEnvironmentName = "Development";
+        internal const string DefaultEnvironmentName = "Development";
 
-        public HostingEnvironment(IApplicationEnvironment appEnvironment, IEnumerable<IConfigureHostingEnvironment> configures)
+        public HostingEnvironment(IApplicationEnvironment appEnvironment)
         {
             EnvironmentName = DefaultEnvironmentName;
             WebRootPath = HostingUtilities.GetWebRoot(appEnvironment.ApplicationBasePath);
             WebRootFileProvider = new PhysicalFileProvider(WebRootPath);
-            foreach (var configure in configures)
-            {
-                configure.Configure(this);
-            }
         }
 
         public string EnvironmentName { get; set; }

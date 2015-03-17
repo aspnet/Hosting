@@ -5,40 +5,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
     public class HostingEngine
     {
+        private const string EnvironmentKey = "ASPNET_ENV";
         private readonly IServiceProvider _fallbackServices;
-        private readonly Action<IServiceCollection> _additionalServices;
         private readonly ApplicationLifetime _appLifetime;
+        private HostingEnvironment _hostingEnv;
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
 
         // Move everything except startupLoader to get them after configureServices
-        public HostingEngine() : this(fallbackServices: null, additionalServices: null) { }
+        public HostingEngine() : this(fallbackServices: null) { }
 
-        public HostingEngine(IServiceProvider fallbackServices) : this(fallbackServices, additionalServices: null) { }
-
-        public HostingEngine(Action<IServiceCollection> additionalServices) : this(fallbackServices : null, additionalServices: additionalServices) { }
-
-        public HostingEngine(IServiceProvider fallbackServices, Action<IServiceCollection> additionalServices)
+        public HostingEngine(IServiceProvider fallbackServices)
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
-            _additionalServices = additionalServices;
             _appLifetime = new ApplicationLifetime();
         }
 
         public IDisposable Start(HostingContext context)
         {
+            EnsureContextDefaults(context);
             EnsureApplicationServices(context);
             EnsureBuilder(context);
             EnsureServerFactory(context);
@@ -47,16 +44,33 @@ namespace Microsoft.AspNet.Hosting
 
             var contextFactory = context.ApplicationServices.GetRequiredService<IHttpContextFactory>();
             var contextAccessor = context.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
-            var pipeline = new PipelineInstance(contextFactory, context.ApplicationDelegate, contextAccessor);
-            var server = context.ServerFactory.Start(context.Server, pipeline.Invoke);
+            var server = context.ServerFactory.Start(context.Server, 
+                features =>
+                {
+                    var httpContext = contextFactory.CreateHttpContext(features);
+                    contextAccessor.HttpContext = httpContext;
+                    return context.ApplicationDelegate(httpContext);
+                });
 
             return new Disposable(() =>
             {
                 _appLifetime.NotifyStopping();
                 server.Dispose();
-                pipeline.Dispose();
                 _appLifetime.NotifyStopped();
             });
+        }
+
+        private void EnsureContextDefaults(HostingContext context)
+        {
+            var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
+            if (context.ApplicationName == null)
+            {
+                context.ApplicationName = appEnv.ApplicationName;
+            }
+            if (context.EnvironmentName == null)
+            {
+                context.EnvironmentName = context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
+            }
         }
 
         private void EnsureBuilder(HostingContext context)
@@ -103,19 +117,20 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-        private void EnsureHostingServices(HostingContext context)
+        private IServiceCollection CreateHostingServices(HostingContext context)
         {
-            if (context.HostingServices != null)
-            {
-                return;
-            }
-            context.HostingServices = HostingServices.Create(_fallbackServices, _additionalServices)
+            var services = HostingServices.Create(_fallbackServices)
+                .Add(context.Services)
                 .AddHosting(context.Configuration);
-            // REVIEW: jamming in app lifetime
-            context.HostingServices.TryAdd(ServiceDescriptor.Instance<IApplicationLifetime>(_appLifetime));
+
+            // Jamming in app lifetime and hosting env since these are not replaceable
+            services.AddInstance<IApplicationLifetime>(_appLifetime);
+            services.AddSingleton<IHostingEnvironment, HostingEnvironment>();
 
             // Conjure up a RequestServices
-            context.HostingServices.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
+            services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
+
+            return services;
         }
 
         private void EnsureApplicationDelegate(HostingContext context)
@@ -167,8 +182,7 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
             EnsureStartupMethods(context);
-            EnsureHostingServices(context);
-            context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(context.HostingServices);
+            context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices(context));
         }
 
         private class Disposable : IDisposable

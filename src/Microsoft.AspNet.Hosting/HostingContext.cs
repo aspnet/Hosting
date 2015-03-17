@@ -21,7 +21,7 @@ namespace Microsoft.AspNet.Hosting
         public StartupMethods StartupMethods { get; set; }
         public RequestDelegate ApplicationDelegate { get; set; }
 
-        public IServiceCollection HostingServices { get; set; }
+        public IServiceCollection Services { get; } = new ServiceCollection();
 
         // Result of ConfigureServices
         public IServiceProvider ApplicationServices { get; set; }
