@@ -33,7 +33,7 @@ namespace Microsoft.AspNet.Hosting
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
 
-            var services = HostingServices.Create(_serviceProvider, config)
+            var services = HostingServices.Create(_serviceProvider)
                 .BuildServiceProvider();
 
             var appEnv = services.GetRequiredService<IApplicationEnvironment>();

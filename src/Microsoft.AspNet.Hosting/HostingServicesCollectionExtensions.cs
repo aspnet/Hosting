@@ -4,18 +4,12 @@
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Server;
-using Microsoft.Framework.ConfigurationModel;
 
 namespace Microsoft.Framework.DependencyInjection
 {
     public static class HostingServicesExtensions
     {
         public static IServiceCollection AddHosting(this IServiceCollection services)
-        {
-            return services.AddHosting(configuration: null);
-        }
-
-        public static IServiceCollection AddHosting(this IServiceCollection services, IConfiguration configuration)
         {
             services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
 

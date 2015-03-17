@@ -30,38 +30,23 @@ namespace Microsoft.AspNet.Hosting
 
         public static IServiceCollection Create()
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices: null, configuration: null);
-        }
-
-        public static IServiceCollection Create(IServiceProvider fallbackServices)
-        {
-            return Create(fallbackServices, configureHostServices: null, configuration: null);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices: null);
         }
 
         public static IServiceCollection Create(Action<IServiceCollection> configureHostServices)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices, configuration: null);
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices);
+        }
+
+        public static IServiceCollection Create(IServiceProvider fallbackServices)
+        {
+            return Create(fallbackServices, configureHostServices: null);
         }
 
         public static IServiceCollection Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureHostServices)
         {
-            return Create(fallbackServices, configureHostServices, configuration: null);
-        }
-
-        public static IServiceCollection Create(Action<IServiceCollection> configureHostServices, IConfiguration configuration)
-        {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices, configuration);
-        }
-
-        public static IServiceCollection Create(IServiceProvider fallbackServices, IConfiguration configuration)
-        {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureHostServices: null, configuration: configuration);
-        }
-
-        public static IServiceCollection Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureHostServices, IConfiguration configuration)
-        {
             var services = Import(fallbackServices, configureHostServices);
-            services.AddHosting(configuration);
+            services.AddHosting();
             return services;
         }
     }

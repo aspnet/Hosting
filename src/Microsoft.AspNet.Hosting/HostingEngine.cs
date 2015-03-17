@@ -118,9 +118,20 @@ namespace Microsoft.AspNet.Hosting
 
         private IServiceCollection CreateHostingServices(HostingContext context)
         {
-            var services = HostingServices.Create(_fallbackServices)
-                .Add(context.Services)
-                .AddHosting(context.Configuration);
+            var services = HostingServices.Create(_fallbackServices);
+
+            // Copied from AddHosting (TODO: remove AddHosting)
+            services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
+
+            services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
+            services.TryAdd(ServiceDescriptor.Transient<IHttpContextFactory, HttpContextFactory>());
+
+            // TODO: Do we expect this to be provide by the runtime eventually?
+            services.AddLogging();
+            services.TryAdd(ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>());
+
+            // Apply user services
+            services.Add(context.Services);
 
             // Jamming in app lifetime and hosting env since these must not be replaceable
             services.AddInstance<IApplicationLifetime>(_appLifetime);
