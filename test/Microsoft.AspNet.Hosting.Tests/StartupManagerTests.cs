@@ -77,29 +77,6 @@ namespace Microsoft.AspNet.Hosting.Tests
         //    Assert.Equal(services, app.ApplicationServices);
         //}
 
-        // REVIEW: With the manifest change, Since the ConfigureServices are not imported, UseServices will mask what's in ConfigureServices
-        // This will throw since ConfigureServices consumes manifest and then UseServices will blow up
-        [Fact(Skip = "Review Failure")]
-        public void StartupClassWithConfigureServicesAndUseServicesHidesConfigureServices()
-        {
-            var services = new ServiceCollection().BuildServiceProvider();
-            var diagnosticMessages = new List<string>();
-
-            var startup = ApplicationStartup.LoadStartupMethods(services, "Microsoft.AspNet.Hosting.Tests", "UseServices", diagnosticMessages);
-
-            var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
-            startup.ConfigureDelegate(app);
-
-            Assert.NotNull(app.ApplicationServices.GetRequiredService<FakeService>());
-            Assert.Null(app.ApplicationServices.GetService<IFakeService>());
-
-            var options = app.ApplicationServices.GetRequiredService<IOptions<FakeOptions>>().Options;
-            Assert.NotNull(options);
-            Assert.Equal("Configured", options.Message);
-            Assert.False(options.Configured); // Options never resolved from inner containers
-        }
-
         [Fact]
         public void StartupWithNoConfigureThrows()
         {

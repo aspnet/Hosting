@@ -11,6 +11,7 @@ using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.TestHost
@@ -45,6 +46,19 @@ namespace Microsoft.AspNet.TestHost
             return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices: null);
         }
 
+        public static TestServer Create(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        {
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, 
+                sc =>
+                {
+                    if (configureServices != null)
+                    {
+                        configureServices(sc);
+                    }
+                    return sc.BuildServiceProvider();
+                });
+        }
+
         public static TestServer Create(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
             return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
@@ -53,6 +67,19 @@ namespace Microsoft.AspNet.TestHost
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
         {
             return Create(serviceProvider, configureApp, configureServices: null);
+        }
+
+        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        {
+            return Create(serviceProvider, configureApp,
+                sc =>
+                {
+                    if (configureServices != null)
+                    {
+                        configureServices(sc);
+                    }
+                    return sc.BuildServiceProvider();
+                });
         }
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
