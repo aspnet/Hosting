@@ -8,6 +8,7 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public interface IStartupFilter
     {
-        void Configure(IApplicationBuilder app, Action<IApplicationBuilder> next);
+        // TODO: replace with ConfigureDelegate?
+        Action<IApplicationBuilder> Configure(IApplicationBuilder app, Action<IApplicationBuilder> next);
     }
 }

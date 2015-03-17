@@ -113,6 +113,9 @@ namespace Microsoft.AspNet.Hosting
                 .AddHosting(context.Configuration);
             // REVIEW: jamming in app lifetime
             context.HostingServices.TryAdd(ServiceDescriptor.Instance<IApplicationLifetime>(_appLifetime));
+
+            // Conjure up a RequestServices
+            context.HostingServices.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
         }
 
         private void EnsureApplicationDelegate(HostingContext context)
@@ -122,16 +125,17 @@ namespace Microsoft.AspNet.Hosting
                 return;
             }
 
-            // This will ensure RequestServices are populated, TODO implement StartupFilter
-            context.Builder.UseMiddleware<RequestServicesContainerMiddleware>();
+            // REVIEW: should we call EnsureApplicationServices?
+            var startupFilters = context.ApplicationServices.GetService<IEnumerable<IStartupFilter>>();
+            var configure = context.StartupMethods.ConfigureDelegate;
+            foreach (var filter in startupFilters)
+            {
+                configure = filter.Configure(context.Builder, configure);
+            }
 
-            context.StartupMethods.ConfigureDelegate(context.Builder);
+            configure(context.Builder);
 
             context.ApplicationDelegate = context.Builder.Build();
-        }
-
-        private void InvokeApplicationStartupFilter(HostingContext context)
-        {
         }
 
         private void EnsureStartupMethods(HostingContext context)
