@@ -20,7 +20,6 @@ namespace Microsoft.AspNet.Hosting
         private const string EnvironmentKey = "ASPNET_ENV";
         private readonly IServiceProvider _fallbackServices;
         private readonly ApplicationLifetime _appLifetime;
-        private HostingEnvironment _hostingEnv;
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
 
@@ -123,7 +122,7 @@ namespace Microsoft.AspNet.Hosting
                 .Add(context.Services)
                 .AddHosting(context.Configuration);
 
-            // Jamming in app lifetime and hosting env since these are not replaceable
+            // Jamming in app lifetime and hosting env since these must not be replaceable
             services.AddInstance<IApplicationLifetime>(_appLifetime);
             services.AddSingleton<IHostingEnvironment, HostingEnvironment>();
 
