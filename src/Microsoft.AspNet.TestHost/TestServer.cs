@@ -59,11 +59,6 @@ namespace Microsoft.AspNet.TestHost
                 });
         }
 
-        public static TestServer Create(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
-        {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
-        }
-
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
         {
             return Create(serviceProvider, configureApp, configureServices: null);
