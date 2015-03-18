@@ -33,7 +33,7 @@ namespace Microsoft.AspNet.TestHost
                 ApplicationName = "Test App",
                 Configuration = config,
                 ServerFactory = this,
-                StartupMethods = new StartupMethods(configureApp, configureServices: configureServices)
+                StartupMethods = new StartupMethods(configureApp, configureServices)
             };
 
             _appInstance = new HostingEngine(serviceProvider).Start(hostContext);
