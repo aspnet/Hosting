@@ -27,7 +27,6 @@ namespace Microsoft.AspNet.Hosting
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
 
-        // Move everything except startupLoader to get them after configureServices
         public HostingEngine() : this(fallbackServices: null) { }
 
         public HostingEngine(IServiceProvider fallbackServices)
@@ -79,6 +78,40 @@ namespace Microsoft.AspNet.Hosting
             }
 
             _hostingEnvironment.EnvironmentName = context.EnvironmentName;
+        }
+
+        private void EnsureApplicationServices(HostingContext context)
+        {
+            if (context.ApplicationServices != null)
+            {
+                return;
+            }
+
+            EnsureStartupMethods(context);
+
+            context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices(context));
+        }
+
+        private void EnsureStartupMethods(HostingContext context)
+        {
+            if (context.StartupMethods != null)
+            {
+                return;
+            }
+
+            var diagnosticMessages = new List<string>();
+            context.StartupMethods = ApplicationStartup.LoadStartupMethods(
+                _fallbackServices,
+                context.ApplicationName,
+                context.EnvironmentName,
+                diagnosticMessages);
+
+            if (context.StartupMethods == null)
+            {
+                throw new ArgumentException(
+                    diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
+                    nameof(context));
+            }
         }
 
         private void EnsureBuilder(HostingContext context)
@@ -169,40 +202,6 @@ namespace Microsoft.AspNet.Hosting
             configure(context.Builder);
 
             context.ApplicationDelegate = context.Builder.Build();
-        }
-
-        private void EnsureStartupMethods(HostingContext context)
-        {
-            if (context.StartupMethods != null)
-            {
-                return;
-            }
-
-            var diagnosticMessages = new List<string>();
-            context.StartupMethods = ApplicationStartup.LoadStartupMethods(
-                _fallbackServices,
-                context.ApplicationName,
-                context.EnvironmentName,
-                diagnosticMessages);
-
-            if (context.StartupMethods == null)
-            {
-                throw new ArgumentException(
-                    diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
-                    nameof(context));
-            }
-        }
-
-        private void EnsureApplicationServices(HostingContext context)
-        {
-            if (context.ApplicationServices != null)
-            {
-                return;
-            }
-
-            EnsureStartupMethods(context);
-
-            context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices(context));
         }
 
         private static IServiceCollection Import(IServiceProvider fallbackProvider)
