@@ -78,6 +78,11 @@ namespace Microsoft.AspNet.Hosting
             }
 
             _hostingEnvironment.EnvironmentName = context.EnvironmentName;
+
+            if (context.WebRootPath != null)
+            {
+                _hostingEnvironment.WebRootPath = context.WebRootPath;
+            }
         }
 
         private void EnsureApplicationServices(HostingContext context)

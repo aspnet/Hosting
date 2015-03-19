@@ -21,7 +21,7 @@ namespace Microsoft.AspNet.Hosting
 
         public string EnvironmentName { get; set; }
 
-        public string WebRootPath { get; private set; }
+        public string WebRootPath { get; set; }
 
         public IFileProvider WebRootFileProvider { get; private set; }
     }

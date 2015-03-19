@@ -28,7 +28,7 @@ namespace Microsoft.AspNet.TestHost
         // REVIEW: we can configure services via AppStartup or via hostContext.Services
         public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            HostingContext hostContext = new HostingContext()
+            var hostContext = new HostingContext()
             {
                 ApplicationName = "Test App",
                 Configuration = config,
