@@ -59,24 +59,6 @@ namespace Microsoft.AspNet.Hosting.Tests
             Assert.Equal(environment, options.Environment);
         }
 
-        // REVIEW: no longer supported
-        //[Theory]
-        //[InlineData("Null")]
-        //[InlineData("FallbackProvider")]
-        //public void StartupClassConfigureServicesThatFallsbackToApplicationServices(string env)
-        //{
-        //    var services = HostingServices.Create().BuildServiceProvider();
-        //    var diagnosticMessages = new List<string>();
-
-        //    var startup = ApplicationStartup.LoadStartupMethods(services, "Microsoft.AspNet.Hosting.Tests", env, diagnosticMessages);
-
-        //    var app = new ApplicationBuilder(services);
-        //    app.ApplicationServices = startup.ConfigureServicesDelegate(HostingServices.Create());
-        //    startup.ConfigureDelegate(app);
-
-        //    Assert.Equal(services, app.ApplicationServices);
-        //}
-
         [Fact]
         public void StartupWithNoConfigureThrows()
         {
@@ -89,23 +71,8 @@ namespace Microsoft.AspNet.Hosting.Tests
             Assert.Equal("A method named 'ConfigureBoom' or 'Configure' in the type 'Microsoft.AspNet.Hosting.Fakes.StartupBoom' could not be found.", ex.Message);
         }
 
-        [Fact(Skip = "No longer can inject into ConfigureServices")]
-        public void StartupWithConfigureServicesNotResolvedThrows()
-        {
-            var serviceCollection = new ServiceCollection();
-            var services = serviceCollection.BuildServiceProvider();
-            var diagnosticMessages = new List<string>();
-
-            var startup = ApplicationStartup.LoadStartupMethods(services, "Microsoft.AspNet.Hosting.Tests", "WithConfigureServicesNotResolved", diagnosticMessages);
-            var app = new ApplicationBuilder(services);
-
-            var ex = Assert.Throws<Exception>(() => startup.ConfigureServicesDelegate(serviceCollection));
-
-            Assert.Equal("Could not resolve a service of type 'System.Int32' for the parameter 'notAService' of method 'Configure' on type 'Microsoft.AspNet.Hosting.Fakes.StartupWithConfigureServicesNotResolved'.", ex.Message);
-        }
-
-        [Fact(Skip = "Figure out what this should really do")]
-        public void StartupClassWithConfigureServicesThatReturnsNullUsesExistingAppServices()
+        [Fact]
+        public void StartupClassCanHandleConfigureServicesThatReturnsNull()
         {
             var serviceCollection = new ServiceCollection();
             var services = serviceCollection.BuildServiceProvider();
@@ -115,9 +82,9 @@ namespace Microsoft.AspNet.Hosting.Tests
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
+            Assert.NotNull(app.ApplicationServices);
             startup.ConfigureDelegate(app);
-
-            Assert.Same(services, app.ApplicationServices);
+            Assert.NotNull(app.ApplicationServices);
         }
 
         [Fact]
