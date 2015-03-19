@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -22,10 +21,8 @@ namespace Microsoft.AspNet.TestHost
         public void CreateWithDelegate()
         {
             // Arrange
-            var services = HostingServices.Create().BuildServiceProvider();
-
             // Act & Assert (Does not throw)
-            TestServer.Create(services, app => { });
+            TestServer.Create(app => { });
         }
 
         [Fact]
@@ -108,7 +105,8 @@ namespace Microsoft.AspNet.TestHost
                     var accessor = app.ApplicationServices.GetRequiredService<ContextHolder>();
                     return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.HttpContext != null));
                 });
-            }, newHostServices => newHostServices.AddSingleton<ContextHolder>());
+            },
+            services => services.AddSingleton<ContextHolder>().BuildServiceProvider());
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("HasContext:True", result);
