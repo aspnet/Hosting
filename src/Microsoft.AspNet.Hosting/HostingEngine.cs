@@ -38,9 +38,20 @@ namespace Microsoft.AspNet.Hosting
             _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _appLifetime);
         }
 
+        public static IServiceProvider CreateApplicationServices(HostingContext context)
+        {
+            return CreateApplicationServices(context, fallbackServices: null);
+        }
+
+        public static IServiceProvider CreateApplicationServices(HostingContext context, IServiceProvider fallbackServices)
+        {
+            var engine = new HostingEngine(fallbackServices);
+            engine.EnsureApplicationServices(context);
+            return context.ApplicationServices;
+        }
+
         public IDisposable Start(HostingContext context)
         {
-            EnsureContextDefaults(context);
             EnsureApplicationServices(context);
             EnsureBuilder(context);
             EnsureServerFactory(context);
@@ -87,6 +98,8 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureApplicationServices(HostingContext context)
         {
+            EnsureContextDefaults(context);
+
             if (context.ApplicationServices != null)
             {
                 return;
