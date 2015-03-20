@@ -46,6 +46,12 @@ namespace Microsoft.AspNet.Hosting
         public static IServiceProvider CreateApplicationServices(HostingContext context, IServiceProvider fallbackServices)
         {
             var engine = new HostingEngine(fallbackServices);
+
+            // Default to no-op startup if not specified in context
+            if (context.StartupMethods == null)
+            {
+                context.StartupMethods = new StartupMethods(_ => { }, configureServices: null);
+            }
             engine.EnsureApplicationServices(context);
             return context.ApplicationServices;
         }
