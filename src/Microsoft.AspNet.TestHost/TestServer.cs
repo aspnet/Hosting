@@ -25,21 +25,31 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        // REVIEW: we can configure services via AppStartup or via hostContext.Services
-        public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        public TestServer(IServiceProvider serviceProvider, HostingContext context)
         {
-            var hostContext = new HostingContext()
+            if (context.ServerFactory == null)
             {
-                ApplicationName = "Test App",
-                Configuration = config,
-                ServerFactory = this,
-                StartupMethods = new StartupMethods(configureApp, configureServices)
-            };
-
-            _appInstance = new HostingEngine(serviceProvider).Start(hostContext);
+                context.ServerFactory = this;
+            }
+            _appInstance = new HostingEngine(serviceProvider, context.ApplicationName, context.ApplicationBasePath).Start(context);
         }
 
+        // REVIEW: we can configure services via AppStartup or via hostContext.Services
+        public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+            : this(serviceProvider, new HostingContext()
+                {
+                    ApplicationName = "Test App",
+                    Configuration = config,
+                    StartupMethods = new StartupMethods(configureApp, configureServices)
+                })
+        { }
+
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
+
+        public static TestServer Create(HostingContext context)
+        {
+            return new TestServer(CallContextServiceLocator.Locator.ServiceProvider, context);
+        }
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp)
         {

@@ -8,6 +8,9 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public class StartupMethods
     {
+        public StartupMethods(Action<IApplicationBuilder> configure) 
+            : this(configure, configureServices: null) { }
+
         // TODO: switch to ConfigureDelegate eventually
         public StartupMethods(Action<IApplicationBuilder> configure, ConfigureServicesDelegate configureServices)
         {

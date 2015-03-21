@@ -2,15 +2,18 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.Runtime;
 using Xunit;
 
 namespace Microsoft.AspNet.TestHost
@@ -48,6 +51,52 @@ namespace Microsoft.AspNet.TestHost
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("RequestServices:True", result);
+        }
+
+        [Fact]
+        public async Task CanChangeApplicationName()
+        {
+            var appName = "gobblegobble";
+            var hostingContext = new HostingContext
+            {
+                ApplicationName = appName,
+                StartupMethods = new StartupMethods(
+                    app =>
+                    {
+                        app.Run(context =>
+                        {
+                            var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+                            return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
+                        });
+                    })
+            };
+            TestServer server = TestServer.Create(hostingContext);
+
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("AppName:"+appName, result);
+        }
+
+        [Fact]
+        public async Task CanChangeAppPath()
+        {
+            var appPath = ".";
+            var hostingContext = new HostingContext
+            {
+                ApplicationBasePath = appPath,
+                StartupMethods = new StartupMethods(
+                    app =>
+                    {
+                        app.Run(context =>
+                        {
+                            var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+                            return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
+                        });
+                    })
+            };
+            TestServer server = TestServer.Create(hostingContext);
+
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("AppPath:" + appPath, result);
         }
 
         [Fact]
