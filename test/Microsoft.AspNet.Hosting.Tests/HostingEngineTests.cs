@@ -10,6 +10,7 @@ using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.OptionsModel;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting
@@ -36,6 +37,15 @@ namespace Microsoft.AspNet.Hosting
             engineStart.Dispose();
 
             Assert.Equal(1, _startInstances[0].DisposeCalls);
+        }
+
+        [Fact]
+        public void CanCreateApplicationServicesWithDefaultHostingContext()
+        {
+            var context = new HostingContext();
+            context.Services.AddOptions();
+            var appServices = HostingEngine.CreateApplicationServices(context);
+            Assert.NotNull(appServices.GetRequiredService<IOptions<object>>());
         }
 
         [Fact]
@@ -129,11 +139,6 @@ namespace Microsoft.AspNet.Hosting
                 Assert.True(env.IsEnvironment("Development"));
                 Assert.True(env.IsEnvironment("developMent"));
             }
-        }
-
-        public void Initialize(IApplicationBuilder builder)
-        {
-
         }
 
         public IServerInformation Initialize(IConfiguration configuration)

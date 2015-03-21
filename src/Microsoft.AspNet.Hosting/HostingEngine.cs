@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
@@ -21,7 +23,7 @@ namespace Microsoft.AspNet.Hosting
 
         private readonly IServiceProvider _fallbackServices;
         private readonly ApplicationLifetime _appLifetime;
-        private readonly IApplicationEnvironment _applicationEnvironment;
+        private readonly IApplicationEnvironment _appEnv;
         private readonly HostingEnvironment _hostingEnvironment;
 
         private IServerLoader _serverLoader;
@@ -29,18 +31,39 @@ namespace Microsoft.AspNet.Hosting
 
         public HostingEngine() : this(fallbackServices: null) { }
 
-        public HostingEngine(IServiceProvider fallbackServices)
+        public HostingEngine(IServiceProvider fallbackServices) : this(fallbackServices, applicationName: null, applicationPath: null) { }
+
+        public HostingEngine(IServiceProvider fallbackServices, string applicationName, string applicationPath)
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             _appLifetime = new ApplicationLifetime();
-            _applicationEnvironment = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
-            _hostingEnvironment = new HostingEnvironment(_applicationEnvironment);
+            var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
+            _appEnv = new HostingApplicationEnvironment(appEnv, applicationPath, applicationName);
+            _hostingEnvironment = new HostingEnvironment(_appEnv);
             _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _appLifetime);
+        }
+
+        public static IServiceProvider CreateApplicationServices(HostingContext context)
+        {
+            return CreateApplicationServices(context, fallbackServices: null);
+        }
+
+        // REVIEW: so ugly ApplicationName used here as input
+        public static IServiceProvider CreateApplicationServices(HostingContext context, IServiceProvider fallbackServices)
+        {
+            var engine = new HostingEngine(fallbackServices, context.ApplicationName, context.ApplicationBasePath);
+
+            // Default to no-op startup if not specified in context
+            if (context.StartupMethods == null)
+            {
+                context.StartupMethods = new StartupMethods(_ => { });
+            }
+            engine.EnsureApplicationServices(context);
+            return context.ApplicationServices;
         }
 
         public IDisposable Start(HostingContext context)
         {
-            EnsureContextDefaults(context);
             EnsureApplicationServices(context);
             EnsureBuilder(context);
             EnsureServerFactory(context);
@@ -69,7 +92,7 @@ namespace Microsoft.AspNet.Hosting
         {
             if (context.ApplicationName == null)
             {
-                context.ApplicationName = _applicationEnvironment.ApplicationName;
+                context.ApplicationName = _appEnv.ApplicationName;
             }
 
             if (context.EnvironmentName == null)
@@ -78,15 +101,12 @@ namespace Microsoft.AspNet.Hosting
             }
 
             _hostingEnvironment.EnvironmentName = context.EnvironmentName;
-
-            if (context.WebRootPath != null)
-            {
-                _hostingEnvironment.WebRootPath = context.WebRootPath;
-            }
         }
 
         private void EnsureApplicationServices(HostingContext context)
         {
+            EnsureContextDefaults(context);
+
             if (context.ApplicationServices != null)
             {
                 return;
@@ -179,9 +199,10 @@ namespace Microsoft.AspNet.Hosting
             // Apply user services
             services.Add(context.Services);
 
-            // Jamming in app lifetime and hosting env since these must not be replaceable
+            // Jamming in app lifetime, app env, and hosting env since these must not be replaceable
             services.AddInstance<IApplicationLifetime>(_appLifetime);
             services.AddInstance<IHostingEnvironment>(_hostingEnvironment);
+            services.AddInstance(_appEnv);
 
             // Conjure up a RequestServices
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
@@ -249,6 +270,51 @@ namespace Microsoft.AspNet.Hosting
                 }
 
                 return _sp.GetService(serviceType);
+            }
+        }
+
+        // Represents an application environment that overrides the base path of the original
+        // application environment in order to make it point to the test application folder.
+        private class HostingApplicationEnvironment : IApplicationEnvironment
+        {
+            private readonly IApplicationEnvironment _originalAppEnvironment;
+            private readonly string _appName;
+            private readonly string _appPath;
+
+            public HostingApplicationEnvironment(
+                IApplicationEnvironment originalAppEnvironment,
+                string appPath,
+                string appName)
+            {
+                _originalAppEnvironment = originalAppEnvironment;
+                _appPath = appPath;
+                _appName = appName;
+            }
+
+            public string ApplicationName
+            {
+                get { return _appName ?? _originalAppEnvironment.ApplicationName; }
+            }
+
+            public string Version
+            {
+                get { return _originalAppEnvironment.Version; }
+            }
+
+            public string ApplicationBasePath
+            {
+                get { return _appPath ?? _originalAppEnvironment.ApplicationBasePath; }
+            }
+
+            public string Configuration
+            {
+                get
+                { return _originalAppEnvironment.Configuration; }
+            }
+
+            public FrameworkName RuntimeFramework
+            {
+                get { return _originalAppEnvironment.RuntimeFramework; }
             }
         }
 

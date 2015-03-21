@@ -76,7 +76,6 @@ namespace Microsoft.AspNet.Hosting.Startup
             return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
         }
 
-
         public static ConfigureBuilder FindConfigureDelegate(Type startupType, string environmentName)
         {
             var configureMethod = FindMethod(startupType, "Configure{0}", environmentName, typeof(void), required: true);

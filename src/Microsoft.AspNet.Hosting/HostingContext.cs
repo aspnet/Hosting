@@ -17,7 +17,9 @@ namespace Microsoft.AspNet.Hosting
         public IApplicationBuilder Builder { get; set; }
 
         public string ApplicationName { get; set; }
-        public string WebRootPath { get; set; }
+        // REVIEW: BasePath and WebRootPath are basically setting same thing?
+        public string ApplicationBasePath { get; set; }
+        //public string WebRootPath { get; set; }
         public string EnvironmentName { get; set; }
         public StartupMethods StartupMethods { get; set; }
         public RequestDelegate ApplicationDelegate { get; set; }
