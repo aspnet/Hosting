@@ -25,6 +25,7 @@ namespace Microsoft.AspNet.Hosting.Server
                 throw new ArgumentException(string.Empty, "serverFactoryIdentifier");
             }
 
+            // NUKE (and replace: ) // assembly or type name => LoadLibrary, and find IServerFactory
             var nameParts = HostingUtilities.SplitTypeName(serverFactoryIdentifier);
             string typeName = nameParts.Item1;
             string assemblyName = nameParts.Item2;
@@ -53,6 +54,7 @@ namespace Microsoft.AspNet.Hosting.Server
                     throw new Exception(string.Format("The type {0} failed to load.", typeName ?? "<null>"));
                 }
             }
+            // Cut the else, server name is assembly name only
             else
             {
                 type = assembly.GetType(typeName);
