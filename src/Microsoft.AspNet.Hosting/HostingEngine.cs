@@ -3,9 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Threading;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
@@ -38,6 +36,13 @@ namespace Microsoft.AspNet.Hosting
 
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
+        private string _environmentName;
+        private RequestDelegate _applicationDelegate;
+
+        // Result of ConfigureServices and ConfigureHostingServices
+        private IServiceProvider _applicationServices;
+
+
 
         public HostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureHostingServices)
         {
@@ -58,14 +63,14 @@ namespace Microsoft.AspNet.Hosting
             InitalizeServerFactory();
             EnsureApplicationDelegate();
 
-            var _contextFactory = _context.ApplicationServices.GetRequiredService<IHttpContextFactory>();
-            var _contextAccessor = _context.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
+            var _contextFactory = _applicationServices.GetRequiredService<IHttpContextFactory>();
+            var _contextAccessor = _applicationServices.GetRequiredService<IHttpContextAccessor>();
             var server = _context.ServerFactory.Start(_context.Server,
                 features =>
                 {
                     var httpContext = _contextFactory.CreateHttpContext(features);
                     _contextAccessor.HttpContext = httpContext;
-                    return _context.ApplicationDelegate(httpContext);
+                    return _applicationDelegate(httpContext);
                 });
 
             _instanceStarted = new Disposable(() =>
@@ -85,12 +90,8 @@ namespace Microsoft.AspNet.Hosting
                 _context.StartupClass = _applicationEnvironment.ApplicationName;
             }
 
-            if (_context.EnvironmentName == null)
-            {
-                _context.EnvironmentName = _context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
-            }
-
-            _hostingEnvironment.EnvironmentName = _context.EnvironmentName;
+            _environmentName = _context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
+            _hostingEnvironment.EnvironmentName = _environmentName;
         }
 
         private void EnsureApplicationServices()
@@ -99,7 +100,7 @@ namespace Microsoft.AspNet.Hosting
             EnsureContextDefaults();
             EnsureStartupMethods();
 
-            _context.ApplicationServices = _context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices());
+            _applicationServices = _context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices());
         }
 
         private void EnsureStartupMethods()
@@ -113,7 +114,7 @@ namespace Microsoft.AspNet.Hosting
             _context.StartupMethods = ApplicationStartup.LoadStartupMethods(
                 _fallbackServices,
                 _context.StartupClass,
-                _context.EnvironmentName,
+                _environmentName,
                 diagnosticMessages);
 
             if (_context.StartupMethods == null)
@@ -126,18 +127,13 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureBuilder()
         {
-            if (_context.Builder != null)
-            {
-                return;
-            }
-
             if (_builderFactory == null)
             {
-                _builderFactory = _context.ApplicationServices.GetRequiredService<IApplicationBuilderFactory>();
+                _builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
             }
 
             _context.Builder = _builderFactory.CreateBuilder();
-            _context.Builder.ApplicationServices = _context.ApplicationServices;
+            _context.Builder.ApplicationServices = _applicationServices;
         }
 
         private void EnsureServerFactory()
@@ -149,7 +145,7 @@ namespace Microsoft.AspNet.Hosting
 
             if (_serverLoader == null)
             {
-                _serverLoader = _context.ApplicationServices.GetRequiredService<IServerLoader>();
+                _serverLoader = _applicationServices.GetRequiredService<IServerLoader>();
             }
 
             _context.ServerFactory = _serverLoader.LoadServerFactory(_context.ServerFactoryLocation);
@@ -200,8 +196,7 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureApplicationDelegate()
         {
-            // REVIEW: should we call EnsureApplicationServices?
-            var startupFilters = _context.ApplicationServices.GetService<IEnumerable<IStartupFilter>>();
+            var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
             var configure = _context.StartupMethods.ConfigureDelegate;
             foreach (var filter in startupFilters)
             {
@@ -210,7 +205,7 @@ namespace Microsoft.AspNet.Hosting
 
             configure(_context.Builder);
 
-            _context.ApplicationDelegate = _context.Builder.Build();
+            _applicationDelegate = _context.Builder.Build();
         }
 
         private static IServiceCollection Import(IServiceProvider fallbackProvider)
@@ -240,7 +235,7 @@ namespace Microsoft.AspNet.Hosting
             get
             {
                 EnsureApplicationServices();
-                return _context.ApplicationServices;
+                return _applicationServices;
             }
         }
 
@@ -332,20 +327,7 @@ namespace Microsoft.AspNet.Hosting
             public IApplicationBuilder Builder { get; set; }
 
             public string StartupClass { get; set; }
-            // REVIEW: BasePath and WebRootPath are basically setting same thing?
-            public string ApplicationBasePath { get; set; }
-            //public string WebRootPath { get; set; }
-            public string EnvironmentName { get; set; }
             public StartupMethods StartupMethods { get; set; }
-            public RequestDelegate ApplicationDelegate { get; set; }
-
-            public IServiceCollection Services { get; } = new ServiceCollection();
-
-            // Result of ConfigureServices and ConfigureHostingServices
-            public IServiceProvider ApplicationServices { get; set; }
-
-            // Result of ConfigureHostingServices
-            public IServiceProvider HostingServices { get; set; }
 
             public string ServerFactoryLocation { get; set; }
             public IServerFactory ServerFactory { get; set; }

@@ -8,7 +8,6 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Server;
-using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -25,14 +24,13 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        // REVIEW: we can configure services via AppStartup or via hostContext.Services
         public TestServer(IServiceProvider serviceProvider, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
             serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
             // Review: should we assume these are configureing host services always?
             var engine = HostingEngineFactory.Create(serviceProvider, config, configureServices)
                 .UseServer(this)
-                .UseStartup(configureApp, configureServices);
+                .UseStartup(configureApp, configureServices: null); // REVIEW: never need this one since we configuring at the host level
             _appInstance = engine.Start();
         }
 
@@ -58,13 +56,6 @@ namespace Microsoft.AspNet.TestHost
             // REVIEW: need overload that takes config??
             return new TestServer(serviceProvider, new Configuration(), configureApp, configureServices);
         }
-
-        //public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
-        //{
-        //    // REVIEW: do we need an overload that takes Config for Create?
-        //    var config = new Configuration();
-        //    return new TestServer(config, serviceProvider, configureApp, configureServices);
-        //}
 
         public HttpMessageHandler CreateHandler()
         {
