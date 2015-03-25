@@ -230,6 +230,11 @@ namespace Microsoft.AspNet.Hosting
             {
                 throw new NotImplementedException();
             }
+
+            public IHostingEngine UseEnvironment(string environment)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
