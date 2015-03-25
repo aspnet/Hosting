@@ -13,13 +13,13 @@ namespace Microsoft.AspNet.Hosting
     {
         public static IHostingEngine Create(IServiceProvider fallbackServices)
         {
-            return Create(fallbackServices, configureServices: null);
+            return Create(fallbackServices, configureHostingServices: null);
         }
 
-        public static IHostingEngine Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
+        public static IHostingEngine Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureHostingServices)
         {
             fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider; // Switch to assume not null?
-            var services = Import(fallbackServices, configureServices);
+            var services = Import(fallbackServices, configureHostingServices);
             services.TryAdd(ServiceDescriptor.Transient<IHostingEngine, HostingEngine>());
             services.TryAdd(ServiceDescriptor.Transient<IStartupLoader, StartupLoader>());
             var hostingServices = services.BuildServiceProvider();
@@ -36,7 +36,6 @@ namespace Microsoft.AspNet.Hosting
                 services.AddTransient(service, sp => fallbackServices.GetService(service));
             }
 
-            // Apply user hosting services
             if (configureServices != null)
             {
                 configureServices(services);

@@ -27,8 +27,7 @@ namespace Microsoft.AspNet.TestHost
         public TestServer(IServiceProvider serviceProvider, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
             serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-            // Review: should we assume these are configureing host services always?
-            var engine = HostingEngineFactory.Create(serviceProvider, configureServices)
+            var engine = HostingEngineFactory.Create(serviceProvider)
                 .UseConfiguration(config)
                 .UseServer(this)
                 .UseStartup(configureApp, configureServices); // REVIEW: never need this one since we configuring at the host level
