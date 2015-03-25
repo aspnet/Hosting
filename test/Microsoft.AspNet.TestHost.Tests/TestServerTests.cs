@@ -25,7 +25,7 @@ namespace Microsoft.AspNet.TestHost
         {
             // Arrange
             // Act & Assert (Does not throw)
-            TestServer.Create(app => { });
+            TestServer.Start(app => { });
         }
 
         [Fact]
@@ -35,13 +35,13 @@ namespace Microsoft.AspNet.TestHost
             var services = new ServiceCollection().BuildServiceProvider();
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Startup().Configuration));
+            Assert.Throws<InvalidOperationException>(() => TestServer.Start(services, new Startup().Configuration));
         }
 
         [Fact]
         public async Task RequestServicesAutoCreated()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(context =>
                 {
@@ -103,7 +103,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CanAccessLogger()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(context =>
                 {
@@ -119,7 +119,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CanAccessHttpContext()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(context =>
                 {
@@ -145,7 +145,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CanAddNewHostServices()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(context =>
                 {
@@ -162,7 +162,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CreateInvokesApp()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(context =>
                 {
@@ -177,7 +177,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public void WebRootCanBeResolvedWhenNotInTheProjectJson()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 var env = app.ApplicationServices.GetRequiredService<IHostingEnvironment>();
                 Assert.Equal(Directory.GetCurrentDirectory(), env.WebRootPath);
@@ -187,7 +187,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task DisposeStreamIgnored()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(async context =>
                 {
@@ -204,7 +204,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task DisposedServerThrows()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(async context =>
                 {
@@ -222,7 +222,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public void CancelAborts()
         {
-            TestServer server = TestServer.Create(app =>
+            TestServer server = TestServer.Start(app =>
             {
                 app.Run(context =>
                 {
@@ -238,10 +238,20 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CanCreateViaStartupType()
         {
-            TestServer server = TestServer.Create<TestStartup>();
+            TestServer server = TestServer.Start<TestStartup>();
             HttpResponseMessage result = await server.CreateClient().GetAsync("/");
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
             Assert.Equal("FoundService:True", await result.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task CanCreateViaStartupTypeAndSpecifyEnv()
+        {
+            TestServer server = TestServer.Create();
+            server.UseStartup<TestStartup>().UseEnvironment("Foo").Start();
+            HttpResponseMessage result = await server.CreateClient().GetAsync("/");
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("FoundFoo:False", await result.Content.ReadAsStringAsync());
         }
 
         public class Startup
@@ -268,6 +278,10 @@ namespace Microsoft.AspNet.TestHost
                 services.AddSingleton<SimpleService>();
             }
 
+            public void ConfigureFooServices(IServiceCollection services)
+            {
+            }
+
             public void Configure(IApplicationBuilder app)
             {
                 app.Run(context =>
@@ -277,7 +291,14 @@ namespace Microsoft.AspNet.TestHost
                 });
             }
 
+            public void ConfigureFoo(IApplicationBuilder app)
+            {
+                app.Run(context =>
+                {
+                    var service = app.ApplicationServices.GetService<SimpleService>();
+                    return context.Response.WriteAsync("FoundFoo:" + (service != null));
+                });
+            }
         }
-
     }
 }

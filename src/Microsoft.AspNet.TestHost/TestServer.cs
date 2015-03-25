@@ -33,46 +33,54 @@ namespace Microsoft.AspNet.TestHost
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
 
-        public static TestServer Create<T>() where T : class
+        public static TestServer Start<T>() where T : class
         {
-            return Create<T>(CallContextServiceLocator.Locator.ServiceProvider);
+            return Start<T>(CallContextServiceLocator.Locator.ServiceProvider);
         }
 
-        public static TestServer Create<T>(IServiceProvider serviceProvider) where T : class
+        public static TestServer Start<T>(IServiceProvider serviceProvider) where T : class
         {
             serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-            var config = new Configuration();
 
-            var engine = HostingEngineFactory.Create(serviceProvider, services => services.AddSingleton<IHostingEngine, TestServer>())
-                .UseConfiguration(config)
+            var engine = Create(serviceProvider)
                 .UseStartup(typeof(T));
 
             engine.Start();
             return engine as TestServer;
         }
 
-        public static TestServer Create(Action<IApplicationBuilder> configureApp)
+        public static TestServer Start(Action<IApplicationBuilder> configureApp)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices: null);
+            return Start(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices: null);
         }
 
-        public static TestServer Create(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public static TestServer Start(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
+            return Start(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
+        public static TestServer Start(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
         {
-            return Create(serviceProvider, configureApp, configureServices: null);
+            return Start(serviceProvider, configureApp, configureServices: null);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public static TestServer Create()
+        {
+            return Create(CallContextServiceLocator.Locator.ServiceProvider);
+        }
+
+        public static TestServer Create(IServiceProvider serviceProvider)
         {
             serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-            var config = new Configuration();
+            var engine = HostingEngineFactory.Create(serviceProvider, services => services.AddSingleton<IHostingEngine, TestServer>());
+            return engine as TestServer;
+        }
 
-            var engine = HostingEngineFactory.Create(serviceProvider, services => services.AddSingleton<IHostingEngine, TestServer>())
-                .UseConfiguration(config)
+        public static TestServer Start(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        {
+            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
+
+            var engine = Create(serviceProvider)
                 .UseStartup(configureApp, configureServices);
 
             engine.Start();

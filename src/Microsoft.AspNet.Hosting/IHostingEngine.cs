@@ -25,6 +25,8 @@ namespace Microsoft.AspNet.Hosting
 
         IHostingEngine UseConfiguration(IConfiguration config);
 
+        IHostingEngine UseEnvironment(string environment);
+
         // Mutually exclusive
         IHostingEngine UseServer(string assemblyName);
         IHostingEngine UseServer(IServerFactory factory);

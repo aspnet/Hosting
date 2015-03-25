@@ -89,14 +89,10 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureDefaults()
         {
-            if (_startupName == null)
-            {
-                _startupName = _applicationEnvironment.ApplicationName;
-            }
-
             _fallbackServices = _fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             _config = _config ?? new Configuration();
-            _environmentName = _config?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
+            _startupName = _startupName ?? _applicationEnvironment.ApplicationName;
+            _environmentName = _environmentName ?? _config?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
             _hostingEnvironment.EnvironmentName = _environmentName;
         }
 
@@ -256,6 +252,13 @@ namespace Microsoft.AspNet.Hosting
         {
             CheckUseAllowed();
             _config = config ?? new Configuration();
+            return this;
+        }
+
+        public IHostingEngine UseEnvironment(string environment)
+        {
+            CheckUseAllowed();
+            _environmentName = environment;
             return this;
         }
 
