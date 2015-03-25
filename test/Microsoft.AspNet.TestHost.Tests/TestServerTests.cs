@@ -156,7 +156,7 @@ namespace Microsoft.AspNet.TestHost
                     return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.HttpContext != null));
                 });
             },
-            services => services.AddSingleton<ContextHolder>().BuildServiceProvider());
+            services => services.AddSingleton<ContextHolder>());
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("HasContext:True", result);

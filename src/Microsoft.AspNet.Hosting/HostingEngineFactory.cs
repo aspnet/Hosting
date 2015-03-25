@@ -2,27 +2,47 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime;
+using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
     public static class HostingEngineFactory
     {
-        public static HostingEngine Create(IServiceProvider fallbackServices)
+        public static IHostingEngine Create(IServiceProvider fallbackServices)
         {
-            return Create(fallbackServices, config: null, configureServices: null);
+            return Create(fallbackServices, configureServices: null);
         }
 
-        public static HostingEngine Create(IServiceProvider fallbackServices, IConfiguration config)
+        public static IHostingEngine Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
-            return Create(fallbackServices, config, configureServices: null);
+            fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider; // Switch to assume not null?
+            var services = Import(fallbackServices, configureServices);
+            services.TryAdd(ServiceDescriptor.Transient<IHostingEngine, HostingEngine>());
+            services.TryAdd(ServiceDescriptor.Transient<IStartupLoader, StartupLoader>());
+            var hostingServices = services.BuildServiceProvider();
+            return hostingServices.GetRequiredService<IHostingEngine>().UseFallbackServices(fallbackServices);
         }
 
-        public static HostingEngine Create(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)
+        internal static IServiceCollection Import(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
-            // Replace with creating a hosting container, and creating a hosting engine from IHostingEngineFactory
-            return new HostingEngine(fallbackServices, config, configureServices);
+            var services = new ServiceCollection();
+            // Import services
+            var manifest = fallbackServices.GetRequiredService<IServiceManifest>();
+            foreach (var service in manifest.Services)
+            {
+                services.AddTransient(service, sp => fallbackServices.GetService(service));
+            }
+
+            // Apply user hosting services
+            if (configureServices != null)
+            {
+                configureServices(services);
+            }
+
+            return services;
         }
     }
 }
