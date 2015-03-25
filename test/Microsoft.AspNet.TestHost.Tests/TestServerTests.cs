@@ -147,11 +147,8 @@ namespace Microsoft.AspNet.TestHost
         {
             TestServer server = TestServer.Create(app =>
             {
-                var a = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
-
                 app.Run(context =>
                 {
-                    var b = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
                     var accessor = app.ApplicationServices.GetRequiredService<ContextHolder>();
                     return context.Response.WriteAsync("HasContext:" + (accessor.Accessor.HttpContext != null));
                 });
@@ -238,6 +235,15 @@ namespace Microsoft.AspNet.TestHost
             Assert.Throws<AggregateException>(() => { string result = server.CreateClient().GetStringAsync("/path").Result; });
         }
 
+        [Fact]
+        public async Task CanCreateViaStartupType()
+        {
+            TestServer server = TestServer.Create<TestStartup>();
+            HttpResponseMessage result = await server.CreateClient().GetAsync("/");
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("FoundService:True", await result.Content.ReadAsStringAsync());
+        }
+
         public class Startup
         {
             public void Configuration(IApplicationBuilder builder)
@@ -246,12 +252,32 @@ namespace Microsoft.AspNet.TestHost
             }
         }
 
-        public class AnotherStartup
+        public class SimpleService
         {
-            public void Configuration(IApplicationBuilder builder)
+            public SimpleService()
             {
-                builder.Run(ctx => ctx.Response.WriteAsync("Another Startup"));
             }
+
+            public string Message { get; set; }
         }
+
+        public class TestStartup
+        {
+            public void ConfigureServices(IServiceCollection services)
+            {
+                services.AddSingleton<SimpleService>();
+            }
+
+            public void Configure(IApplicationBuilder app)
+            {
+                app.Run(context =>
+                {
+                    var service = app.ApplicationServices.GetRequiredService<SimpleService>();
+                    return context.Response.WriteAsync("FoundService:" + (service != null));
+                });
+            }
+
+        }
+
     }
 }

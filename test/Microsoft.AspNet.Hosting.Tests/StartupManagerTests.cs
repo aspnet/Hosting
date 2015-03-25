@@ -169,9 +169,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             {
                 var service = app.ApplicationServices.GetRequiredService<SimpleService>();
             }
-
         }
-
 
         public void ConfigurationMethodCalled(object instance)
         {

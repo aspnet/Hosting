@@ -251,6 +251,11 @@ namespace Microsoft.AspNet.Hosting
             {
                 throw new NotImplementedException();
             }
+
+            public IHostingEngine UseStartup(Type startupType)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
