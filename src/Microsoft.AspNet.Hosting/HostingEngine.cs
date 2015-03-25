@@ -7,183 +7,168 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
+using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public class HostingEngine
+    public class HostingEngine : IHostingEngine
     {
         private const string EnvironmentKey = "ASPNET_ENV";
 
         private readonly IServiceProvider _fallbackServices;
-        private readonly ApplicationLifetime _appLifetime;
-        private readonly IApplicationEnvironment _appEnv;
+        private readonly ApplicationLifetime _applicationLifetime;
+        private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly HostingEnvironment _hostingEnvironment;
+        private readonly Action<IServiceCollection> _configureHostingServices;
+
+        private HostingContext _context = new HostingContext();
+        private Disposable _instanceStarted;
+
+        // Start/Dispose/BuildApplicaitonServices block use methods
+        // REVIEW: could split the UseServer from UseStartup
+        private bool _useDisabled;
 
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
 
-        public HostingEngine() : this(fallbackServices: null) { }
-
-        public HostingEngine(IServiceProvider fallbackServices) : this(fallbackServices, applicationName: null, applicationPath: null) { }
-
-        public HostingEngine(IServiceProvider fallbackServices, string applicationName, string applicationPath)
+        public HostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureHostingServices)
         {
-            _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
-            _appLifetime = new ApplicationLifetime();
-            var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
-            _appEnv = new HostingApplicationEnvironment(appEnv, applicationPath, applicationName);
-            _hostingEnvironment = new HostingEnvironment(_appEnv);
-            _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _appLifetime);
+            _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider; // Switch to assume not null?
+            _context.Configuration = config ?? new Configuration();
+            _configureHostingServices = configureHostingServices;
+            _applicationLifetime = new ApplicationLifetime();
+            _applicationEnvironment = _fallbackServices.GetRequiredService<IApplicationEnvironment>(); var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
+            _hostingEnvironment = new HostingEnvironment(appEnv);
+            _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _applicationLifetime);
         }
 
-        public static IServiceProvider CreateApplicationServices(HostingContext context)
+        public IDisposable Start()
         {
-            return CreateApplicationServices(context, fallbackServices: null);
-        }
+            EnsureApplicationServices();
+            EnsureBuilder();
+            EnsureServerFactory();
+            InitalizeServerFactory();
+            EnsureApplicationDelegate();
 
-        // REVIEW: so ugly ApplicationName used here as input
-        public static IServiceProvider CreateApplicationServices(HostingContext context, IServiceProvider fallbackServices)
-        {
-            var engine = new HostingEngine(fallbackServices, context.ApplicationName, context.ApplicationBasePath);
-
-            // Default to no-op startup if not specified in context
-            if (context.StartupMethods == null)
-            {
-                context.StartupMethods = new StartupMethods(_ => { });
-            }
-            engine.EnsureApplicationServices(context);
-            return context.ApplicationServices;
-        }
-
-        public IDisposable Start(HostingContext context)
-        {
-            EnsureApplicationServices(context);
-            EnsureBuilder(context);
-            EnsureServerFactory(context);
-            InitalizeServerFactory(context);
-            EnsureApplicationDelegate(context);
-
-            var contextFactory = context.ApplicationServices.GetRequiredService<IHttpContextFactory>();
-            var contextAccessor = context.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
-            var server = context.ServerFactory.Start(context.Server,
+            var _contextFactory = _context.ApplicationServices.GetRequiredService<IHttpContextFactory>();
+            var _contextAccessor = _context.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
+            var server = _context.ServerFactory.Start(_context.Server,
                 features =>
                 {
-                    var httpContext = contextFactory.CreateHttpContext(features);
-                    contextAccessor.HttpContext = httpContext;
-                    return context.ApplicationDelegate(httpContext);
+                    var httpContext = _contextFactory.CreateHttpContext(features);
+                    _contextAccessor.HttpContext = httpContext;
+                    return _context.ApplicationDelegate(httpContext);
                 });
 
-            return new Disposable(() =>
+            _instanceStarted = new Disposable(() =>
             {
-                _appLifetime.NotifyStopping();
+                _applicationLifetime.NotifyStopping();
                 server.Dispose();
-                _appLifetime.NotifyStopped();
+                _applicationLifetime.NotifyStopped();
             });
+
+            return _instanceStarted;
         }
 
-        private void EnsureContextDefaults(HostingContext context)
+        private void EnsureContextDefaults()
         {
-            if (context.ApplicationName == null)
+            if (_context.StartupClass == null)
             {
-                context.ApplicationName = _appEnv.ApplicationName;
+                _context.StartupClass = _applicationEnvironment.ApplicationName;
             }
 
-            if (context.EnvironmentName == null)
+            if (_context.EnvironmentName == null)
             {
-                context.EnvironmentName = context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
+                _context.EnvironmentName = _context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
             }
 
-            _hostingEnvironment.EnvironmentName = context.EnvironmentName;
+            _hostingEnvironment.EnvironmentName = _context.EnvironmentName;
         }
 
-        private void EnsureApplicationServices(HostingContext context)
+        private void EnsureApplicationServices()
         {
-            EnsureContextDefaults(context);
+            _useDisabled = true;
+            EnsureContextDefaults();
+            EnsureStartupMethods();
 
-            if (context.ApplicationServices != null)
-            {
-                return;
-            }
-
-            EnsureStartupMethods(context);
-
-            context.ApplicationServices = context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices(context));
+            _context.ApplicationServices = _context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices());
         }
 
-        private void EnsureStartupMethods(HostingContext context)
+        private void EnsureStartupMethods()
         {
-            if (context.StartupMethods != null)
+            if (_context.StartupMethods != null)
             {
                 return;
             }
 
             var diagnosticMessages = new List<string>();
-            context.StartupMethods = ApplicationStartup.LoadStartupMethods(
+            _context.StartupMethods = ApplicationStartup.LoadStartupMethods(
                 _fallbackServices,
-                context.ApplicationName,
-                context.EnvironmentName,
+                _context.StartupClass,
+                _context.EnvironmentName,
                 diagnosticMessages);
 
-            if (context.StartupMethods == null)
+            if (_context.StartupMethods == null)
             {
                 throw new ArgumentException(
                     diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
-                    nameof(context));
+                    nameof(_context));
             }
         }
 
-        private void EnsureBuilder(HostingContext context)
+        private void EnsureBuilder()
         {
-            if (context.Builder != null)
+            if (_context.Builder != null)
             {
                 return;
             }
 
             if (_builderFactory == null)
             {
-                _builderFactory = context.ApplicationServices.GetRequiredService<IApplicationBuilderFactory>();
+                _builderFactory = _context.ApplicationServices.GetRequiredService<IApplicationBuilderFactory>();
             }
 
-            context.Builder = _builderFactory.CreateBuilder();
-            context.Builder.ApplicationServices = context.ApplicationServices;
+            _context.Builder = _builderFactory.CreateBuilder();
+            _context.Builder.ApplicationServices = _context.ApplicationServices;
         }
 
-        private void EnsureServerFactory(HostingContext context)
+        private void EnsureServerFactory()
         {
-            if (context.ServerFactory != null)
+            if (_context.ServerFactory != null)
             {
                 return;
             }
 
             if (_serverLoader == null)
             {
-                _serverLoader = context.ApplicationServices.GetRequiredService<IServerLoader>();
+                _serverLoader = _context.ApplicationServices.GetRequiredService<IServerLoader>();
             }
 
-            context.ServerFactory = _serverLoader.LoadServerFactory(context.ServerFactoryLocation);
+            _context.ServerFactory = _serverLoader.LoadServerFactory(_context.ServerFactoryLocation);
         }
 
-        private void InitalizeServerFactory(HostingContext context)
+        private void InitalizeServerFactory()
         {
-            if (context.Server == null)
+            if (_context.Server == null)
             {
-                context.Server = context.ServerFactory.Initialize(context.Configuration);
+                _context.Server = _context.ServerFactory.Initialize(_context.Configuration);
             }
 
-            if (context.Builder.Server == null)
+            if (_context.Builder.Server == null)
             {
-                context.Builder.Server = context.Server;
+                _context.Builder.Server = _context.Server;
             }
         }
 
-        private IServiceCollection CreateHostingServices(HostingContext context)
+        private IServiceCollection CreateHostingServices()
         {
             var services = Import(_fallbackServices);
 
@@ -196,13 +181,16 @@ namespace Microsoft.AspNet.Hosting
             services.AddLogging();
             services.TryAdd(ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>());
 
-            // Apply user services
-            services.Add(context.Services);
+            // Apply user hosting services
+            if (_configureHostingServices != null)
+            {
+                _configureHostingServices(services);
+            }
 
             // Jamming in app lifetime, app env, and hosting env since these must not be replaceable
-            services.AddInstance<IApplicationLifetime>(_appLifetime);
+            services.AddInstance<IApplicationLifetime>(_applicationLifetime);
             services.AddInstance<IHostingEnvironment>(_hostingEnvironment);
-            services.AddInstance(_appEnv);
+            services.AddInstance(_applicationEnvironment);
 
             // Conjure up a RequestServices
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
@@ -210,24 +198,19 @@ namespace Microsoft.AspNet.Hosting
             return services;
         }
 
-        private void EnsureApplicationDelegate(HostingContext context)
+        private void EnsureApplicationDelegate()
         {
-            if (context.ApplicationDelegate != null)
-            {
-                return;
-            }
-
             // REVIEW: should we call EnsureApplicationServices?
-            var startupFilters = context.ApplicationServices.GetService<IEnumerable<IStartupFilter>>();
-            var configure = context.StartupMethods.ConfigureDelegate;
+            var startupFilters = _context.ApplicationServices.GetService<IEnumerable<IStartupFilter>>();
+            var configure = _context.StartupMethods.ConfigureDelegate;
             foreach (var filter in startupFilters)
             {
-                configure = filter.Configure(context.Builder, configure);
+                configure = filter.Configure(_context.Builder, configure);
             }
 
-            configure(context.Builder);
+            configure(_context.Builder);
 
-            context.ApplicationDelegate = context.Builder.Build();
+            _context.ApplicationDelegate = _context.Builder.Build();
         }
 
         private static IServiceCollection Import(IServiceProvider fallbackProvider)
@@ -240,6 +223,75 @@ namespace Microsoft.AspNet.Hosting
             }
 
             return services;
+        }
+
+        public void Dispose()
+        {
+            // REVIEW: this prob broke thread safety that the old using had
+            if (_instanceStarted != null)
+            {
+                _instanceStarted.Dispose();
+                _instanceStarted = null;
+            }
+        }
+
+        public IServiceProvider ApplicationServices
+        {
+            get
+            {
+                EnsureApplicationServices();
+                return _context.ApplicationServices;
+            }
+        }
+
+        private void CheckUseAllowed()
+        {
+            if (_useDisabled)
+            {
+                throw new InvalidOperationException("HostingEngine has already been started.");
+            }
+        }
+
+        public IHostingEngine UseServer(string assemblyName)
+        {
+            CheckUseAllowed();
+            _context.ServerFactoryLocation = assemblyName;
+            return this;
+        }
+
+        public IHostingEngine UseServer(IServerFactory factory)
+        {
+            CheckUseAllowed();
+            _context.ServerFactory = factory;
+            return this;
+        }
+
+        public IHostingEngine UseStartup(string startupClass)
+        {
+            CheckUseAllowed();
+            _context.StartupClass = startupClass;
+            return this;
+        }
+
+        public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        {
+            CheckUseAllowed();
+            _context.StartupMethods = new StartupMethods(configureApp, configureServices);
+            return this;
+        }
+
+        public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        {
+            CheckUseAllowed();
+            _context.StartupMethods = new StartupMethods(configureApp, 
+                services => {
+                    if (configureServices != null)
+                    {
+                        configureServices(services);
+                    }
+                    return services.BuildServiceProvider();
+                });
+            return this;
         }
 
         private class WrappingServiceProvider : IServiceProvider
@@ -273,49 +325,31 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-        // Represents an application environment that overrides the base path of the original
-        // application environment in order to make it point to the test application folder.
-        private class HostingApplicationEnvironment : IApplicationEnvironment
+        private class HostingContext
         {
-            private readonly IApplicationEnvironment _originalAppEnvironment;
-            private readonly string _appName;
-            private readonly string _appPath;
+            public IConfiguration Configuration { get; set; }
 
-            public HostingApplicationEnvironment(
-                IApplicationEnvironment originalAppEnvironment,
-                string appPath,
-                string appName)
-            {
-                _originalAppEnvironment = originalAppEnvironment;
-                _appPath = appPath;
-                _appName = appName;
-            }
+            public IApplicationBuilder Builder { get; set; }
 
-            public string ApplicationName
-            {
-                get { return _appName ?? _originalAppEnvironment.ApplicationName; }
-            }
+            public string StartupClass { get; set; }
+            // REVIEW: BasePath and WebRootPath are basically setting same thing?
+            public string ApplicationBasePath { get; set; }
+            //public string WebRootPath { get; set; }
+            public string EnvironmentName { get; set; }
+            public StartupMethods StartupMethods { get; set; }
+            public RequestDelegate ApplicationDelegate { get; set; }
 
-            public string Version
-            {
-                get { return _originalAppEnvironment.Version; }
-            }
+            public IServiceCollection Services { get; } = new ServiceCollection();
 
-            public string ApplicationBasePath
-            {
-                get { return _appPath ?? _originalAppEnvironment.ApplicationBasePath; }
-            }
+            // Result of ConfigureServices and ConfigureHostingServices
+            public IServiceProvider ApplicationServices { get; set; }
 
-            public string Configuration
-            {
-                get
-                { return _originalAppEnvironment.Configuration; }
-            }
+            // Result of ConfigureHostingServices
+            public IServiceProvider HostingServices { get; set; }
 
-            public FrameworkName RuntimeFramework
-            {
-                get { return _originalAppEnvironment.RuntimeFramework; }
-            }
+            public string ServerFactoryLocation { get; set; }
+            public IServerFactory ServerFactory { get; set; }
+            public IServerInformation Server { get; set; }
         }
 
         private class Disposable : IDisposable

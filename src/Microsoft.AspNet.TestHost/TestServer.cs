@@ -25,31 +25,18 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        public TestServer(IServiceProvider serviceProvider, HostingContext context)
-        {
-            if (context.ServerFactory == null)
-            {
-                context.ServerFactory = this;
-            }
-            _appInstance = new HostingEngine(serviceProvider, context.ApplicationName, context.ApplicationBasePath).Start(context);
-        }
-
         // REVIEW: we can configure services via AppStartup or via hostContext.Services
-        public TestServer(IConfiguration config, IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
-            : this(serviceProvider, new HostingContext()
-                {
-                    ApplicationName = "Test App",
-                    Configuration = config,
-                    StartupMethods = new StartupMethods(configureApp, configureServices)
-                })
-        { }
+        public TestServer(IServiceProvider serviceProvider, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        {
+            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
+            // Review: should we assume these are configureing host services always?
+            var engine = HostingEngineFactory.Create(serviceProvider, config, configureServices)
+                .UseServer(this)
+                .UseStartup(configureApp, configureServices);
+            _appInstance = engine.Start();
+        }
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
-
-        public static TestServer Create(HostingContext context)
-        {
-            return new TestServer(CallContextServiceLocator.Locator.ServiceProvider, context);
-        }
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp)
         {
@@ -58,15 +45,7 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, 
-                sc =>
-                {
-                    if (configureServices != null)
-                    {
-                        configureServices(sc);
-                    }
-                    return sc.BuildServiceProvider();
-                });
+            return Create(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
         }
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
@@ -76,23 +55,16 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return Create(serviceProvider, configureApp,
-                sc =>
-                {
-                    if (configureServices != null)
-                    {
-                        configureServices(sc);
-                    }
-                    return sc.BuildServiceProvider();
-                });
+            // REVIEW: need overload that takes config??
+            return new TestServer(serviceProvider, new Configuration(), configureApp, configureServices);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
-        {
-            // REVIEW: do we need an overload that takes Config for Create?
-            var config = new Configuration();
-            return new TestServer(config, serviceProvider, configureApp, configureServices);
-        }
+        //public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        //{
+        //    // REVIEW: do we need an overload that takes Config for Create?
+        //    var config = new Configuration();
+        //    return new TestServer(config, serviceProvider, configureApp, configureServices);
+        //}
 
         public HttpMessageHandler CreateHandler()
         {
