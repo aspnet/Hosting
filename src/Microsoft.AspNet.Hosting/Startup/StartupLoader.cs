@@ -12,7 +12,27 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public class StartupLoader : IStartupLoader
     {
-        public StartupMethods LoadStartupMethods(
+        public StartupMethods Load(
+            IServiceProvider services,
+            Type startupType,
+            string environmentName,
+            IList<string> diagnosticMessages)
+        {
+            var configureMethod = FindConfigureDelegate(startupType, environmentName);
+            var servicesMethod = FindConfigureServicesDelegate(startupType, environmentName);
+
+            object instance = null;
+            if (!configureMethod.MethodInfo.IsStatic || (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic))
+            {
+                instance = ActivatorUtilities.GetServiceOrCreateInstance(services, startupType);
+            }
+
+            return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
+        }
+
+
+
+        public StartupMethods Load(
             IServiceProvider services,
             string startupClass,
             string environmentName,
@@ -62,25 +82,16 @@ namespace Microsoft.AspNet.Hosting.Startup
                     startupClass));
             }
 
-            var configureMethod = FindConfigureDelegate(type, environmentName);
-            var servicesMethod = FindConfigureServicesDelegate(type, environmentName);
-
-            object instance = null;
-            if (!configureMethod.MethodInfo.IsStatic || (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic))
-            {
-                instance = ActivatorUtilities.GetServiceOrCreateInstance(services, type);
-            }
-
-            return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
+            return Load(services, type, environmentName, diagnosticMessages);
         }
 
-        public static ConfigureBuilder FindConfigureDelegate(Type startupType, string environmentName)
+        private static ConfigureBuilder FindConfigureDelegate(Type startupType, string environmentName)
         {
             var configureMethod = FindMethod(startupType, "Configure{0}", environmentName, typeof(void), required: true);
             return new ConfigureBuilder(configureMethod);
         }
 
-        public static ConfigureServicesBuilder FindConfigureServicesDelegate(Type startupType, string environmentName)
+        private static ConfigureServicesBuilder FindConfigureServicesDelegate(Type startupType, string environmentName)
         {
             var servicesMethod = FindMethod(startupType, "Configure{0}Services", environmentName, typeof(IServiceProvider), required: false)
                 ?? FindMethod(startupType, "Configure{0}Services", environmentName, typeof(void), required: false);

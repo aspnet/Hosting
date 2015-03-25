@@ -155,7 +155,12 @@ namespace Microsoft.AspNet.Hosting
 
         private class TestLoader : IStartupLoader
         {
-            public StartupMethods LoadStartupMethods(IServiceProvider services, string startupClass, string environmentName, IList<string> diagnosticMessages)
+            public StartupMethods Load(IServiceProvider services, Type startupClass, string environmentName, IList<string> diagnosticMessages)
+            {
+                throw new NotImplementedException();
+            }
+
+            public StartupMethods Load(IServiceProvider services, string startupClass, string environmentName, IList<string> diagnosticMessages)
             {
                 throw new NotImplementedException();
             }
@@ -189,6 +194,11 @@ namespace Microsoft.AspNet.Hosting
             public IHostingEngine UseFallbackServices(IServiceProvider services)
             {
                 return this;
+            }
+
+            public IHostingEngine UseStartup<T>() where T : class
+            {
+                throw new NotImplementedException();
             }
 
             public IHostingEngine UseServer(IServerFactory factory)
