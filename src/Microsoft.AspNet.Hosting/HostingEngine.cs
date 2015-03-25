@@ -42,7 +42,8 @@ namespace Microsoft.AspNet.Hosting
         private IServiceProvider _applicationServices;
 
         // Only one of these should be set
-        private string _startupClass;
+        private string _startupName;
+        private Type _startupType;
         private StartupMethods _startup;
 
         // Only one of these should be set
@@ -88,9 +89,9 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureDefaults()
         {
-            if (_startupClass == null)
+            if (_startupName == null)
             {
-                _startupClass = _applicationEnvironment.ApplicationName;
+                _startupName = _applicationEnvironment.ApplicationName;
             }
 
             _fallbackServices = _fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
@@ -138,17 +139,28 @@ namespace Microsoft.AspNet.Hosting
             }
 
             var diagnosticMessages = new List<string>();
-            _startup = _startupLoader.LoadStartupMethods(
-                _fallbackServices,
-                _startupClass,
-                _environmentName,
-                diagnosticMessages);
+            if (_startupType != null)
+            {
+                _startup = _startupLoader.Load(
+                    _fallbackServices,
+                    _startupType,
+                    _environmentName,
+                    diagnosticMessages);
+            }
+            else
+            {
+                _startup = _startupLoader.Load(
+                    _fallbackServices,
+                    _startupName,
+                    _environmentName,
+                    diagnosticMessages);
+            }
 
             if (_startup == null)
             {
                 throw new ArgumentException(
-                    diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
-                    _startupClass);
+                    diagnosticMessages.Aggregate("Failed to find a startup entry point for the web application.", (a, b) => a + "\r\n" + b),
+                    _startupName);
             }
         }
 
@@ -261,10 +273,17 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public IHostingEngine UseStartup(string startupClass)
+        public IHostingEngine UseStartup(string startupName)
         {
             CheckUseAllowed();
-            _startupClass = startupClass;
+            _startupName = startupName;
+            return this;
+        }
+
+        public IHostingEngine UseStartup<T>() where T : class
+        {
+            CheckUseAllowed();
+            _startupType = typeof(T);
             return this;
         }
 

@@ -8,9 +8,15 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public interface IStartupLoader
     {
-        StartupMethods LoadStartupMethods(
+        StartupMethods Load(
             IServiceProvider services,
             string startupClass,
+            string environmentName,
+            IList<string> diagnosticMessages);
+
+        StartupMethods Load(
+            IServiceProvider services,
+            Type startupClass,
             string environmentName,
             IList<string> diagnosticMessages);
     }
