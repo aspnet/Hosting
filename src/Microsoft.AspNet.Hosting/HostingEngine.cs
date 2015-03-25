@@ -27,7 +27,6 @@ namespace Microsoft.AspNet.Hosting
         private readonly HostingEnvironment _hostingEnvironment;
         private readonly Action<IServiceCollection> _configureHostingServices;
 
-        private HostingContext _context = new HostingContext();
         private Disposable _instanceStarted;
 
         // Start/Dispose/BuildApplicaitonServices block use methods
@@ -38,16 +37,26 @@ namespace Microsoft.AspNet.Hosting
         private IApplicationBuilderFactory _builderFactory;
         private string _environmentName;
         private RequestDelegate _applicationDelegate;
+        private IConfiguration _config;
+        private IApplicationBuilder _builder;
 
         // Result of ConfigureServices and ConfigureHostingServices
         private IServiceProvider _applicationServices;
 
 
+        // Only one of these should be set
+        private string _startupClass;
+        private StartupMethods _startup;
+
+        // Only one of these should be set
+        private string _serverFactoryLocation;
+        private IServerFactory _serverFactory;
+        private IServerInformation _serverInstance;
 
         public HostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureHostingServices)
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider; // Switch to assume not null?
-            _context.Configuration = config ?? new Configuration();
+            _config = config ?? new Configuration();
             _configureHostingServices = configureHostingServices;
             _applicationLifetime = new ApplicationLifetime();
             _applicationEnvironment = _fallbackServices.GetRequiredService<IApplicationEnvironment>(); var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
@@ -65,7 +74,7 @@ namespace Microsoft.AspNet.Hosting
 
             var _contextFactory = _applicationServices.GetRequiredService<IHttpContextFactory>();
             var _contextAccessor = _applicationServices.GetRequiredService<IHttpContextAccessor>();
-            var server = _context.ServerFactory.Start(_context.Server,
+            var server = _serverFactory.Start(_serverInstance,
                 features =>
                 {
                     var httpContext = _contextFactory.CreateHttpContext(features);
@@ -85,12 +94,12 @@ namespace Microsoft.AspNet.Hosting
 
         private void EnsureContextDefaults()
         {
-            if (_context.StartupClass == null)
+            if (_startupClass == null)
             {
-                _context.StartupClass = _applicationEnvironment.ApplicationName;
+                _startupClass = _applicationEnvironment.ApplicationName;
             }
 
-            _environmentName = _context.Configuration?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
+            _environmentName = _config?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
             _hostingEnvironment.EnvironmentName = _environmentName;
         }
 
@@ -98,30 +107,30 @@ namespace Microsoft.AspNet.Hosting
         {
             _useDisabled = true;
             EnsureContextDefaults();
-            EnsureStartupMethods();
+            EnsureStartup();
 
-            _applicationServices = _context.StartupMethods.ConfigureServicesDelegate(CreateHostingServices());
+            _applicationServices = _startup.ConfigureServicesDelegate(CreateHostingServices());
         }
 
-        private void EnsureStartupMethods()
+        private void EnsureStartup()
         {
-            if (_context.StartupMethods != null)
+            if (_startup != null)
             {
                 return;
             }
 
             var diagnosticMessages = new List<string>();
-            _context.StartupMethods = ApplicationStartup.LoadStartupMethods(
+            _startup = ApplicationStartup.LoadStartupMethods(
                 _fallbackServices,
-                _context.StartupClass,
+                _startupClass,
                 _environmentName,
                 diagnosticMessages);
 
-            if (_context.StartupMethods == null)
+            if (_startup == null)
             {
                 throw new ArgumentException(
                     diagnosticMessages.Aggregate("Failed to find an entry point for the web application.", (a, b) => a + "\r\n" + b),
-                    nameof(_context));
+                    _startupClass);
             }
         }
 
@@ -132,13 +141,13 @@ namespace Microsoft.AspNet.Hosting
                 _builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
             }
 
-            _context.Builder = _builderFactory.CreateBuilder();
-            _context.Builder.ApplicationServices = _applicationServices;
+            _builder = _builderFactory.CreateBuilder();
+            _builder.ApplicationServices = _applicationServices;
         }
 
         private void EnsureServerFactory()
         {
-            if (_context.ServerFactory != null)
+            if (_serverFactory != null)
             {
                 return;
             }
@@ -148,19 +157,19 @@ namespace Microsoft.AspNet.Hosting
                 _serverLoader = _applicationServices.GetRequiredService<IServerLoader>();
             }
 
-            _context.ServerFactory = _serverLoader.LoadServerFactory(_context.ServerFactoryLocation);
+            _serverFactory = _serverLoader.LoadServerFactory(_serverFactoryLocation);
         }
 
         private void InitalizeServerFactory()
         {
-            if (_context.Server == null)
+            if (_serverInstance == null)
             {
-                _context.Server = _context.ServerFactory.Initialize(_context.Configuration);
+                _serverInstance = _serverFactory.Initialize(_config);
             }
 
-            if (_context.Builder.Server == null)
+            if (_builder.Server == null)
             {
-                _context.Builder.Server = _context.Server;
+                _builder.Server = _serverInstance;
             }
         }
 
@@ -197,15 +206,15 @@ namespace Microsoft.AspNet.Hosting
         private void EnsureApplicationDelegate()
         {
             var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
-            var configure = _context.StartupMethods.ConfigureDelegate;
+            var configure = _startup.ConfigureDelegate;
             foreach (var filter in startupFilters)
             {
-                configure = filter.Configure(_context.Builder, configure);
+                configure = filter.Configure(_builder, configure);
             }
 
-            configure(_context.Builder);
+            configure(_builder);
 
-            _applicationDelegate = _context.Builder.Build();
+            _applicationDelegate = _builder.Build();
         }
 
         private static IServiceCollection Import(IServiceProvider fallbackProvider)
@@ -250,35 +259,35 @@ namespace Microsoft.AspNet.Hosting
         public IHostingEngine UseServer(string assemblyName)
         {
             CheckUseAllowed();
-            _context.ServerFactoryLocation = assemblyName;
+            _serverFactoryLocation = assemblyName;
             return this;
         }
 
         public IHostingEngine UseServer(IServerFactory factory)
         {
             CheckUseAllowed();
-            _context.ServerFactory = factory;
+            _serverFactory = factory;
             return this;
         }
 
         public IHostingEngine UseStartup(string startupClass)
         {
             CheckUseAllowed();
-            _context.StartupClass = startupClass;
+            _startupClass = startupClass;
             return this;
         }
 
         public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
             CheckUseAllowed();
-            _context.StartupMethods = new StartupMethods(configureApp, configureServices);
+            _startup = new StartupMethods(configureApp, configureServices);
             return this;
         }
 
         public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
             CheckUseAllowed();
-            _context.StartupMethods = new StartupMethods(configureApp, 
+            _startup = new StartupMethods(configureApp, 
                 services => {
                     if (configureServices != null)
                     {
@@ -318,20 +327,6 @@ namespace Microsoft.AspNet.Hosting
 
                 return _sp.GetService(serviceType);
             }
-        }
-
-        private class HostingContext
-        {
-            public IConfiguration Configuration { get; set; }
-
-            public IApplicationBuilder Builder { get; set; }
-
-            public string StartupClass { get; set; }
-            public StartupMethods StartupMethods { get; set; }
-
-            public string ServerFactoryLocation { get; set; }
-            public IServerFactory ServerFactory { get; set; }
-            public IServerInformation Server { get; set; }
         }
 
         private class Disposable : IDisposable
