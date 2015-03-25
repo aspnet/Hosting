@@ -59,7 +59,7 @@ namespace Microsoft.AspNet.Hosting
             _hostingEnvironment = new HostingEnvironment(appEnv);
         }
 
-        public IDisposable Start()
+        public virtual IDisposable Start()
         {
             EnsureApplicationServices();
             EnsureBuilder();
@@ -218,7 +218,7 @@ namespace Microsoft.AspNet.Hosting
             _applicationDelegate = _builder.Build();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             // REVIEW: this prob broke thread safety that the old using had
             if (_instanceStarted != null)

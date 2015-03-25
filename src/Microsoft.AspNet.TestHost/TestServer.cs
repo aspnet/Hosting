@@ -8,14 +8,16 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.TestHost
 {
-    public class TestServer : IServerFactory, IDisposable
+    public class TestServer : HostingEngine, IServerFactory, IDisposable
     {
         private const string DefaultEnvironmentName = "Development";
         private const string ServerName = nameof(TestServer);
@@ -24,24 +26,9 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        public TestServer(IServiceProvider serviceProvider, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public TestServer(IStartupLoader loader, IApplicationEnvironment appEnv) : base(loader, appEnv)
         {
-            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-            var engine = HostingEngineFactory.Create(serviceProvider)
-                .UseConfiguration(config)
-                .UseServer(this)
-                .UseStartup(configureApp, configureServices);
-            _appInstance = engine.Start();
-        }
-
-        public TestServer(IServiceProvider serviceProvider, IConfiguration config, Type startupType)
-        {
-            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-            var engine = HostingEngineFactory.Create(serviceProvider)
-                .UseConfiguration(config)
-                .UseServer(this)
-                .UseStartup(startupType);
-            _appInstance = engine.Start();
+            UseServer(this);
         }
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
@@ -53,7 +40,15 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create<T>(IServiceProvider serviceProvider) where T : class
         {
-            return new TestServer(serviceProvider, new Configuration(), typeof(T));
+            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
+            var config = new Configuration();
+
+            var engine = HostingEngineFactory.Create(serviceProvider, services => services.AddSingleton<IHostingEngine, TestServer>())
+                .UseConfiguration(config)
+                .UseStartup(typeof(T));
+
+            engine.Start();
+            return engine as TestServer;
         }
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp)
@@ -73,8 +68,21 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            // REVIEW: need overload that takes config??
-            return new TestServer(serviceProvider, new Configuration(), configureApp, configureServices);
+            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
+            var config = new Configuration();
+
+            var engine = HostingEngineFactory.Create(serviceProvider, services => services.AddSingleton<IHostingEngine, TestServer>())
+                .UseConfiguration(config)
+                .UseStartup(configureApp, configureServices);
+
+            engine.Start();
+            return engine as TestServer;
+        }
+
+        public override IDisposable Start()
+        {
+            _appInstance = base.Start();
+            return _appInstance;
         }
 
         public HttpMessageHandler CreateHandler()
@@ -124,8 +132,9 @@ namespace Microsoft.AspNet.TestHost
             return _appDelegate(featureCollection);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             _disposed = true;
             _appInstance.Dispose();
         }
