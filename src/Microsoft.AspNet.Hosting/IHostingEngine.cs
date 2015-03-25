@@ -32,6 +32,7 @@ namespace Microsoft.AspNet.Hosting
         // Mutually exclusive
         IHostingEngine UseStartup(string startupName);
         IHostingEngine UseStartup<T>() where T : class;
+        IHostingEngine UseStartup(Type startupType);
         IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices);
         IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices);
     }

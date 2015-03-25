@@ -282,8 +282,13 @@ namespace Microsoft.AspNet.Hosting
 
         public IHostingEngine UseStartup<T>() where T : class
         {
+            return UseStartup(typeof(T));
+        }
+
+        public IHostingEngine UseStartup(Type startupType)
+        {
             CheckUseAllowed();
-            _startupType = typeof(T);
+            _startupType = startupType;
             return this;
         }
 

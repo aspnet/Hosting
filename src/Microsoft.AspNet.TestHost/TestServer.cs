@@ -34,7 +34,27 @@ namespace Microsoft.AspNet.TestHost
             _appInstance = engine.Start();
         }
 
+        public TestServer(IServiceProvider serviceProvider, IConfiguration config, Type startupType)
+        {
+            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
+            var engine = HostingEngineFactory.Create(serviceProvider)
+                .UseConfiguration(config)
+                .UseServer(this)
+                .UseStartup(startupType);
+            _appInstance = engine.Start();
+        }
+
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
+
+        public static TestServer Create<T>() where T : class
+        {
+            return Create<T>(CallContextServiceLocator.Locator.ServiceProvider);
+        }
+
+        public static TestServer Create<T>(IServiceProvider serviceProvider) where T : class
+        {
+            return new TestServer(serviceProvider, new Configuration(), typeof(T));
+        }
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp)
         {
