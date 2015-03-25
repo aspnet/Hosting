@@ -30,7 +30,7 @@ namespace Microsoft.AspNet.TestHost
             var engine = HostingEngineFactory.Create(serviceProvider)
                 .UseConfiguration(config)
                 .UseServer(this)
-                .UseStartup(configureApp, configureServices); // REVIEW: never need this one since we configuring at the host level
+                .UseStartup(configureApp, configureServices);
             _appInstance = engine.Start();
         }
 
