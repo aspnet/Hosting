@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.OptionsModel;
@@ -35,6 +36,26 @@ namespace Microsoft.AspNet.Hosting
             engineStart.Dispose();
 
             Assert.Equal(1, _startInstances[0].DisposeCalls);
+        }
+
+        [Fact]
+        public void CanReplaceHostingEngine()
+        {
+            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider,
+                services => services.AddTransient<IHostingEngine, TestEngine>());
+
+            Assert.NotNull(engine as TestEngine);
+        }
+
+        [Fact]
+        public void CanReplaceStartupLoader()
+        {
+            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider,
+                services => services.AddTransient<IStartupLoader, TestLoader>())
+                .UseServer(this)
+                .UseStartup("Microsoft.AspNet.Hosting.Tests");
+
+            Assert.Throws<NotImplementedException>(() => engine.Start());
         }
 
         [Fact]
@@ -129,6 +150,70 @@ namespace Microsoft.AspNet.Hosting
             public void Dispose()
             {
                 DisposeCalls += 1;
+            }
+        }
+
+        private class TestLoader : IStartupLoader
+        {
+            public StartupMethods LoadStartupMethods(IServiceProvider services, string startupClass, string environmentName, IList<string> diagnosticMessages)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class TestEngine : IHostingEngine
+        {
+            public IServiceProvider ApplicationServices
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+
+            public IDisposable Start()
+            {
+                throw new NotImplementedException();
+            }
+
+            public IHostingEngine UseConfiguration(IConfiguration config)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IHostingEngine UseFallbackServices(IServiceProvider services)
+            {
+                return this;
+            }
+
+            public IHostingEngine UseServer(IServerFactory factory)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IHostingEngine UseServer(string assemblyName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IHostingEngine UseStartup(string startupClass)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+            {
+                throw new NotImplementedException();
             }
         }
     }
