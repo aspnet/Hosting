@@ -6,6 +6,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
@@ -19,6 +20,10 @@ namespace Microsoft.AspNet.Hosting
         IServiceProvider ApplicationServices { get; }
 
         // Use methods blow up after any of the above methods are called
+
+        IHostingEngine UseFallbackServices(IServiceProvider services);
+
+        IHostingEngine UseConfiguration(IConfiguration config);
 
         // Mutually exclusive
         IHostingEngine UseServer(string assemblyName);

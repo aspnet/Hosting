@@ -10,11 +10,9 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
-    public static class ApplicationStartup
+    public class StartupLoader : IStartupLoader
     {
-        internal static ConfigureServicesDelegate DefaultBuildServiceProvider = s => s.BuildServiceProvider();
-
-        public static StartupMethods LoadStartupMethods(
+        public StartupMethods LoadStartupMethods(
             IServiceProvider services,
             string startupClass,
             string environmentName,

@@ -21,11 +21,11 @@ namespace Microsoft.AspNet.Hosting
     {
         private const string EnvironmentKey = "ASPNET_ENV";
 
-        private readonly IServiceProvider _fallbackServices;
+        private IServiceProvider _fallbackServices;
+        private readonly IStartupLoader _startupLoader;
         private readonly ApplicationLifetime _applicationLifetime;
         private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly HostingEnvironment _hostingEnvironment;
-        private readonly Action<IServiceCollection> _configureHostingServices;
 
         private Disposable _instanceStarted;
 
@@ -39,10 +39,7 @@ namespace Microsoft.AspNet.Hosting
         private RequestDelegate _applicationDelegate;
         private IConfiguration _config;
         private IApplicationBuilder _builder;
-
-        // Result of ConfigureServices and ConfigureHostingServices
         private IServiceProvider _applicationServices;
-
 
         // Only one of these should be set
         private string _startupClass;
@@ -53,15 +50,12 @@ namespace Microsoft.AspNet.Hosting
         private IServerFactory _serverFactory;
         private IServerInformation _serverInstance;
 
-        public HostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureHostingServices)
+        public HostingEngine(IStartupLoader startupLoader, IApplicationEnvironment appEnv)
         {
-            _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider; // Switch to assume not null?
-            _config = config ?? new Configuration();
-            _configureHostingServices = configureHostingServices;
+            _startupLoader = startupLoader;
+            _applicationEnvironment = appEnv;
             _applicationLifetime = new ApplicationLifetime();
-            _applicationEnvironment = _fallbackServices.GetRequiredService<IApplicationEnvironment>(); var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
             _hostingEnvironment = new HostingEnvironment(appEnv);
-            _fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _applicationLifetime);
         }
 
         public IDisposable Start()
@@ -92,13 +86,15 @@ namespace Microsoft.AspNet.Hosting
             return _instanceStarted;
         }
 
-        private void EnsureContextDefaults()
+        private void EnsureDefaults()
         {
             if (_startupClass == null)
             {
                 _startupClass = _applicationEnvironment.ApplicationName;
             }
 
+            _fallbackServices = _fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            _config = _config ?? new Configuration();
             _environmentName = _config?.Get(EnvironmentKey) ?? HostingEnvironment.DefaultEnvironmentName;
             _hostingEnvironment.EnvironmentName = _environmentName;
         }
@@ -106,10 +102,32 @@ namespace Microsoft.AspNet.Hosting
         private void EnsureApplicationServices()
         {
             _useDisabled = true;
-            EnsureContextDefaults();
+            EnsureDefaults();
             EnsureStartup();
 
-            _applicationServices = _startup.ConfigureServicesDelegate(CreateHostingServices());
+            var fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _applicationLifetime);
+
+            var hostingServices = HostingEngineFactory.Import(fallbackServices, 
+                services =>
+                {
+                    services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
+                    services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
+                    services.TryAdd(ServiceDescriptor.Transient<IHttpContextFactory, HttpContextFactory>());
+                    services.TryAdd(ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>());
+
+                    // TODO: Do we expect this to be provide by the runtime eventually?
+                    services.AddLogging();
+
+                    // Jamming in app lifetime, app env, and hosting env since these must not be replaceable
+                    services.AddInstance<IApplicationLifetime>(_applicationLifetime);
+                    services.AddInstance<IHostingEnvironment>(_hostingEnvironment);
+                    //services.AddInstance(_applicationEnvironment);
+
+                    // Conjure up a RequestServices
+                    services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
+                });
+
+        _applicationServices = _startup.ConfigureServicesDelegate(hostingServices);
         }
 
         private void EnsureStartup()
@@ -120,7 +138,7 @@ namespace Microsoft.AspNet.Hosting
             }
 
             var diagnosticMessages = new List<string>();
-            _startup = ApplicationStartup.LoadStartupMethods(
+            _startup = _startupLoader.LoadStartupMethods(
                 _fallbackServices,
                 _startupClass,
                 _environmentName,
@@ -162,6 +180,7 @@ namespace Microsoft.AspNet.Hosting
 
         private void InitalizeServerFactory()
         {
+            // REVIEW: why is instance on _builder as well? currently we have no UseServer(instance), so this is always null
             if (_serverInstance == null)
             {
                 _serverInstance = _serverFactory.Initialize(_config);
@@ -171,36 +190,6 @@ namespace Microsoft.AspNet.Hosting
             {
                 _builder.Server = _serverInstance;
             }
-        }
-
-        private IServiceCollection CreateHostingServices()
-        {
-            var services = Import(_fallbackServices);
-
-            services.TryAdd(ServiceDescriptor.Transient<IServerLoader, ServerLoader>());
-
-            services.TryAdd(ServiceDescriptor.Transient<IApplicationBuilderFactory, ApplicationBuilderFactory>());
-            services.TryAdd(ServiceDescriptor.Transient<IHttpContextFactory, HttpContextFactory>());
-
-            // TODO: Do we expect this to be provide by the runtime eventually?
-            services.AddLogging();
-            services.TryAdd(ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>());
-
-            // Apply user hosting services
-            if (_configureHostingServices != null)
-            {
-                _configureHostingServices(services);
-            }
-
-            // Jamming in app lifetime, app env, and hosting env since these must not be replaceable
-            services.AddInstance<IApplicationLifetime>(_applicationLifetime);
-            services.AddInstance<IHostingEnvironment>(_hostingEnvironment);
-            services.AddInstance(_applicationEnvironment);
-
-            // Conjure up a RequestServices
-            services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
-
-            return services;
         }
 
         private void EnsureApplicationDelegate()
@@ -215,18 +204,6 @@ namespace Microsoft.AspNet.Hosting
             configure(_builder);
 
             _applicationDelegate = _builder.Build();
-        }
-
-        private static IServiceCollection Import(IServiceProvider fallbackProvider)
-        {
-            var services = new ServiceCollection();
-            var manifest = fallbackProvider.GetRequiredService<IServiceManifest>();
-            foreach (var service in manifest.Services)
-            {
-                services.AddTransient(service, sp => fallbackProvider.GetService(service));
-            }
-
-            return services;
         }
 
         public void Dispose()
@@ -254,6 +231,20 @@ namespace Microsoft.AspNet.Hosting
             {
                 throw new InvalidOperationException("HostingEngine has already been started.");
             }
+        }
+
+        public IHostingEngine UseFallbackServices(IServiceProvider services)
+        {
+            CheckUseAllowed();
+            _fallbackServices = services;
+            return this;
+        }
+
+        public IHostingEngine UseConfiguration(IConfiguration config)
+        {
+            CheckUseAllowed();
+            _config = config ?? new Configuration();
+            return this;
         }
 
         public IHostingEngine UseServer(string assemblyName)
@@ -298,7 +289,7 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        private class WrappingServiceProvider : IServiceProvider
+        internal class WrappingServiceProvider : IServiceProvider
         {
             private readonly IServiceProvider _sp;
             private readonly IHostingEnvironment _hostingEnvironment;

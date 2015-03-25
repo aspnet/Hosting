@@ -3,11 +3,14 @@
 
 using System;
 using Microsoft.AspNet.Builder;
+using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
     public class StartupMethods
     {
+        internal static ConfigureServicesDelegate DefaultBuildServiceProvider = s => s.BuildServiceProvider();
+
         public StartupMethods(Action<IApplicationBuilder> configure) 
             : this(configure, configureServices: null) { }
 
@@ -15,7 +18,7 @@ namespace Microsoft.AspNet.Hosting.Startup
         public StartupMethods(Action<IApplicationBuilder> configure, ConfigureServicesDelegate configureServices)
         {
             ConfigureDelegate = configure;
-            ConfigureServicesDelegate = configureServices ?? ApplicationStartup.DefaultBuildServiceProvider;
+            ConfigureServicesDelegate = configureServices ?? DefaultBuildServiceProvider;
         }
 
         public ConfigureServicesDelegate ConfigureServicesDelegate { get; }

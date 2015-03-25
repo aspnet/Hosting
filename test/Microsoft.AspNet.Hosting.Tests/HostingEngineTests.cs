@@ -40,7 +40,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void CanCreateApplicationServicesWithDefaultHostingContext()
         {
-            var engineStart = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(), services => services.AddOptions());
+            var engineStart = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider, services => services.AddOptions());
             Assert.NotNull(engineStart.ApplicationServices.GetRequiredService<IOptions<object>>());
         }
 
@@ -68,7 +68,8 @@ namespace Microsoft.AspNet.Hosting
             var config = new Configuration()
                 .Add(new MemoryConfigurationSource(vals));
 
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider, config)
+            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider)
+                .UseConfiguration(config)
                 .UseServer(this);
 
             using (engine.Start())
