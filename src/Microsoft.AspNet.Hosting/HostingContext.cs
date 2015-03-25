@@ -10,27 +10,4 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public class HostingContext
-    {
-        public IConfiguration Configuration { get; set; }
-
-        public IApplicationBuilder Builder { get; set; }
-
-        public string ApplicationName { get; set; }
-        // REVIEW: BasePath and WebRootPath are basically setting same thing?
-        public string ApplicationBasePath { get; set; }
-        //public string WebRootPath { get; set; }
-        public string EnvironmentName { get; set; }
-        public StartupMethods StartupMethods { get; set; }
-        public RequestDelegate ApplicationDelegate { get; set; }
-
-        public IServiceCollection Services { get; } = new ServiceCollection();
-
-        // Result of ConfigureServices
-        public IServiceProvider ApplicationServices { get; set; }
-
-        public string ServerFactoryLocation { get; set; }
-        public IServerFactory ServerFactory { get; set; }
-        public IServerInformation Server { get; set; }
-    }
 }

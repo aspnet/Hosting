@@ -16,19 +16,19 @@ namespace Microsoft.AspNet.Hosting.Startup
 
         public static StartupMethods LoadStartupMethods(
             IServiceProvider services,
-            string applicationName,
+            string startupClass,
             string environmentName,
             IList<string> diagnosticMessages)
         {
-            if (string.IsNullOrEmpty(applicationName))
+            if (string.IsNullOrEmpty(startupClass))
             {
-                throw new ArgumentException("Value cannot be null or empty.", "applicationName");
+                throw new ArgumentException("Value cannot be null or empty.", nameof(startupClass));
             }
 
-            var assembly = Assembly.Load(new AssemblyName(applicationName));
+            var assembly = Assembly.Load(new AssemblyName(startupClass));
             if (assembly == null)
             {
-                throw new InvalidOperationException(String.Format("The assembly '{0}' failed to load.", applicationName));
+                throw new InvalidOperationException(String.Format("The assembly '{0}' failed to load.", startupClass));
             }
 
             var startupNameWithEnv = "Startup" + environmentName;
@@ -37,9 +37,9 @@ namespace Microsoft.AspNet.Hosting.Startup
             // Check the most likely places first
             var type =
                 assembly.GetType(startupNameWithEnv) ??
-                assembly.GetType(applicationName + "." + startupNameWithEnv) ??
+                assembly.GetType(startupClass + "." + startupNameWithEnv) ??
                 assembly.GetType(startupNameWithoutEnv) ??
-                assembly.GetType(applicationName + "." + startupNameWithoutEnv);
+                assembly.GetType(startupClass + "." + startupNameWithoutEnv);
 
             if (type == null)
             {
@@ -61,7 +61,7 @@ namespace Microsoft.AspNet.Hosting.Startup
                 throw new InvalidOperationException(String.Format("A type named '{0}' or '{1}' could not be found in assembly '{2}'.",
                     startupNameWithEnv,
                     startupNameWithoutEnv,
-                    applicationName));
+                    startupClass));
             }
 
             var configureMethod = FindConfigureDelegate(type, environmentName);

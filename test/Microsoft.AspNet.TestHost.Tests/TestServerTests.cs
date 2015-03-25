@@ -53,51 +53,52 @@ namespace Microsoft.AspNet.TestHost
             Assert.Equal("RequestServices:True", result);
         }
 
-        [Fact]
-        public async Task CanChangeApplicationName()
-        {
-            var appName = "gobblegobble";
-            var hostingContext = new HostingContext
-            {
-                ApplicationName = appName,
-                StartupMethods = new StartupMethods(
-                    app =>
-                    {
-                        app.Run(context =>
-                        {
-                            var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-                            return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
-                        });
-                    })
-            };
-            TestServer server = TestServer.Create(hostingContext);
+        //[Fact]
+        //public async Task CanChangeApplicationName()
+        //{
+        //    var appName = "gobblegobble";
 
-            string result = await server.CreateClient().GetStringAsync("/path");
-            Assert.Equal("AppName:"+appName, result);
-        }
+        //    var hostingContext = new HostingContext
+        //    {
+        //        ApplicationName = appName,
+        //        StartupMethods = new StartupMethods(
+        //            app =>
+        //            {
+        //                app.Run(context =>
+        //                {
+        //                    var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+        //                    return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
+        //                });
+        //            })
+        //    };
+        //    TestServer server = TestServer.Create(hostingContext);
 
-        [Fact]
-        public async Task CanChangeAppPath()
-        {
-            var appPath = ".";
-            var hostingContext = new HostingContext
-            {
-                ApplicationBasePath = appPath,
-                StartupMethods = new StartupMethods(
-                    app =>
-                    {
-                        app.Run(context =>
-                        {
-                            var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-                            return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
-                        });
-                    })
-            };
-            TestServer server = TestServer.Create(hostingContext);
+        //    string result = await server.CreateClient().GetStringAsync("/path");
+        //    Assert.Equal("AppName:"+appName, result);
+        //}
 
-            string result = await server.CreateClient().GetStringAsync("/path");
-            Assert.Equal("AppPath:" + appPath, result);
-        }
+        //[Fact]
+        //public async Task CanChangeAppPath()
+        //{
+        //    var appPath = ".";
+        //    var hostingContext = new HostingContext
+        //    {
+        //        ApplicationBasePath = appPath,
+        //        StartupMethods = new StartupMethods(
+        //            app =>
+        //            {
+        //                app.Run(context =>
+        //                {
+        //                    var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+        //                    return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
+        //                });
+        //            })
+        //    };
+        //    TestServer server = TestServer.Create(hostingContext);
+
+        //    string result = await server.CreateClient().GetStringAsync("/path");
+        //    Assert.Equal("AppPath:" + appPath, result);
+        //}
 
         [Fact]
         public async Task CanAccessLogger()
