@@ -12,12 +12,5 @@ namespace Microsoft.AspNet.Hosting.Startup
             string startupAssemblyName,
             string environmentName,
             IList<string> diagnosticMessages);
-
-        // Move this to replace implmeentaiton
-
-        //StartupMethods Load(
-        //    Type startupClass,
-        //    string environmentName,
-        //    IList<string> diagnosticMessages);
     }
 }

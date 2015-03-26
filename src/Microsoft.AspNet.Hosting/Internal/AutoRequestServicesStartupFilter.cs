@@ -14,7 +14,10 @@ namespace Microsoft.AspNet.Hosting.Internal
             return builder =>
             {
                 app.UseMiddleware<RequestServicesContainerMiddleware>();
-                next(builder);
+                if (next != null)
+                {
+                    next(builder);
+                }
             };
         }
     }

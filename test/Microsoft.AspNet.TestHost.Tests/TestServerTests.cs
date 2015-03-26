@@ -11,6 +11,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
@@ -35,7 +36,7 @@ namespace Microsoft.AspNet.TestHost
             var services = new ServiceCollection().BuildServiceProvider();
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Startup().Configuration));
+            Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Configuration(), new Startup().Configuration, configureServices: null));
         }
 
         [Fact]
@@ -235,24 +236,25 @@ namespace Microsoft.AspNet.TestHost
             Assert.Throws<AggregateException>(() => { string result = server.CreateClient().GetStringAsync("/path").Result; });
         }
 
-        //[Fact]
-        //public async Task CanCreateViaStartupType()
-        //{
-        //    TestServer server = TestServer.Create<TestStartup>();
-        //    HttpResponseMessage result = await server.CreateClient().GetAsync("/");
-        //    Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-        //    Assert.Equal("FoundService:True", await result.Content.ReadAsStringAsync());
-        //}
+        [Fact]
+        public async Task CanCreateViaStartupType()
+        {
+            TestServer server = TestServer.Create<TestStartup>();
+            HttpResponseMessage result = await server.CreateClient().GetAsync("/");
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("FoundService:True", await result.Content.ReadAsStringAsync());
+        }
 
-        //[Fact]
-        //public async Task CanCreateViaStartupTypeAndSpecifyEnv()
-        //{
-        //    TestServer server = TestServer.Create();
-        //    server.UseStartup<TestStartup>().UseEnvironment("Foo").Start();
-        //    HttpResponseMessage result = await server.CreateClient().GetAsync("/");
-        //    Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-        //    Assert.Equal("FoundFoo:False", await result.Content.ReadAsStringAsync());
-        //}
+        [Fact]
+        public async Task CanCreateViaStartupTypeAndSpecifyEnv()
+        {
+            var builder = TestServer.CreateBuilder<TestStartup>();
+            builder.Environment = "Foo";
+            var server = builder.Build();
+            HttpResponseMessage result = await server.CreateClient().GetAsync("/");
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("FoundFoo:False", await result.Content.ReadAsStringAsync());
+        }
 
         public class Startup
         {

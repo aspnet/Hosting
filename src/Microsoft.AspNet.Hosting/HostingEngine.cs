@@ -7,13 +7,10 @@ using System.Linq;
 using System.Threading;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Builder;
-using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Runtime;
-using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -28,7 +25,6 @@ namespace Microsoft.AspNet.Hosting
         private Disposable _instanceStarted;
 
         // Start/Dispose/BuildApplicaitonServices block use methods
-        // REVIEW: could split the UseServer from UseStartup
         private bool _useDisabled;
 
         private IServerLoader _serverLoader;
@@ -40,7 +36,6 @@ namespace Microsoft.AspNet.Hosting
 
         // Only one of these should be set
         private string _startupAssemblyName;
-        //private Type _startupType;
         private StartupMethods _startup;
 
         // Only one of these should be set
@@ -98,24 +93,8 @@ namespace Microsoft.AspNet.Hosting
             EnsureDefaults();
             EnsureStartup();
 
-            //var fallbackServices = new WrappingServiceProvider(_fallbackServices, _hostingEnvironment, _applicationLifetime);
-
             _applicationServiceCollection.AddInstance<IApplicationLifetime>(_applicationLifetime);
 
-            // Get rid of this, find other way 
-            _applicationServiceCollection.AddInstance<IHostingEnvironment>(_hostingEnvironment);
-
-            //var hostingServices = 
-            //    HostingEngineFactory.Import(fallbackServices, 
-            //services =>
-            //    {
-
-            //        // TODO: Do we expect this to be provide by the runtime eventually?
-
-            //        // Jamming in app lifetime, app env, and hosting env since these must not be replaceable
-            //        //services.AddInstance(_applicationEnvironment);
-
-            //    });
             _applicationServices = _startup.ConfigureServicesDelegate(_applicationServiceCollection);
         }
 
@@ -127,20 +106,10 @@ namespace Microsoft.AspNet.Hosting
             }
 
             var diagnosticMessages = new List<string>();
-            //if (_startupType != null)
-            //{
-            //    _startup = _startupLoader.Load(
-            //        _startupType,
-            //        _environmentName,
-            //        diagnosticMessages);
-            //}
-            //else
-            //{
-                _startup = _startupLoader.Load(
-                    _startupAssemblyName,
-                    _hostingEnvironment.EnvironmentName,
-                    diagnosticMessages);
-            //}
+            _startup = _startupLoader.Load(
+                _startupAssemblyName,
+                _hostingEnvironment.EnvironmentName,
+                diagnosticMessages);
 
             if (_startup == null)
             {
@@ -231,20 +200,6 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-        //public IHostingEngine UseFallbackServices(IServiceProvider services)
-        //{
-        //    CheckUseAllowed();
-        //    _fallbackServices = services;
-        //    return this;
-        //}
-
-        //public IHostingEngine UseConfiguration(IConfiguration config)
-        //{
-        //    CheckUseAllowed();
-        //    _config = config ?? new Configuration();
-        //    return this;
-        //}
-
         // Consider cutting
         public IHostingEngine UseEnvironment(string environment)
         {
@@ -274,19 +229,6 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        // move to test server, and make it startuploader
-        //public IHostingEngine UseStartup<T>() where T : class
-        //{
-        //    return UseStartup(typeof(T));
-        //}
-
-        //public IHostingEngine UseStartup(Type startupType)
-        //{
-        //    CheckUseAllowed();
-        //    _startupType = startupType;
-        //    return this;
-        //}
-
         public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
             CheckUseAllowed();
@@ -307,37 +249,6 @@ namespace Microsoft.AspNet.Hosting
                 });
             return this;
         }
-
-        //internal class WrappingServiceProvider : IServiceProvider
-        //{
-        //    private readonly IServiceProvider _sp;
-        //    private readonly IHostingEnvironment _hostingEnvironment;
-        //    private readonly IApplicationLifetime _applicationLifetime;
-
-        //    public WrappingServiceProvider(IServiceProvider sp,
-        //                                   IHostingEnvironment hostingEnvironment,
-        //                                   IApplicationLifetime applicationLifetime)
-        //    {
-        //        _sp = sp;
-        //        _hostingEnvironment = hostingEnvironment;
-        //        _applicationLifetime = applicationLifetime;
-        //    }
-
-        //    public object GetService(Type serviceType)
-        //    {
-        //        if (serviceType == typeof(IHostingEnvironment))
-        //        {
-        //            return _hostingEnvironment;
-        //        }
-
-        //        if (serviceType == typeof(IApplicationLifetime))
-        //        {
-        //            return _applicationLifetime;
-        //        }
-
-        //        return _sp.GetService(serviceType);
-        //    }
-        //}
 
         private class Disposable : IDisposable
         {
