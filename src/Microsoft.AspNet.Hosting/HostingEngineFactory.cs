@@ -1,47 +1,39 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
+using Microsoft.AspNet.FileProviders;
+using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Startup;
-using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Runtime;
-using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public static class HostingEngineFactory
+    public class HostingEngineFactory : IHostingEngineFactory
     {
-        public static IHostingEngine Create(IServiceProvider fallbackServices)
+        public const string EnvironmentKey = "Hosting:Environment";
+
+        private IHostingServicesBuilder _serviceBuilder;
+        private readonly IStartupLoader _startupLoader;
+        private readonly ApplicationLifetime _applicationLifetime;
+        private readonly IApplicationEnvironment _applicationEnvironment;
+        private readonly IHostingEnvironment _hostingEnvironment;
+
+        public HostingEngineFactory(IHostingServicesBuilder buildServices, IStartupLoader startupLoader, IApplicationEnvironment appEnv, IHostingEnvironment hostingEnv)
         {
-            return Create(fallbackServices, configureHostingServices: null);
+            _serviceBuilder = buildServices;
+            _startupLoader = startupLoader;
+            _applicationEnvironment = appEnv;
+            _hostingEnvironment = hostingEnv;
         }
 
-        public static IHostingEngine Create(IServiceProvider fallbackServices, Action<IServiceCollection> configureHostingServices)
+        public IHostingEngine Create(IConfiguration config)
         {
-            fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider; // Switch to assume not null?
-            var services = Import(fallbackServices, configureHostingServices);
-            services.TryAdd(ServiceDescriptor.Transient<IHostingEngine, HostingEngine>());
-            services.TryAdd(ServiceDescriptor.Transient<IStartupLoader, StartupLoader>());
-            var hostingServices = services.BuildServiceProvider();
-            return hostingServices.GetRequiredService<IHostingEngine>().UseFallbackServices(fallbackServices);
-        }
+            _hostingEnvironment.WebRootPath = HostingUtilities.GetWebRoot(_applicationEnvironment.ApplicationBasePath);
+            _hostingEnvironment.WebRootFileProvider = new PhysicalFileProvider(_hostingEnvironment.WebRootPath);
+            _hostingEnvironment.EnvironmentName = config[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
 
-        internal static IServiceCollection Import(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
-        {
-            var services = new ServiceCollection();
-            // Import services
-            var manifest = fallbackServices.GetRequiredService<IServiceManifest>();
-            foreach (var service in manifest.Services)
-            {
-                services.AddTransient(service, sp => fallbackServices.GetService(service));
-            }
-
-            if (configureServices != null)
-            {
-                configureServices(services);
-            }
-
-            return services;
+            return new HostingEngine(_serviceBuilder.Build(isApplicationServices: true), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
         }
     }
 }

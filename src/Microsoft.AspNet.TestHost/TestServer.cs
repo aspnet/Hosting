@@ -17,7 +17,49 @@ using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.TestHost
 {
-    public class TestServer : HostingEngine, IServerFactory, IDisposable
+    public class TestServerBuilder
+    {
+        public IServiceProvider FallbackServices { get; set; }
+        public string Environment { get; set; }
+        public Type StartupType { get; set; }
+        public string StartupAssemblyName { get; set; }
+        public IConfiguration Config { get; set; }
+
+        public IServiceCollection AdditionalServices { get; } = new ServiceCollection();
+
+        public StartupMethods Startup { get; set; }
+
+        public TestServer Build()
+        {
+            var fallbackServices = FallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            var config = Config ?? new Configuration();
+            if (Environment != null)
+            {
+                config[HostingEngineFactory.EnvironmentKey] = Environment;
+            }
+
+            var engine = WebApplication.CreateHostingEngine(fallbackServices,
+                config,
+                services => services.Add(AdditionalServices));
+            //if (StartupType != null)
+            //{
+            //    engine.UseStartup(StartupAssemblyName);
+            //}
+            if (Startup != null)
+            {
+                engine.UseStartup(Startup.ConfigureDelegate, Startup.ConfigureServicesDelegate);
+            }
+            else if (StartupAssemblyName != null)
+            {
+                engine.UseStartup(StartupAssemblyName);
+            }
+
+            return new TestServer(engine);
+        }
+    }
+
+
+    public class TestServer : IServerFactory, IDisposable
     {
         private const string DefaultEnvironmentName = "Development";
         private const string ServerName = nameof(TestServer);
@@ -26,71 +68,68 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        public TestServer(IStartupLoader loader, IApplicationEnvironment appEnv) : base(loader, appEnv)
+        public TestServer(IHostingEngine engine)
         {
-            UseServer(this);
+            _appInstance = engine.UseServer(this).Start();
         }
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
 
-        public static TestServer Start<T>() where T : class
-        {
-            return Start<T>(CallContextServiceLocator.Locator.ServiceProvider);
-        }
+        //public static TestServer Create<T>() where T : class
+        //{
+        //    return Create<T>(serviceProvider: null);
+        //}
 
-        public static TestServer Start<T>(IServiceProvider serviceProvider) where T : class
-        {
-            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
+        //public static TestServer Create<T>(IServiceProvider serviceProvider) where T : class
+        //{
+        //    return 
+        //    var engine = Create(serviceProvider)
+        //        .UseStartup(typeof(T));
 
-            var engine = Create(serviceProvider)
-                .UseStartup(typeof(T));
-
-            engine.Start();
-            return engine as TestServer;
-        }
-
-        public static TestServer Start(Action<IApplicationBuilder> configureApp)
-        {
-            return Start(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices: null);
-        }
-
-        public static TestServer Start(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
-        {
-            return Start(CallContextServiceLocator.Locator.ServiceProvider, configureApp, configureServices);
-        }
-
-        public static TestServer Start(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp)
-        {
-            return Start(serviceProvider, configureApp, configureServices: null);
-        }
+        //    engine.Start();
+        //    return engine as TestServer;
+        //}
 
         public static TestServer Create()
         {
-            return Create(CallContextServiceLocator.Locator.ServiceProvider);
+            return Create(fallbackServices: null, config: null, configureApp: null, configureServices: null);
         }
 
-        public static TestServer Create(IServiceProvider serviceProvider)
+        public static TestServer Create(Action<IApplicationBuilder> configureApp)
         {
-            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-            var engine = HostingEngineFactory.Create(serviceProvider, services => services.AddSingleton<IHostingEngine, TestServer>());
-            return engine as TestServer;
+            return Create(fallbackServices: null, config: null, configureApp: configureApp, configureServices: null);
         }
 
-        public static TestServer Start(IServiceProvider serviceProvider, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public static TestServer Create(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            serviceProvider = serviceProvider ?? CallContextServiceLocator.Locator.ServiceProvider;
-
-            var engine = Create(serviceProvider)
-                .UseStartup(configureApp, configureServices);
-
-            engine.Start();
-            return engine as TestServer;
+            return Create(fallbackServices: null, config: null, configureApp: configureApp, configureServices: configureServices);
         }
 
-        public override IDisposable Start()
+        public static TestServer Create(IServiceProvider fallbackServices, Action<IApplicationBuilder> configureApp)
         {
-            _appInstance = base.Start();
-            return _appInstance;
+            return Create(fallbackServices, config: null, configureApp: configureApp, configureServices: null);
+        }
+
+        public static TestServer Create(IServiceProvider fallbackServices, IConfiguration config)
+        {
+            return Create(fallbackServices, config: null, configureApp: null, configureServices: null);
+        }
+
+        public static TestServer Create(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        {
+            return new TestServerBuilder
+            {
+                FallbackServices = fallbackServices,
+                Startup = new StartupMethods(configureApp, services =>
+                {
+                    if (configureServices != null)
+                    {
+                        configureServices(services);
+                    }
+                    return services.BuildServiceProvider();
+                }),
+                Config = config
+            }.Build();
         }
 
         public HttpMessageHandler CreateHandler()
@@ -140,9 +179,8 @@ namespace Microsoft.AspNet.TestHost
             return _appDelegate(featureCollection);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
             _disposed = true;
             _appInstance.Dispose();
         }

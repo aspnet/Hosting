@@ -20,7 +20,7 @@ namespace Microsoft.AspNet.TestHost
 
         public TestClientTests()
         {
-            _server = TestServer.Start(app => app.Run(ctx => Task.FromResult(0)));
+            _server = TestServer.Create(app => app.Run(ctx => Task.FromResult(0)));
         }
 
         [Fact]
@@ -30,7 +30,7 @@ namespace Microsoft.AspNet.TestHost
             var expected = "GET Response";
             RequestDelegate appDelegate = ctx =>
                 ctx.Response.WriteAsync(expected);
-            var server = TestServer.Start(app => app.Run(appDelegate));
+            var server = TestServer.Create(app => app.Run(appDelegate));
             var client = server.CreateClient();
 
             // Act
@@ -51,7 +51,7 @@ namespace Microsoft.AspNet.TestHost
                 Assert.Equal("/", ctx.Request.Path.Value);
                 return ctx.Response.WriteAsync(expected);
             };
-            var server = TestServer.Start(app => app.Run(appDelegate));
+            var server = TestServer.Create(app => app.Run(appDelegate));
             var client = server.CreateClient();
 
             // Act
@@ -72,7 +72,7 @@ namespace Microsoft.AspNet.TestHost
                 Assert.Equal("/", ctx.Request.Path.Value);
                 return ctx.Response.WriteAsync(expected);
             };
-            var server = TestServer.Start(app => app.Run(appDelegate));
+            var server = TestServer.Create(app => app.Run(appDelegate));
             var client = server.CreateClient();
 
             // Act
@@ -88,7 +88,7 @@ namespace Microsoft.AspNet.TestHost
             // Arrange
             RequestDelegate appDelegate = ctx =>
                 ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd() + " PUT Response");
-            var server = TestServer.Start(app => app.Run(appDelegate));
+            var server = TestServer.Create(app => app.Run(appDelegate));
             var client = server.CreateClient();
 
             // Act
@@ -105,7 +105,7 @@ namespace Microsoft.AspNet.TestHost
             // Arrange
             RequestDelegate appDelegate = async ctx =>
                 await ctx.Response.WriteAsync(new StreamReader(ctx.Request.Body).ReadToEnd() + " POST Response");
-            var server = TestServer.Start(app => app.Run(appDelegate));
+            var server = TestServer.Create(app => app.Run(appDelegate));
             var client = server.CreateClient();
 
             // Act

@@ -26,7 +26,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();
-            var startup = new StartupLoader().Load(services, "Microsoft.AspNet.Hosting.Tests", "WithServices", diagnosticMessages);
+            var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", "WithServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
@@ -49,7 +49,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = new ServiceCollection().BuildServiceProvider();
             var diagnosticMesssages = new List<string>();
 
-            var startup = new StartupLoader().Load(services, "Microsoft.AspNet.Hosting.Tests", environment ?? "", diagnosticMesssages);
+            var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", environment ?? "", diagnosticMesssages);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
@@ -69,7 +69,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
             var diagnosticMessages = new List<string>();
 
-            var ex = Assert.Throws<InvalidOperationException>(() => new StartupLoader().Load(services, "Microsoft.AspNet.Hosting.Tests", "Boom", diagnosticMessages));
+            var ex = Assert.Throws<InvalidOperationException>(() => new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", "Boom", diagnosticMessages));
             Assert.Equal("A method named 'ConfigureBoom' or 'Configure' in the type 'Microsoft.AspNet.Hosting.Fakes.StartupBoom' could not be found.", ex.Message);
         }
 
@@ -80,7 +80,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();
-            var startup = new StartupLoader().Load(services, "Microsoft.AspNet.Hosting.Tests", "WithNullConfigureServices", diagnosticMessages);
+            var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", "WithNullConfigureServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
@@ -96,7 +96,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();
-            var startup = new StartupLoader().Load(services, "Microsoft.AspNet.Hosting.Tests", "WithConfigureServices", diagnosticMessages);
+            var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", "WithConfigureServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
@@ -113,7 +113,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();
-            var startup = new StartupLoader().Load(services, typeof(TestStartup), "", diagnosticMessages);
+            var startup = new StartupLoader(services).Load(typeof(TestStartup), "", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
@@ -130,7 +130,7 @@ namespace Microsoft.AspNet.Hosting.Tests
             var services = serviceCollection.BuildServiceProvider();
 
             var diagnosticMessages = new List<string>();
-            var startup = new StartupLoader().Load(services, typeof(TestStartup), "No", diagnosticMessages);
+            var startup = new StartupLoader(services).Load(typeof(TestStartup), "No", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
