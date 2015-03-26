@@ -12,8 +12,14 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public class StartupLoader : IStartupLoader
     {
+        private readonly IServiceProvider _services;
+
+        public StartupLoader(IServiceProvider services)
+        {
+            _services = services;
+        }
+
         public StartupMethods Load(
-            IServiceProvider services,
             Type startupType,
             string environmentName,
             IList<string> diagnosticMessages)
@@ -24,29 +30,26 @@ namespace Microsoft.AspNet.Hosting.Startup
             object instance = null;
             if (!configureMethod.MethodInfo.IsStatic || (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic))
             {
-                instance = ActivatorUtilities.GetServiceOrCreateInstance(services, startupType);
+                instance = ActivatorUtilities.GetServiceOrCreateInstance(_services, startupType);
             }
 
             return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
         }
 
-
-
         public StartupMethods Load(
-            IServiceProvider services,
-            string startupClass,
+            string startupAssemblyName,
             string environmentName,
             IList<string> diagnosticMessages)
         {
-            if (string.IsNullOrEmpty(startupClass))
+            if (string.IsNullOrEmpty(startupAssemblyName))
             {
-                throw new ArgumentException("Value cannot be null or empty.", nameof(startupClass));
+                throw new ArgumentException("Value cannot be null or empty.", nameof(startupAssemblyName));
             }
 
-            var assembly = Assembly.Load(new AssemblyName(startupClass));
+            var assembly = Assembly.Load(new AssemblyName(startupAssemblyName));
             if (assembly == null)
             {
-                throw new InvalidOperationException(String.Format("The assembly '{0}' failed to load.", startupClass));
+                throw new InvalidOperationException(String.Format("The assembly '{0}' failed to load.", startupAssemblyName));
             }
 
             var startupNameWithEnv = "Startup" + environmentName;
@@ -55,9 +58,9 @@ namespace Microsoft.AspNet.Hosting.Startup
             // Check the most likely places first
             var type =
                 assembly.GetType(startupNameWithEnv) ??
-                assembly.GetType(startupClass + "." + startupNameWithEnv) ??
+                assembly.GetType(startupAssemblyName + "." + startupNameWithEnv) ??
                 assembly.GetType(startupNameWithoutEnv) ??
-                assembly.GetType(startupClass + "." + startupNameWithoutEnv);
+                assembly.GetType(startupAssemblyName + "." + startupNameWithoutEnv);
 
             if (type == null)
             {
@@ -79,10 +82,10 @@ namespace Microsoft.AspNet.Hosting.Startup
                 throw new InvalidOperationException(String.Format("A type named '{0}' or '{1}' could not be found in assembly '{2}'.",
                     startupNameWithEnv,
                     startupNameWithoutEnv,
-                    startupClass));
+                    startupAssemblyName));
             }
 
-            return Load(services, type, environmentName, diagnosticMessages);
+            return Load(type, environmentName, diagnosticMessages);
         }
 
         private static ConfigureBuilder FindConfigureDelegate(Type startupType, string environmentName)

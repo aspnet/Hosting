@@ -9,15 +9,15 @@ namespace Microsoft.AspNet.Hosting.Startup
     public interface IStartupLoader
     {
         StartupMethods Load(
-            IServiceProvider services,
-            string startupClass,
+            string startupAssemblyName,
             string environmentName,
             IList<string> diagnosticMessages);
 
-        StartupMethods Load(
-            IServiceProvider services,
-            Type startupClass,
-            string environmentName,
-            IList<string> diagnosticMessages);
+        // Move this to replace implmeentaiton
+
+        //StartupMethods Load(
+        //    Type startupClass,
+        //    string environmentName,
+        //    IList<string> diagnosticMessages);
     }
 }

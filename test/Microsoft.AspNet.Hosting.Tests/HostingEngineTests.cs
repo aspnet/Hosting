@@ -24,33 +24,33 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void HostingEngineCanBeStarted()
         {
-            var engineStart = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider)
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(), configureServices: null)
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests")
                 .Start();
 
-            Assert.NotNull(engineStart);
+            Assert.NotNull(engine);
             Assert.Equal(1, _startInstances.Count);
             Assert.Equal(0, _startInstances[0].DisposeCalls);
 
-            engineStart.Dispose();
+            engine.Dispose();
 
             Assert.Equal(1, _startInstances[0].DisposeCalls);
         }
 
         [Fact]
-        public void CanReplaceHostingEngine()
+        public void CanReplaceHostingEngineFactory()
         {
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider,
-                services => services.AddTransient<IHostingEngine, TestEngine>());
+            var factory = WebApplication.CreateHostingEngineFactory(CallContextServiceLocator.Locator.ServiceProvider,
+                services => services.AddTransient<IHostingEngineFactory, TestEngineFactory>());
 
-            Assert.NotNull(engine as TestEngine);
+            Assert.NotNull(factory as TestEngineFactory);
         }
 
         [Fact]
         public void CanReplaceStartupLoader()
         {
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider,
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(),
                 services => services.AddTransient<IStartupLoader, TestLoader>())
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests");
@@ -59,16 +59,16 @@ namespace Microsoft.AspNet.Hosting
         }
 
         [Fact]
-        public void CanCreateApplicationServicesWithDefaultHostingContext()
+        public void CanCreateApplicationServices()
         {
-            var engineStart = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider, services => services.AddOptions());
+            var engineStart = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(), services => services.AddOptions());
             Assert.NotNull(engineStart.ApplicationServices.GetRequiredService<IOptions<object>>());
         }
 
         [Fact]
         public void EnvDefaultsToDevelopmentIfNoConfig()
         {
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider)
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(), configureServices: null)
                 .UseServer(this);
 
             using (engine.Start())
@@ -89,8 +89,7 @@ namespace Microsoft.AspNet.Hosting
             var config = new Configuration()
                 .Add(new MemoryConfigurationSource(vals));
 
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider)
-                .UseConfiguration(config)
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, config, configureServices: null)
                 .UseServer(this);
 
             using (engine.Start())
@@ -103,7 +102,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void WebRootCanBeResolvedFromTheProjectJson()
         {
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider)
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, config: null, configureServices: null)
                 .UseServer(this);
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal(Path.GetFullPath("testroot"), env.WebRootPath);
@@ -113,7 +112,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void IsEnvironment_Extension_Is_Case_Insensitive()
         {
-            var engine = HostingEngineFactory.Create(CallContextServiceLocator.Locator.ServiceProvider)
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, config: null, configureServices: null)
                 .UseServer(this);
 
             using (engine.Start())
@@ -155,83 +154,15 @@ namespace Microsoft.AspNet.Hosting
 
         private class TestLoader : IStartupLoader
         {
-            public StartupMethods Load(IServiceProvider services, Type startupClass, string environmentName, IList<string> diagnosticMessages)
-            {
-                throw new NotImplementedException();
-            }
-
-            public StartupMethods Load(IServiceProvider services, string startupClass, string environmentName, IList<string> diagnosticMessages)
+            public StartupMethods Load(string startupAssemblyName, string environmentName, IList<string> diagnosticMessages)
             {
                 throw new NotImplementedException();
             }
         }
 
-        private class TestEngine : IHostingEngine
+        private class TestEngineFactory : IHostingEngineFactory
         {
-            public IServiceProvider ApplicationServices
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            public void Dispose()
-            {
-                throw new NotImplementedException();
-            }
-
-            public IDisposable Start()
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseConfiguration(IConfiguration config)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseFallbackServices(IServiceProvider services)
-            {
-                return this;
-            }
-
-            public IHostingEngine UseStartup<T>() where T : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseServer(IServerFactory factory)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseServer(string assemblyName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseStartup(string startupClass)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseStartup(Type startupType)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingEngine UseEnvironment(string environment)
+            public IHostingEngine Create(IConfiguration config)
             {
                 throw new NotImplementedException();
             }
