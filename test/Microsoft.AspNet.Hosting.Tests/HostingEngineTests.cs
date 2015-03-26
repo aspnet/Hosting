@@ -83,7 +83,7 @@ namespace Microsoft.AspNet.Hosting
         {
             var vals = new Dictionary<string, string>
             {
-                { "ASPNET_ENV", "Staging" }
+                { "Hosting:Environment", "Staging" }
             };
 
             var config = new Configuration()
