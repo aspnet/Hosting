@@ -23,7 +23,6 @@ namespace Microsoft.AspNet.Hosting
         private readonly IServiceCollection _applicationServiceCollection;
         private readonly IStartupLoader _startupLoader;
         private readonly ApplicationLifetime _applicationLifetime;
-        private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly IHostingEnvironment _hostingEnvironment;
 
         private Disposable _instanceStarted;
@@ -41,7 +40,7 @@ namespace Microsoft.AspNet.Hosting
 
         // Only one of these should be set
         private string _startupAssemblyName;
-        private Type _startupType;
+        //private Type _startupType;
         private StartupMethods _startup;
 
         // Only one of these should be set

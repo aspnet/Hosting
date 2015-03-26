@@ -8,6 +8,7 @@ using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
@@ -21,6 +22,7 @@ namespace Microsoft.AspNet.Hosting
         public HostingServicesBuilder(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            _configureServices = configureServices;
             _hostingEnvironment = new HostingEnvironment();
         }
 
@@ -29,8 +31,15 @@ namespace Microsoft.AspNet.Hosting
             var services = new ServiceCollection();
 
             // Import from manifest
+            var manifest = _fallbackServices.GetRequiredService<IServiceManifest>();
+            foreach (var service in manifest.Services)
+            {
+                services.AddTransient(service, sp => _fallbackServices.GetService(service));
+            }
 
             services.AddInstance(_hostingEnvironment);
+            services.AddInstance<IHostingServicesBuilder>(this);
+
             // Add hosting engine or application services
             if (isApplicationServices)
             {
@@ -46,7 +55,7 @@ namespace Microsoft.AspNet.Hosting
             else
             {
                 services.AddTransient<IHostingEngineFactory, HostingEngineFactory>();
-                services.AddTransient<IStartupLoader, IStartupLoader>();
+                services.AddTransient<IStartupLoader, StartupLoader>();
             }
 
             if (_configureServices != null)

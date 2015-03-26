@@ -19,9 +19,10 @@ namespace Microsoft.AspNet.Hosting
 
         public static IHostingEngineFactory CreateHostingEngineFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
-            return new HostingServicesBuilder(fallbackServices, configureServices)
+            var services = new HostingServicesBuilder(fallbackServices, configureServices)
                 .Build(isApplicationServices: false)
-                .BuildServiceProvider()
+                .BuildServiceProvider();
+            return services
                 .GetRequiredService<IHostingEngineFactory>();
         }
 

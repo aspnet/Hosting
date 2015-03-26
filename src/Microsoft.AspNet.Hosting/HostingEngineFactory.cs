@@ -13,9 +13,8 @@ namespace Microsoft.AspNet.Hosting
     {
         public const string EnvironmentKey = "Hosting:Environment";
 
-        private IHostingServicesBuilder _serviceBuilder;
+        private readonly IHostingServicesBuilder _serviceBuilder;
         private readonly IStartupLoader _startupLoader;
-        private readonly ApplicationLifetime _applicationLifetime;
         private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly IHostingEnvironment _hostingEnvironment;
 
@@ -31,7 +30,7 @@ namespace Microsoft.AspNet.Hosting
         {
             _hostingEnvironment.WebRootPath = HostingUtilities.GetWebRoot(_applicationEnvironment.ApplicationBasePath);
             _hostingEnvironment.WebRootFileProvider = new PhysicalFileProvider(_hostingEnvironment.WebRootPath);
-            _hostingEnvironment.EnvironmentName = config[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
+            _hostingEnvironment.EnvironmentName = config?[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
 
             return new HostingEngine(_serviceBuilder.Build(isApplicationServices: true), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
         }
