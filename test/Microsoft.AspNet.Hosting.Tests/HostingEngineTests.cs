@@ -68,14 +68,9 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void EnvDefaultsToDevelopmentIfNoConfig()
         {
-            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(), configureServices: null)
-                .UseServer(this);
-
-            using (engine.Start())
-            {
-                var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
-                Assert.Equal("Development", env.EnvironmentName);
-            }
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, new Configuration(), configureServices: null);
+            var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+            Assert.Equal("Development", env.EnvironmentName);
         }
 
         [Fact]
@@ -89,14 +84,9 @@ namespace Microsoft.AspNet.Hosting
             var config = new Configuration()
                 .Add(new MemoryConfigurationSource(vals));
 
-            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, config, configureServices: null)
-                .UseServer(this);
-
-            using (engine.Start())
-            {
-                var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
-                Assert.Equal("Staging", env.EnvironmentName);
-            }
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, config, configureServices: null);
+            var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+            Assert.Equal("Staging", env.EnvironmentName);
         }
 
         [Fact]
