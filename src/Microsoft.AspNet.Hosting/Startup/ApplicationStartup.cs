@@ -94,32 +94,51 @@ namespace Microsoft.AspNet.Hosting.Startup
         {
             var methodNameWithEnv = string.Format(CultureInfo.InvariantCulture, methodName, environmentName);
             var methodNameWithNoEnv = string.Format(CultureInfo.InvariantCulture, methodName, "");
-            var methodInfo = startupType.GetMethod(methodNameWithEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
-                ?? startupType.GetMethod(methodNameWithNoEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-            if (methodInfo == null)
-            {
-                if (required)
-                {
-                    throw new InvalidOperationException(string.Format("A method named '{0}' or '{1}' in the type '{2}' could not be found.",
-                        methodNameWithEnv,
-                        methodNameWithNoEnv,
-                        startupType.FullName));
 
-                }
-                return null;
-            }
-            if (returnType != null && methodInfo.ReturnType != returnType)
+            try
             {
-                if (required)
+                var methodInfo = startupType.GetMethod(methodNameWithEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+                    ?? startupType.GetMethod(methodNameWithNoEnv, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+
+                if (methodInfo == null)
                 {
-                    throw new InvalidOperationException(string.Format("The '{0}' method in the type '{1}' must have a return type of '{2}'.",
-                        methodInfo.Name,
-                        startupType.FullName,
-                        returnType.Name));
+                    if (required)
+                    {
+                        throw new InvalidOperationException(string.Format("A method named '{0}' or '{1}' in the type '{2}' could not be found.",
+                            methodNameWithEnv,
+                            methodNameWithNoEnv,
+                            startupType.FullName));
+
+                    }
+                    return null;
                 }
-                return null;
+                if (returnType != null && methodInfo.ReturnType != returnType)
+                {
+                    if (required)
+                    {
+                        throw new InvalidOperationException(string.Format("The '{0}' method in the type '{1}' must have a return type of '{2}'.",
+                            methodInfo.Name,
+                            startupType.FullName,
+                            returnType.Name));
+                    }
+                    return null;
+                }
+                return methodInfo;
             }
-            return methodInfo;
+            catch (AmbiguousMatchException ambMatchEx)
+            {
+                throw new NotSupportedException(
+                    string.Format("The method '{0}' does not support overloading. Make sure only one occurence of the method '{0}' in type '{1}' is present",
+                    methodName,
+                    startupType.FullName),
+
+                    innerException: ambMatchEx
+                );
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }
