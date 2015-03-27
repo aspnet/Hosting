@@ -22,8 +22,6 @@ namespace Microsoft.AspNet.Hosting
         private readonly ApplicationLifetime _applicationLifetime;
         private readonly IHostingEnvironment _hostingEnvironment;
 
-        private Disposable _instanceStarted;
-
         // Start/Dispose/BuildApplicaitonServices block use methods
         private bool _useDisabled;
 
@@ -71,14 +69,12 @@ namespace Microsoft.AspNet.Hosting
                     return _applicationDelegate(httpContext);
                 });
 
-            _instanceStarted = new Disposable(() =>
+            return new Disposable(() =>
             {
                 _applicationLifetime.NotifyStopping();
                 server.Dispose();
                 _applicationLifetime.NotifyStopped();
             });
-
-            return _instanceStarted;
         }
 
         private void EnsureDefaults()
@@ -171,16 +167,6 @@ namespace Microsoft.AspNet.Hosting
             configure(_builder);
 
             _applicationDelegate = _builder.Build();
-        }
-
-        public virtual void Dispose()
-        {
-            // REVIEW: this prob broke thread safety that the old using had
-            if (_instanceStarted != null)
-            {
-                _instanceStarted.Dispose();
-                _instanceStarted = null;
-            }
         }
 
         public IServiceProvider ApplicationServices

@@ -5,7 +5,6 @@ using System;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
-using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
@@ -13,7 +12,6 @@ namespace Microsoft.AspNet.Hosting
     public interface IHostingEngine
     {
         IDisposable Start();
-        void Dispose();
 
         // Accessing this will block Use methods
         IServiceProvider ApplicationServices { get; }
@@ -28,8 +26,6 @@ namespace Microsoft.AspNet.Hosting
 
         // Mutually exclusive
         IHostingEngine UseStartup(string startupAssemblyName);
-        //IHostingEngine UseStartup<T>() where T : class;
-        //IHostingEngine UseStartup(Type startupType);
         IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices);
         IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices);
     }
