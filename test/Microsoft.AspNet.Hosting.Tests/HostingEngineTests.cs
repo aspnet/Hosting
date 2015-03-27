@@ -133,16 +133,12 @@ namespace Microsoft.AspNet.Hosting
         [InlineData(@"sub/sub2\sub3\", @"sub/sub2/sub3/")]
         public void MapPath_Facts(string virtualPath, string expectedSuffix)
         {
-            var context = new HostingContext
-            {
-                ServerFactory = this
-            };
+            var engine = WebApplication.CreateHostingEngine(CallContextServiceLocator.Locator.ServiceProvider, config: null, configureServices: null)
+                .UseServer(this);
 
-            var engine = new HostingEngine();
-
-            using (engine.Start(context))
+            using (engine.Start())
             {
-                var env = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+                var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
                 var mappedPath = env.MapPath(virtualPath);
                 expectedSuffix = expectedSuffix.Replace('/', Path.DirectorySeparatorChar);
                 Assert.Equal(Path.Combine(env.WebRootPath, expectedSuffix), mappedPath);
