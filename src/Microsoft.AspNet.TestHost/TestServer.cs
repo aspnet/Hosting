@@ -91,16 +91,10 @@ namespace Microsoft.AspNet.TestHost
             return Create(fallbackServices: null, config: null, configureApp: configureApp, configureServices: configureServices);
         }
 
-        // REVIEW: see if can we live without these overloads
-        //public static TestServer Create(IServiceProvider fallbackServices, Action<IApplicationBuilder> configureApp)
-        //{
-        //    return Create(fallbackServices, config: null, configureApp: configureApp, configureServices: null);
-        //}
-
-        //public static TestServer Create(IServiceProvider fallbackServices, IConfiguration config)
-        //{
-        //    return Create(fallbackServices, config: null, configureApp: null, configureServices: null);
-        //}
+        public static TestServer Create(IServiceProvider fallbackServices, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        {
+            return CreateBuilder(fallbackServices, config: null, configureApp: configureApp, configureServices: configureServices).Build();
+        }
 
         public static TestServer Create(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
@@ -145,17 +139,23 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServerBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return new TestServerBuilder
-            {
-                FallbackServices = fallbackServices,
-                Startup = new StartupMethods(configureApp, services =>
+            return CreateBuilder(fallbackServices, config, configureApp,
+                services =>
                 {
                     if (configureServices != null)
                     {
                         configureServices(services);
                     }
                     return services.BuildServiceProvider();
-                }),
+                });
+        }
+
+        public static TestServerBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        {
+            return new TestServerBuilder
+            {
+                FallbackServices = fallbackServices,
+                Startup = new StartupMethods(configureApp, configureServices),
                 Config = config
             };
         }
