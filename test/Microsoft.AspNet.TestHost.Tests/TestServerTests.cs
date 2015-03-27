@@ -59,19 +59,22 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CanChangeApplicationName()
         {
+            var fallbackServices = CallContextServiceLocator.Locator.ServiceProvider;
             var appName = "gobblegobble";
-            var testAppEnv = new TestApplicationEnvironment(CallContextServiceLocator.Locator.ServiceProvider.GetRequiredService<IApplicationEnvironment>());
-            testAppEnv.ApplicationName = appName;
 
-            TestServer server = TestServer.Create(app =>
-            {
-                app.Run(context =>
+            var builder = TestServer.CreateBuilder(fallbackServices, new Configuration(),
+                app =>
                 {
-                    var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-                    return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
-                });
-            },
-            services => services.AddInstance<IApplicationEnvironment>(testAppEnv));
+                    app.Run(context =>
+                    {
+                        var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+                        return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
+                    });
+                },
+                configureServices: null);
+
+            builder.ApplicationName = appName;
+            var server = builder.Build();
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("AppName:" + appName, result);
@@ -80,19 +83,22 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task CanChangeAppPath()
         {
+            var fallbackServices = CallContextServiceLocator.Locator.ServiceProvider;
             var appPath = ".";
-            var testAppEnv = new TestApplicationEnvironment(CallContextServiceLocator.Locator.ServiceProvider.GetRequiredService<IApplicationEnvironment>());
-            testAppEnv.ApplicationBasePath = appPath;
 
-            TestServer server = TestServer.Create(app =>
-            {
-                app.Run(context =>
+            var builder = TestServer.CreateBuilder(fallbackServices, new Configuration(),
+                app =>
                 {
-                    var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-                    return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
-                });
-            },
-            services => services.AddInstance<IApplicationEnvironment>(testAppEnv));
+                    app.Run(context =>
+                    {
+                        var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+                        return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
+                    });
+                },
+                configureServices: null);
+
+            builder.ApplicationBasePath = appPath;
+            var server = builder.Build();
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("AppPath:" + appPath, result);
@@ -268,66 +274,6 @@ namespace Microsoft.AspNet.TestHost
             }
 
             public string Message { get; set; }
-        }
-
-        public class TestApplicationEnvironment : IApplicationEnvironment
-        {
-            private readonly IApplicationEnvironment _appEnv;
-            private string _appName;
-            private string _appBasePath;
-
-            public TestApplicationEnvironment(IApplicationEnvironment appEnv)
-            {
-                _appEnv = appEnv;
-            }
-
-            public string ApplicationBasePath
-            {
-                get
-                {
-                    return _appBasePath ?? _appEnv.ApplicationBasePath;
-                }
-                set
-                {
-                    _appBasePath = value;
-                }
-            }
-
-            public string ApplicationName
-            {
-                get
-                {
-                    return _appName ?? _appEnv.ApplicationName;
-                }
-                set
-                {
-                    _appName = value;
-                }
-            }
-
-            public string Configuration
-            {
-                get
-                {
-                    return _appEnv.Configuration;
-                }
-            }
-
-            public FrameworkName RuntimeFramework
-            {
-                get
-                {
-                    return _appEnv.RuntimeFramework;
-                }
-            }
-
-            public string Version
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
         }
 
         public class TestStartup
