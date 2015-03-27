@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
@@ -15,6 +16,7 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
+using Microsoft.Framework.Runtime.Infrastructure;
 using Xunit;
 
 namespace Microsoft.AspNet.TestHost
@@ -36,7 +38,7 @@ namespace Microsoft.AspNet.TestHost
             var services = new ServiceCollection().BuildServiceProvider();
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Configuration(), new Startup().Configuration, configureServices: null));
+            Assert.Throws<InvalidOperationException>(() => TestServer.Create(services, new Configuration(), new Startup().Configure, configureServices: null));
         }
 
         [Fact]
@@ -54,52 +56,47 @@ namespace Microsoft.AspNet.TestHost
             Assert.Equal("RequestServices:True", result);
         }
 
-        //[Fact]
-        //public async Task CanChangeApplicationName()
-        //{
-        //    var appName = "gobblegobble";
+        [Fact]
+        public async Task CanChangeApplicationName()
+        {
+            var appName = "gobblegobble";
+            var testAppEnv = new TestApplicationEnvironment(CallContextServiceLocator.Locator.ServiceProvider.GetRequiredService<IApplicationEnvironment>());
+            testAppEnv.ApplicationName = appName;
 
-        //    var hostingContext = new HostingContext
-        //    {
-        //        ApplicationName = appName,
-        //        StartupMethods = new StartupMethods(
-        //            app =>
-        //            {
-        //                app.Run(context =>
-        //                {
-        //                    var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-        //                    return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
-        //                });
-        //            })
-        //    };
-        //    TestServer server = TestServer.Create(hostingContext);
+            TestServer server = TestServer.Create(app =>
+            {
+                app.Run(context =>
+                {
+                    var appEnv = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+                    return context.Response.WriteAsync("AppName:" + appEnv.ApplicationName);
+                });
+            },
+            services => services.AddInstance<IApplicationEnvironment>(testAppEnv));
 
-        //    string result = await server.CreateClient().GetStringAsync("/path");
-        //    Assert.Equal("AppName:"+appName, result);
-        //}
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("AppName:" + appName, result);
+        }
 
-        //[Fact]
-        //public async Task CanChangeAppPath()
-        //{
-        //    var appPath = ".";
-        //    var hostingContext = new HostingContext
-        //    {
-        //        ApplicationBasePath = appPath,
-        //        StartupMethods = new StartupMethods(
-        //            app =>
-        //            {
-        //                app.Run(context =>
-        //                {
-        //                    var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-        //                    return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
-        //                });
-        //            })
-        //    };
-        //    TestServer server = TestServer.Create(hostingContext);
+        [Fact]
+        public async Task CanChangeAppPath()
+        {
+            var appPath = ".";
+            var testAppEnv = new TestApplicationEnvironment(CallContextServiceLocator.Locator.ServiceProvider.GetRequiredService<IApplicationEnvironment>());
+            testAppEnv.ApplicationBasePath = appPath;
 
-        //    string result = await server.CreateClient().GetStringAsync("/path");
-        //    Assert.Equal("AppPath:" + appPath, result);
-        //}
+            TestServer server = TestServer.Create(app =>
+            {
+                app.Run(context =>
+                {
+                    var env = app.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+                    return context.Response.WriteAsync("AppPath:" + env.ApplicationBasePath);
+                });
+            },
+            services => services.AddInstance<IApplicationEnvironment>(testAppEnv));
+
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("AppPath:" + appPath, result);
+        }
 
         [Fact]
         public async Task CanAccessLogger()
@@ -258,7 +255,7 @@ namespace Microsoft.AspNet.TestHost
 
         public class Startup
         {
-            public void Configuration(IApplicationBuilder builder)
+            public void Configure(IApplicationBuilder builder)
             {
                 builder.Run(ctx => ctx.Response.WriteAsync("Startup"));
             }
@@ -271,6 +268,66 @@ namespace Microsoft.AspNet.TestHost
             }
 
             public string Message { get; set; }
+        }
+
+        public class TestApplicationEnvironment : IApplicationEnvironment
+        {
+            private readonly IApplicationEnvironment _appEnv;
+            private string _appName;
+            private string _appBasePath;
+
+            public TestApplicationEnvironment(IApplicationEnvironment appEnv)
+            {
+                _appEnv = appEnv;
+            }
+
+            public string ApplicationBasePath
+            {
+                get
+                {
+                    return _appBasePath ?? _appEnv.ApplicationBasePath;
+                }
+                set
+                {
+                    _appBasePath = value;
+                }
+            }
+
+            public string ApplicationName
+            {
+                get
+                {
+                    return _appName ?? _appEnv.ApplicationName;
+                }
+                set
+                {
+                    _appName = value;
+                }
+            }
+
+            public string Configuration
+            {
+                get
+                {
+                    return _appEnv.Configuration;
+                }
+            }
+
+            public FrameworkName RuntimeFramework
+            {
+                get
+                {
+                    return _appEnv.RuntimeFramework;
+                }
+            }
+
+            public string Version
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
         }
 
         public class TestStartup

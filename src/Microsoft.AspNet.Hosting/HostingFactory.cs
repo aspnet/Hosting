@@ -28,6 +28,7 @@ namespace Microsoft.AspNet.Hosting
 
         public IHostingEngine Create(IConfiguration config)
         {
+            // REVIEW: should this move into ctor that takes applicationBasePath string?
             _hostingEnvironment.WebRootPath = HostingUtilities.GetWebRoot(_applicationEnvironment.ApplicationBasePath);
             _hostingEnvironment.WebRootFileProvider = new PhysicalFileProvider(_hostingEnvironment.WebRootPath);
             _hostingEnvironment.EnvironmentName = config?[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
