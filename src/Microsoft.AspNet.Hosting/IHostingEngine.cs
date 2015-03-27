@@ -26,6 +26,7 @@ namespace Microsoft.AspNet.Hosting
 
         // Mutually exclusive
         IHostingEngine UseStartup(string startupAssemblyName);
+        IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp);
         IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices);
         IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices);
     }

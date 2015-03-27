@@ -215,6 +215,11 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
+        public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp)
+        {
+            return UseStartup(configureApp, configureServices: null);
+        }
+
         public IHostingEngine UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
             CheckUseAllowed();
