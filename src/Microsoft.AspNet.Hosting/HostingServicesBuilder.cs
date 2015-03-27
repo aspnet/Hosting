@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-
 using System;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
@@ -26,7 +25,7 @@ namespace Microsoft.AspNet.Hosting
             _hostingEnvironment = new HostingEnvironment();
         }
 
-        public IServiceCollection Build(bool isApplicationServices)
+        public IServiceCollection Build()
         {
             var services = new ServiceCollection();
 
@@ -40,23 +39,17 @@ namespace Microsoft.AspNet.Hosting
             services.AddInstance(_hostingEnvironment);
             services.AddInstance<IHostingServicesBuilder>(this);
 
-            // Add hosting engine or application services
-            if (isApplicationServices)
-            {
-                services.AddTransient<IServerLoader, ServerLoader>();
-                services.AddTransient<IApplicationBuilderFactory, ApplicationBuilderFactory>();
-                services.AddTransient< IHttpContextFactory, HttpContextFactory>();
-                services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-                services.AddLogging();
+            services.AddTransient<IHostingFactory, HostingFactory>();
+            services.AddTransient<IStartupLoader, StartupLoader>();
 
-                // Conjure up a RequestServices
-                services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
-            }
-            else
-            {
-                services.AddTransient<IHostingEngineFactory, HostingEngineFactory>();
-                services.AddTransient<IStartupLoader, StartupLoader>();
-            }
+            services.AddTransient<IServerLoader, ServerLoader>();
+            services.AddTransient<IApplicationBuilderFactory, ApplicationBuilderFactory>();
+            services.AddTransient< IHttpContextFactory, HttpContextFactory>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddLogging();
+
+            // Conjure up a RequestServices
+            services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
 
             if (_configureServices != null)
             {

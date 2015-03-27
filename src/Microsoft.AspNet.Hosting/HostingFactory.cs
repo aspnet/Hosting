@@ -9,16 +9,16 @@ using Microsoft.Framework.Runtime;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public class HostingEngineFactory : IHostingEngineFactory
+    public class HostingFactory : IHostingFactory
     {
-        public const string EnvironmentKey = "Hosting:Environment";
+        public const string EnvironmentKey = "ASPNET_ENV";
 
         private readonly IHostingServicesBuilder _serviceBuilder;
         private readonly IStartupLoader _startupLoader;
         private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly IHostingEnvironment _hostingEnvironment;
 
-        public HostingEngineFactory(IHostingServicesBuilder buildServices, IStartupLoader startupLoader, IApplicationEnvironment appEnv, IHostingEnvironment hostingEnv)
+        public HostingFactory(IHostingServicesBuilder buildServices, IStartupLoader startupLoader, IApplicationEnvironment appEnv, IHostingEnvironment hostingEnv)
         {
             _serviceBuilder = buildServices;
             _startupLoader = startupLoader;
@@ -32,7 +32,7 @@ namespace Microsoft.AspNet.Hosting
             _hostingEnvironment.WebRootFileProvider = new PhysicalFileProvider(_hostingEnvironment.WebRootPath);
             _hostingEnvironment.EnvironmentName = config?[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
 
-            return new HostingEngine(_serviceBuilder.Build(isApplicationServices: true), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
+            return new HostingEngine(_serviceBuilder.Build(), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Microsoft.AspNet.TestHost
             var config = Config ?? new Configuration();
             if (Environment != null)
             {
-                config[HostingEngineFactory.EnvironmentKey] = Environment;
+                config[HostingFactory.EnvironmentKey] = Environment;
             }
 
             var engine = WebApplication.CreateHostingEngine(fallbackServices,

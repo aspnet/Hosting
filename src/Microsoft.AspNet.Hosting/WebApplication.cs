@@ -12,18 +12,16 @@ namespace Microsoft.AspNet.Hosting
     {
         public static IHostingEngine CreateHostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)
         {
-            var factory = CreateHostingEngineFactory(fallbackServices, configureServices);
+            var factory = CreateHostingFactory(fallbackServices, configureServices);
             return factory.Create(config);
-
         }
 
-        public static IHostingEngineFactory CreateHostingEngineFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
+        public static IHostingFactory CreateHostingFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
-            var services = new HostingServicesBuilder(fallbackServices, configureServices)
-                .Build(isApplicationServices: false)
-                .BuildServiceProvider();
-            return services
-                .GetRequiredService<IHostingEngineFactory>();
+            return new HostingServicesBuilder(fallbackServices, configureServices)
+                .Build()
+                .BuildServiceProvider()
+                .GetRequiredService<IHostingFactory>();
         }
 
     }

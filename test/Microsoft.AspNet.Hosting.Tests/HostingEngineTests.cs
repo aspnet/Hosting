@@ -39,10 +39,10 @@ namespace Microsoft.AspNet.Hosting
         }
 
         [Fact]
-        public void CanReplaceHostingEngineFactory()
+        public void CanReplaceHostingFactory()
         {
-            var factory = WebApplication.CreateHostingEngineFactory(CallContextServiceLocator.Locator.ServiceProvider,
-                services => services.AddTransient<IHostingEngineFactory, TestEngineFactory>());
+            var factory = WebApplication.CreateHostingFactory(CallContextServiceLocator.Locator.ServiceProvider,
+                services => services.AddTransient<IHostingFactory, TestEngineFactory>());
 
             Assert.NotNull(factory as TestEngineFactory);
         }
@@ -83,7 +83,7 @@ namespace Microsoft.AspNet.Hosting
         {
             var vals = new Dictionary<string, string>
             {
-                { "Hosting:Environment", "Staging" }
+                { "ASPNET_ENV", "Staging" }
             };
 
             var config = new Configuration()
@@ -186,7 +186,7 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-        private class TestEngineFactory : IHostingEngineFactory
+        private class TestEngineFactory : IHostingFactory
         {
             public IHostingEngine Create(IConfiguration config)
             {
