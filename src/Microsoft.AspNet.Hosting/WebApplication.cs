@@ -9,10 +9,39 @@ namespace Microsoft.AspNet.Hosting
 {
     public static class WebApplication
     {
+        public static IHostingEngine CreateHostingEngine()
+        {
+            return CreateHostingEngine(new Configuration());
+        }
+
+        public static IHostingEngine CreateHostingEngine(Action<IServiceCollection> configureServices)
+        {
+            return CreateHostingEngine(new Configuration(), configureServices);
+        }
+
+        public static IHostingEngine CreateHostingEngine(IConfiguration config)
+        {
+            return CreateHostingEngine(config, configureServices: null);
+        }
+
+        public static IHostingEngine CreateHostingEngine(IConfiguration config, Action<IServiceCollection> configureServices)
+        {
+            return CreateHostingFactory(fallbackServices: null, configureServices: configureServices).Create(config);
+        }
+
         public static IHostingEngine CreateHostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)
         {
-            var factory = CreateHostingFactory(fallbackServices, configureServices);
-            return factory.Create(config);
+            return CreateHostingFactory(fallbackServices, configureServices).Create(config);
+        }
+
+        public static IHostingFactory CreateHostingFactory()
+        {
+            return CreateHostingFactory(fallbackServices: null, configureServices: null);
+        }
+
+        public static IHostingFactory CreateHostingFactory(Action<IServiceCollection> configureServices)
+        {
+            return CreateHostingFactory(fallbackServices: null, configureServices: configureServices);
         }
 
         public static IHostingFactory CreateHostingFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
