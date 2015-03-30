@@ -36,7 +36,6 @@ namespace Microsoft.AspNet.Hosting
                 services.AddTransient(service, sp => _fallbackServices.GetService(service));
             }
 
-            var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
             services.AddInstance(_hostingEnvironment);
             services.AddInstance<IHostingServicesBuilder>(this);
 

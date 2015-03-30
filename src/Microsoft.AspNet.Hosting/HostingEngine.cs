@@ -21,7 +21,7 @@ namespace Microsoft.AspNet.Hosting
         private readonly ApplicationLifetime _applicationLifetime;
         private readonly IHostingEnvironment _hostingEnvironment;
 
-        // Start/Dispose/BuildApplicaitonServices block use methods
+        // Start/ApplicationServices block use methods
         private bool _useDisabled;
 
         private IServerLoader _serverLoader;
