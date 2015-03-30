@@ -21,6 +21,12 @@ namespace Microsoft.AspNet.Hosting
         private readonly IList<StartInstance> _startInstances = new List<StartInstance>();
 
         [Fact]
+        public void HostingEngineThrowsWithNoServer()
+        {
+            Assert.Throws<InvalidOperationException>(() => WebHost.CreateEngine().Start());
+        }
+
+        [Fact]
         public void HostingEngineCanBeStarted()
         {
             var engine = WebHost.CreateEngine()

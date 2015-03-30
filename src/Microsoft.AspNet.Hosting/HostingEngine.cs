@@ -53,8 +53,6 @@ namespace Microsoft.AspNet.Hosting
         {
             EnsureApplicationServices();
             EnsureBuilder();
-
-            // Blow up if we don't have a server set
             EnsureServer();
 
             var applicationDelegate = BuildApplicationDelegate();
@@ -123,6 +121,12 @@ namespace Microsoft.AspNet.Hosting
         {
             if (_serverFactory == null)
             {
+                // Blow up if we don't have a server set at this point
+                if (_serverFactoryLocation == null)
+                {
+                    throw new InvalidOperationException("UseStartup() is required for Start()");
+                }
+
                 _serverFactory = _applicationServices.GetRequiredService<IServerLoader>().LoadServerFactory(_serverFactoryLocation);
             }
 
