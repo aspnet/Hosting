@@ -2,12 +2,19 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.AspNet.FileProviders;
+using Microsoft.AspNet.Hosting.Internal;
 
 namespace Microsoft.AspNet.Hosting
 {
     public class HostingEnvironment : IHostingEnvironment
     {
         internal const string DefaultEnvironmentName = "Development";
+
+        public HostingEnvironment(string applicationBasePath)
+        {
+            WebRootPath = HostingUtilities.GetWebRoot(applicationBasePath);
+            WebRootFileProvider = new PhysicalFileProvider(WebRootPath);
+        }
 
         public string EnvironmentName { get; set; } = DefaultEnvironmentName;
 

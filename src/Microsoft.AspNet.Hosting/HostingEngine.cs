@@ -16,7 +16,6 @@ namespace Microsoft.AspNet.Hosting
 {
     public class HostingEngine : IHostingEngine
     {
-
         private readonly IServiceCollection _applicationServiceCollection;
         private readonly IStartupLoader _startupLoader;
         private readonly ApplicationLifetime _applicationLifetime;
@@ -77,16 +76,9 @@ namespace Microsoft.AspNet.Hosting
             });
         }
 
-        private void EnsureDefaults()
-        {
-            _config = _config ?? new Configuration();
-        }
-
-
         private void EnsureApplicationServices()
         {
             _useDisabled = true;
-            EnsureDefaults();
             EnsureStartup();
 
             _applicationServiceCollection.AddInstance<IApplicationLifetime>(_applicationLifetime);

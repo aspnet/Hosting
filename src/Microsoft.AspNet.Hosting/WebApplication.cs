@@ -26,7 +26,12 @@ namespace Microsoft.AspNet.Hosting
 
         public static IHostingEngine CreateHostingEngine(IConfiguration config, Action<IServiceCollection> configureServices)
         {
-            return CreateHostingFactory(fallbackServices: null, configureServices: configureServices).Create(config);
+            return CreateHostingEngine(fallbackServices: null, config: config, configureServices: configureServices);
+        }
+
+        public static IHostingEngine CreateHostingEngine(IServiceProvider fallbackServices, IConfiguration config)
+        {
+            return CreateHostingEngine(fallbackServices, config, configureServices: null);
         }
 
         public static IHostingEngine CreateHostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)

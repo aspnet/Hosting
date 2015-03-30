@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.AspNet.FileProviders;
-using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Runtime;
@@ -28,9 +26,6 @@ namespace Microsoft.AspNet.Hosting
 
         public IHostingEngine Create(IConfiguration config)
         {
-            // REVIEW: should this move into ctor that takes applicationBasePath string?
-            _hostingEnvironment.WebRootPath = HostingUtilities.GetWebRoot(_applicationEnvironment.ApplicationBasePath);
-            _hostingEnvironment.WebRootFileProvider = new PhysicalFileProvider(_hostingEnvironment.WebRootPath);
             _hostingEnvironment.EnvironmentName = config?[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
 
             return new HostingEngine(_serviceBuilder.Build(), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);

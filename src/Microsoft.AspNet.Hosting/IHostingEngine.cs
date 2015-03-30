@@ -17,7 +17,6 @@ namespace Microsoft.AspNet.Hosting
         IServiceProvider ApplicationServices { get; }
 
         // Use methods blow up after any of the above methods are called
-
         IHostingEngine UseEnvironment(string environment);
 
         // Mutually exclusive
