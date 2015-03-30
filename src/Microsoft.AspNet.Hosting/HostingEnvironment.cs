@@ -10,12 +10,6 @@ namespace Microsoft.AspNet.Hosting
     {
         internal const string DefaultEnvironmentName = "Development";
 
-        public HostingEnvironment(string applicationBasePath)
-        {
-            WebRootPath = HostingUtilities.GetWebRoot(applicationBasePath);
-            WebRootFileProvider = new PhysicalFileProvider(WebRootPath);
-        }
-
         public string EnvironmentName { get; set; } = DefaultEnvironmentName;
 
         public string WebRootPath { get; set; }

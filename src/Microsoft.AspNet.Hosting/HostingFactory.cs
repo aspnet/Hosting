@@ -26,7 +26,7 @@ namespace Microsoft.AspNet.Hosting
 
         public IHostingEngine Create(IConfiguration config)
         {
-            _hostingEnvironment.EnvironmentName = config?[EnvironmentKey] ?? _hostingEnvironment.EnvironmentName;
+            _hostingEnvironment.Initialize(_applicationEnvironment.ApplicationBasePath, config?[EnvironmentKey]);
 
             return new HostingEngine(_serviceBuilder.Build(), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
         }

@@ -16,11 +16,13 @@ namespace Microsoft.AspNet.Hosting
     {
         private readonly IServiceProvider _fallbackServices;
         private readonly Action<IServiceCollection> _configureServices;
+        private readonly IHostingEnvironment _hostingEnvironment;
 
         public HostingServicesBuilder(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
             _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             _configureServices = configureServices;
+            _hostingEnvironment = new HostingEnvironment();
         }
 
         public IServiceCollection Build()
@@ -35,7 +37,7 @@ namespace Microsoft.AspNet.Hosting
             }
 
             var appEnv = _fallbackServices.GetRequiredService<IApplicationEnvironment>();
-            services.AddInstance<IHostingEnvironment>(new HostingEnvironment(appEnv.ApplicationBasePath));
+            services.AddInstance(_hostingEnvironment);
             services.AddInstance<IHostingServicesBuilder>(this);
 
             services.AddTransient<IHostingFactory, HostingFactory>();
