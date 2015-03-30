@@ -33,7 +33,7 @@ namespace Microsoft.AspNet.Hosting
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
 
-            var engine = AspNetHosting.CreateEngine(_serviceProvider, config)
+            var engine = WebHost.CreateEngine(_serviceProvider, config)
                 .UseServer(config.Get("server"))
                 .UseStartup(config.Get("app"));
  

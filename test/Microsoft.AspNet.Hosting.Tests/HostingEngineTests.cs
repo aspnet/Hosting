@@ -23,7 +23,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void HostingEngineCanBeStarted()
         {
-            var engine = AspNetHosting.CreateEngine()
+            var engine = WebHost.CreateEngine()
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests")
                 .Start();
@@ -40,7 +40,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void CanReplaceHostingFactory()
         {
-            var factory = AspNetHosting.CreateFactory(services => services.AddTransient<IHostingFactory, TestEngineFactory>());
+            var factory = WebHost.CreateFactory(services => services.AddTransient<IHostingFactory, TestEngineFactory>());
 
             Assert.NotNull(factory as TestEngineFactory);
         }
@@ -48,7 +48,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void CanReplaceStartupLoader()
         {
-            var engine = AspNetHosting.CreateEngine(services => services.AddTransient<IStartupLoader, TestLoader>())
+            var engine = WebHost.CreateEngine(services => services.AddTransient<IStartupLoader, TestLoader>())
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests");
 
@@ -58,14 +58,14 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void CanCreateApplicationServicesWithAddedServices()
         {
-            var engineStart = AspNetHosting.CreateEngine(services => services.AddOptions());
+            var engineStart = WebHost.CreateEngine(services => services.AddOptions());
             Assert.NotNull(engineStart.ApplicationServices.GetRequiredService<IOptions<object>>());
         }
 
         [Fact]
         public void EnvDefaultsToDevelopmentIfNoConfig()
         {
-            var engine = AspNetHosting.CreateEngine(new Configuration());
+            var engine = WebHost.CreateEngine(new Configuration());
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal("Development", env.EnvironmentName);
         }
@@ -81,7 +81,7 @@ namespace Microsoft.AspNet.Hosting
             var config = new Configuration()
                 .Add(new MemoryConfigurationSource(vals));
 
-            var engine = AspNetHosting.CreateEngine(config);
+            var engine = WebHost.CreateEngine(config);
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal("Staging", env.EnvironmentName);
         }
@@ -89,7 +89,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void WebRootCanBeResolvedFromTheProjectJson()
         {
-            var engine = AspNetHosting.CreateEngine().UseServer(this);
+            var engine = WebHost.CreateEngine().UseServer(this);
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal(Path.GetFullPath("testroot"), env.WebRootPath);
             Assert.True(env.WebRootFileProvider.GetFileInfo("TextFile.txt").Exists);
@@ -98,7 +98,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void IsEnvironment_Extension_Is_Case_Insensitive()
         {
-            var engine = AspNetHosting.CreateEngine().UseServer(this);
+            var engine = WebHost.CreateEngine().UseServer(this);
 
             using (engine.Start())
             {
@@ -118,7 +118,7 @@ namespace Microsoft.AspNet.Hosting
         [InlineData(@"sub/sub2\sub3\", @"sub/sub2/sub3/")]
         public void MapPath_Facts(string virtualPath, string expectedSuffix)
         {
-            var engine = AspNetHosting.CreateEngine().UseServer(this);
+            var engine = WebHost.CreateEngine().UseServer(this);
 
             using (engine.Start())
             {

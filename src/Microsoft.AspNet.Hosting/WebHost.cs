@@ -9,7 +9,7 @@ using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public static class AspNetHosting
+    public static class WebHost
     {
         public static IHostingEngine CreateEngine()
         {
