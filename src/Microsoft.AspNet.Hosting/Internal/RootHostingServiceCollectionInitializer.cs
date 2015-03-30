@@ -7,22 +7,25 @@ using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Infrastructure;
 
-namespace Microsoft.AspNet.Hosting
+namespace Microsoft.AspNet.Hosting.Internal
 {
-    public class HostingServicesBuilder : IHostingServicesBuilder
+    public class RootHostingServiceCollectionInitializer
     {
         private readonly IServiceProvider _fallbackServices;
         private readonly Action<IServiceCollection> _configureServices;
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public HostingServicesBuilder(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
+        public RootHostingServiceCollectionInitializer(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
-            _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            _fallbackServices = fallbackServices;
             _configureServices = configureServices;
             _hostingEnvironment = new HostingEnvironment();
+            _loggerFactory = new LoggerFactory();
         }
 
         public IServiceCollection Build()
@@ -37,7 +40,8 @@ namespace Microsoft.AspNet.Hosting
             }
 
             services.AddInstance(_hostingEnvironment);
-            services.AddInstance<IHostingServicesBuilder>(this);
+            services.AddInstance(this);
+            services.AddInstance(_loggerFactory);
 
             services.AddTransient<IHostingFactory, HostingFactory>();
             services.AddTransient<IStartupLoader, StartupLoader>();

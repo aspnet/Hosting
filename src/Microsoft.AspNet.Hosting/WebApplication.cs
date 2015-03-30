@@ -2,56 +2,59 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
-    public static class WebApplication
+    public static class AspNetHosting
     {
-        public static IHostingEngine CreateHostingEngine()
+        public static IHostingEngine CreateEngine()
         {
-            return CreateHostingEngine(new Configuration());
+            return CreateEngine(new Configuration());
         }
 
-        public static IHostingEngine CreateHostingEngine(Action<IServiceCollection> configureServices)
+        public static IHostingEngine CreateEngine(Action<IServiceCollection> configureServices)
         {
-            return CreateHostingEngine(new Configuration(), configureServices);
+            return CreateEngine(new Configuration(), configureServices);
         }
 
-        public static IHostingEngine CreateHostingEngine(IConfiguration config)
+        public static IHostingEngine CreateEngine(IConfiguration config)
         {
-            return CreateHostingEngine(config, configureServices: null);
+            return CreateEngine(config, configureServices: null);
         }
 
-        public static IHostingEngine CreateHostingEngine(IConfiguration config, Action<IServiceCollection> configureServices)
+        public static IHostingEngine CreateEngine(IConfiguration config, Action<IServiceCollection> configureServices)
         {
-            return CreateHostingEngine(fallbackServices: null, config: config, configureServices: configureServices);
+            return CreateEngine(fallbackServices: null, config: config, configureServices: configureServices);
         }
 
-        public static IHostingEngine CreateHostingEngine(IServiceProvider fallbackServices, IConfiguration config)
+        public static IHostingEngine CreateEngine(IServiceProvider fallbackServices, IConfiguration config)
         {
-            return CreateHostingEngine(fallbackServices, config, configureServices: null);
+            return CreateEngine(fallbackServices, config, configureServices: null);
         }
 
-        public static IHostingEngine CreateHostingEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)
+        public static IHostingEngine CreateEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)
         {
-            return CreateHostingFactory(fallbackServices, configureServices).Create(config);
+            return CreateFactory(fallbackServices, configureServices).Create(config);
         }
 
-        public static IHostingFactory CreateHostingFactory()
+        public static IHostingFactory CreateFactory()
         {
-            return CreateHostingFactory(fallbackServices: null, configureServices: null);
+            return CreateFactory(fallbackServices: null, configureServices: null);
         }
 
-        public static IHostingFactory CreateHostingFactory(Action<IServiceCollection> configureServices)
+        public static IHostingFactory CreateFactory(Action<IServiceCollection> configureServices)
         {
-            return CreateHostingFactory(fallbackServices: null, configureServices: configureServices);
+            return CreateFactory(fallbackServices: null, configureServices: configureServices);
         }
 
-        public static IHostingFactory CreateHostingFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
+        public static IHostingFactory CreateFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
-            return new HostingServicesBuilder(fallbackServices, configureServices)
+            fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            return new RootHostingServiceCollectionInitializer(fallbackServices, configureServices)
                 .Build()
                 .BuildServiceProvider()
                 .GetRequiredService<IHostingFactory>();

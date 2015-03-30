@@ -50,10 +50,9 @@ namespace Microsoft.AspNet.TestHost
                 AdditionalServices.AddInstance<IApplicationEnvironment>(appEnv);
             }
 
-            var engine = WebApplication.CreateHostingEngine(fallbackServices,
+            var engine = AspNetHosting.CreateEngine(fallbackServices,
                 config,
                 services => services.Add(AdditionalServices));
-            // REVIEW: startup type overrides Startup delegates that were set
             if (StartupType != null)
             {
                 Startup = new StartupLoader(fallbackServices).Load(StartupType, Environment, new List<string>());

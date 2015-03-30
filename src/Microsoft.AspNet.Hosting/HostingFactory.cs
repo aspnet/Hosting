@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Runtime;
@@ -11,14 +12,14 @@ namespace Microsoft.AspNet.Hosting
     {
         public const string EnvironmentKey = "ASPNET_ENV";
 
-        private readonly IHostingServicesBuilder _serviceBuilder;
+        private readonly RootHostingServiceCollectionInitializer _serviceInitializer;
         private readonly IStartupLoader _startupLoader;
         private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly IHostingEnvironment _hostingEnvironment;
 
-        public HostingFactory(IHostingServicesBuilder buildServices, IStartupLoader startupLoader, IApplicationEnvironment appEnv, IHostingEnvironment hostingEnv)
+        public HostingFactory(RootHostingServiceCollectionInitializer initializer, IStartupLoader startupLoader, IApplicationEnvironment appEnv, IHostingEnvironment hostingEnv)
         {
-            _serviceBuilder = buildServices;
+            _serviceInitializer = initializer;
             _startupLoader = startupLoader;
             _applicationEnvironment = appEnv;
             _hostingEnvironment = hostingEnv;
@@ -28,7 +29,7 @@ namespace Microsoft.AspNet.Hosting
         {
             _hostingEnvironment.Initialize(_applicationEnvironment.ApplicationBasePath, config?[EnvironmentKey]);
 
-            return new HostingEngine(_serviceBuilder.Build(), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
+            return new HostingEngine(_serviceInitializer.Build(), _startupLoader, config, _hostingEnvironment, _applicationEnvironment.ApplicationName);
         }
     }
 }

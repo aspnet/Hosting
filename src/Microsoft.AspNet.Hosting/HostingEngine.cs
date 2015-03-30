@@ -20,14 +20,13 @@ namespace Microsoft.AspNet.Hosting
         private readonly IStartupLoader _startupLoader;
         private readonly ApplicationLifetime _applicationLifetime;
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IConfiguration _config;
 
         // Start/ApplicationServices block use methods
         private bool _useDisabled;
 
         private IServerLoader _serverLoader;
         private IApplicationBuilderFactory _builderFactory;
-        private RequestDelegate _applicationDelegate;
-        private IConfiguration _config;
         private IApplicationBuilder _builder;
         private IServiceProvider _applicationServices;
 
@@ -54,9 +53,11 @@ namespace Microsoft.AspNet.Hosting
         {
             EnsureApplicationServices();
             EnsureBuilder();
-            EnsureServerFactory();
-            InitalizeServerFactory();
-            EnsureApplicationDelegate();
+
+            // Blow up if we don't have a server set
+            EnsureServer();
+
+            var applicationDelegate = BuildApplicationDelegate();
 
             var _contextFactory = _applicationServices.GetRequiredService<IHttpContextFactory>();
             var _contextAccessor = _applicationServices.GetRequiredService<IHttpContextAccessor>();
@@ -65,7 +66,7 @@ namespace Microsoft.AspNet.Hosting
                 {
                     var httpContext = _contextFactory.CreateHttpContext(features);
                     _contextAccessor.HttpContext = httpContext;
-                    return _applicationDelegate(httpContext);
+                    return applicationDelegate(httpContext);
                 });
 
             return new Disposable(() =>
@@ -118,36 +119,18 @@ namespace Microsoft.AspNet.Hosting
             _builder.ApplicationServices = _applicationServices;
         }
 
-        private void EnsureServerFactory()
+        private void EnsureServer()
         {
-            if (_serverFactory != null)
+            if (_serverFactory == null)
             {
-                return;
+                _serverFactory = _applicationServices.GetRequiredService<IServerLoader>().LoadServerFactory(_serverFactoryLocation);
             }
 
-            if (_serverLoader == null)
-            {
-                _serverLoader = _applicationServices.GetRequiredService<IServerLoader>();
-            }
-
-            _serverFactory = _serverLoader.LoadServerFactory(_serverFactoryLocation);
+            _serverInstance = _serverFactory.Initialize(_config);
+            _builder.Server = _serverInstance;
         }
 
-        private void InitalizeServerFactory()
-        {
-            // REVIEW: why is instance on _builder as well? currently we have no UseServer(instance), so this is always null
-            if (_serverInstance == null)
-            {
-                _serverInstance = _serverFactory.Initialize(_config);
-            }
-
-            if (_builder.Server == null)
-            {
-                _builder.Server = _serverInstance;
-            }
-        }
-
-        private void EnsureApplicationDelegate()
+        private RequestDelegate BuildApplicationDelegate()
         {
             var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
             var configure = _startup.ConfigureDelegate;
@@ -158,7 +141,7 @@ namespace Microsoft.AspNet.Hosting
 
             configure(_builder);
 
-            _applicationDelegate = _builder.Build();
+            return _builder.Build();
         }
 
         public IServiceProvider ApplicationServices
