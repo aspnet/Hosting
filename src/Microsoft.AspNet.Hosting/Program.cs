@@ -23,15 +23,8 @@ namespace Microsoft.AspNet.Hosting
             _serviceProvider = serviceProvider;
         }
 
-        public void Main(string[] args)
+        public IHostingEngine CreateEngine(IConfiguration config)
         {
-            var config = new Configuration();
-            if (File.Exists(HostingIniFile))
-            {
-                config.AddIniFile(HostingIniFile);
-            }
-            config.AddEnvironmentVariables();
-            config.AddCommandLine(args);
 
             var engine = WebHost.CreateEngine(_serviceProvider, config);
             var server = config.Get("server");
@@ -44,7 +37,20 @@ namespace Microsoft.AspNet.Hosting
             {
                 engine.UseStartup(startup);
             }
+            return engine;
+        }
 
+        public void Main(string[] args)
+        {
+            var config = new Configuration();
+            if (File.Exists(HostingIniFile))
+            {
+                config.AddIniFile(HostingIniFile);
+            }
+            config.AddEnvironmentVariables();
+            config.AddCommandLine(args);
+
+            var engine = CreateEngine(config);
             var serverShutdown = engine.Start();
             var loggerFactory = engine.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var appShutdownService = engine.ApplicationServices.GetRequiredService<IApplicationShutdown>();

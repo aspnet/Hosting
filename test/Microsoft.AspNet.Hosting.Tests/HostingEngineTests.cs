@@ -62,6 +62,13 @@ namespace Microsoft.AspNet.Hosting
         }
 
         [Fact]
+        public void UseStartupThrowsWithNull()
+        {
+            var engine = WebHost.CreateEngine();
+            Assert.Throws<ArgumentNullException>(() => engine.UseStartup((string)null));
+        }
+
+        [Fact]
         public void CanCreateApplicationServicesWithAddedServices()
         {
             var engineStart = WebHost.CreateEngine(services => services.AddOptions());
