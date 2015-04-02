@@ -10,6 +10,7 @@ using Microsoft.AspNet.Hosting.Fakes;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.OptionsModel;
+using Microsoft.Framework.Runtime.Infrastructure;
 using Xunit;
 
 namespace Microsoft.AspNet.Hosting.Tests
@@ -46,7 +47,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [InlineData("BaseClass")]
         public void StartupClassAddsConfigureServicesToApplicationServices(string environment)
         {
-            var services = new ServiceCollection().BuildServiceProvider();
+            var services = CallContextServiceLocator.Locator.ServiceProvider;
             var diagnosticMesssages = new List<string>();
 
             var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", environment ?? "", diagnosticMesssages);
@@ -76,8 +77,7 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupClassCanHandleConfigureServicesThatReturnsNull()
         {
-            var serviceCollection = new ServiceCollection();
-            var services = serviceCollection.BuildServiceProvider();
+            var services = CallContextServiceLocator.Locator.ServiceProvider;
 
             var diagnosticMessages = new List<string>();
             var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", "WithNullConfigureServices", diagnosticMessages);
@@ -92,14 +92,13 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupClassWithConfigureServicesShouldMakeServiceAvailableInConfigure()
         {
-            var serviceCollection = new ServiceCollection();
-            var services = serviceCollection.BuildServiceProvider();
+            var services = CallContextServiceLocator.Locator.ServiceProvider;
 
             var diagnosticMessages = new List<string>();
             var startup = new StartupLoader(services).Load("Microsoft.AspNet.Hosting.Tests", "WithConfigureServices", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
+            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
             startup.ConfigureDelegate(app);
 
             var foo = app.ApplicationServices.GetRequiredService<StartupWithConfigureServices.IFoo>();
@@ -109,14 +108,13 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupLoaderCanLoadByType()
         {
-            var serviceCollection = new ServiceCollection();
-            var services = serviceCollection.BuildServiceProvider();
+            var services = CallContextServiceLocator.Locator.ServiceProvider;
 
             var diagnosticMessages = new List<string>();
             var startup = new StartupLoader(services).Load(typeof(TestStartup), "", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
+            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
             startup.ConfigureDelegate(app);
 
             var foo = app.ApplicationServices.GetRequiredService<SimpleService>();
@@ -126,14 +124,13 @@ namespace Microsoft.AspNet.Hosting.Tests
         [Fact]
         public void StartupLoaderCanLoadByTypeWithEnvironment()
         {
-            var serviceCollection = new ServiceCollection();
-            var services = serviceCollection.BuildServiceProvider();
+            var services = CallContextServiceLocator.Locator.ServiceProvider;
 
             var diagnosticMessages = new List<string>();
             var startup = new StartupLoader(services).Load(typeof(TestStartup), "No", diagnosticMessages);
 
             var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
+            app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
 
             var ex = Assert.Throws<TargetInvocationException>(() => startup.ConfigureDelegate(app));
             Assert.IsAssignableFrom(typeof(InvalidOperationException), ex.InnerException);
