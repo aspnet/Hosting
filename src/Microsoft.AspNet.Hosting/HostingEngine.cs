@@ -123,7 +123,7 @@ namespace Microsoft.AspNet.Hosting
                 // Blow up if we don't have a server set at this point
                 if (_serverFactoryLocation == null)
                 {
-                    throw new InvalidOperationException("UseStartup() is required for Start()");
+                    throw new InvalidOperationException("UseServer() is required for Start()");
                 }
 
                 _serverFactory = _applicationServices.GetRequiredService<IServerLoader>().LoadServerFactory(_serverFactoryLocation);
@@ -188,6 +188,10 @@ namespace Microsoft.AspNet.Hosting
 
         public IHostingEngine UseStartup(string startupAssemblyName)
         {
+            if (startupAssemblyName == null)
+            {
+                throw new ArgumentNullException(nameof(startupAssemblyName));
+            }
             CheckUseAllowed();
             _startupAssemblyName = startupAssemblyName;
             return this;
