@@ -27,8 +27,9 @@ namespace Microsoft.AspNet.Hosting
         private IConfiguration _config;
 
         // Only one of these should be set
-        private string _startupAssemblyName;
         private StartupMethods _startup;
+        private Type _startupType;
+        private string _startupAssemblyName;
 
         // Only one of these should be set
         private string _serverFactoryLocation;
@@ -87,24 +88,16 @@ namespace Microsoft.AspNet.Hosting
 
             _hostingEnvironment.Initialize(appEnvironment.ApplicationBasePath, _config?[EnvironmentKey]);
 
-            var engine = new HostingEngine(hostingServices, startupLoader, _config, _hostingEnvironment.EnvironmentName);
-            if (_serverFactory != null)
-            {
-                engine.ServerFactory = _serverFactory;
-            }
-            else
-            {
-                engine.ServerFactoryLocation = _serverFactoryLocation;
-            }
+            var engine = new HostingEngine(hostingServices, startupLoader, _config);
 
-            if (_startup != null)
-            {
-                engine.Startup = _startup;
-            }
-            else
-            {
-                engine.StartupAssemblyName = appEnvironment.ApplicationName;
-            }
+            // Only one of these should be set, but they are used in priority
+            engine.ServerFactory = _serverFactory;
+            engine.ServerFactoryLocation = _serverFactoryLocation;
+
+            // Only one of these should be set, but they are used in priority
+            engine.Startup = _startup;
+            engine.StartupType = _startupType;
+            engine.StartupAssemblyName = appEnvironment.ApplicationName;
 
             return engine;
         }
@@ -147,6 +140,21 @@ namespace Microsoft.AspNet.Hosting
             }
             _startupAssemblyName = startupAssemblyName;
             return this;
+        }
+
+        public WebHostBuilder UseStartup(Type startupType)
+        {
+            if (startupType == null)
+            {
+                throw new ArgumentNullException(nameof(startupType));
+            }
+            _startupType = startupType;
+            return this;
+        }
+
+        public WebHostBuilder UseStartup<TStartup>() where TStartup : class
+        {
+            return UseStartup(typeof(TStartup));
         }
 
         public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp)

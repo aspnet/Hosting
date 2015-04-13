@@ -318,7 +318,12 @@ namespace Microsoft.AspNet.Hosting
 
         private class TestLoader : IStartupLoader
         {
-            public StartupMethods Load(string startupAssemblyName, string environmentName, IList<string> diagnosticMessages)
+            public Type FindStartupType(string startupAssemblyName, IList<string> diagnosticMessages)
+            {
+                throw new NotImplementedException();
+            }
+
+            public StartupMethods LoadMethods(Type startupType, IList<string> diagnosticMessages)
             {
                 throw new NotImplementedException();
             }

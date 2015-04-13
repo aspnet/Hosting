@@ -23,7 +23,6 @@ namespace Microsoft.AspNet.Hosting.Internal
         private readonly IServiceCollection _applicationServiceCollection;
         private readonly IStartupLoader _startupLoader;
         private readonly ApplicationLifetime _applicationLifetime;
-        private readonly string _environment;
         private readonly IConfiguration _config;
 
         private IServiceProvider _applicationServices;
@@ -31,19 +30,19 @@ namespace Microsoft.AspNet.Hosting.Internal
         // Only one of these should be set
         internal string StartupAssemblyName { get; set; }
         internal StartupMethods Startup { get; set; }
+        internal Type StartupType { get; set; }
 
         // Only one of these should be set
         internal IServerFactory ServerFactory { get; set; }
         internal string ServerFactoryLocation { get; set; }
         private IServerInformation _serverInstance;
 
-        public HostingEngine(IServiceCollection appServices, IStartupLoader startupLoader, IConfiguration config, string environmentName)
+        public HostingEngine(IServiceCollection appServices, IStartupLoader startupLoader, IConfiguration config)
         {
             _config = config ?? new Configuration();
             _applicationServiceCollection = appServices;
             _startupLoader = startupLoader;
             _applicationLifetime = new ApplicationLifetime();
-            _environment = environmentName;
         }
 
         public virtual IDisposable Start()
@@ -92,12 +91,20 @@ namespace Microsoft.AspNet.Hosting.Internal
                 return;
             }
 
-            var diagnosticMessages = new List<string>();
-            Startup = _startupLoader.Load(
-                StartupAssemblyName,
-                _environment,
-                diagnosticMessages);
+            if (StartupType == null)
+            {
+                var diagnosticTypeMessages = new List<string>();
+                StartupType = _startupLoader.FindStartupType(StartupAssemblyName, diagnosticTypeMessages);
+                if (StartupType == null)
+                {
+                    throw new ArgumentException(
+                        diagnosticTypeMessages.Aggregate("Failed to find a startup type for the web application.", (a, b) => a + "\r\n" + b),
+                        StartupAssemblyName);
+                }
+            }
 
+            var diagnosticMessages = new List<string>();
+            Startup = _startupLoader.LoadMethods(StartupType, diagnosticMessages);
             if (Startup == null)
             {
                 throw new ArgumentException(
