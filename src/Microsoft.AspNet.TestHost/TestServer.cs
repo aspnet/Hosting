@@ -24,9 +24,9 @@ namespace Microsoft.AspNet.TestHost
         private IDisposable _appInstance;
         private bool _disposed = false;
 
-        public TestServer(IHostingEngine engine)
+        public TestServer(IHostingBuilder builder, IConfiguration config)
         {
-            _appInstance = engine.UseServer(this).Start();
+            _appInstance = builder.UseServer(this).Build(config).Start();
         }
 
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");

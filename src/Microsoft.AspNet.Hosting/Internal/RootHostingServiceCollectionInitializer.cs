@@ -3,13 +3,11 @@
 
 using System;
 using Microsoft.AspNet.Hosting.Builder;
-using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
-using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting.Internal
 {
@@ -43,7 +41,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             services.AddInstance(this);
             services.AddInstance(_loggerFactory);
 
-            services.AddTransient<IHostingFactory, HostingFactory>();
+            services.AddTransient<IHostingBuilder, WebHostBuilder>();
             services.AddTransient<IStartupLoader, StartupLoader>();
 
             services.AddTransient<IServerLoader, ServerLoader>();

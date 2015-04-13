@@ -33,21 +33,22 @@ namespace Microsoft.AspNet.Hosting
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
 
-            var engine = WebHost.CreateEngine(_serviceProvider, config);
+            var builder = WebHost.CreateBuilder(_serviceProvider);
             var server = config.Get("server");
             if (server != null)
             {
-                engine.UseServer(server);
+                builder.UseServer(server);
             }
             var startup = config.Get("app");
             if (startup != null)
             {
-                engine.UseStartup(startup);
+                builder.UseStartup(startup);
             }
 
-            var serverShutdown = engine.Start();
-            var loggerFactory = engine.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            var appShutdownService = engine.ApplicationServices.GetRequiredService<IApplicationShutdown>();
+            var host = builder.Build(config);
+            var serverShutdown = host.Start();
+            var loggerFactory = host.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            var appShutdownService = host.ApplicationServices.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEvent(false);
 
             appShutdownService.ShutdownRequested.Register(() =>

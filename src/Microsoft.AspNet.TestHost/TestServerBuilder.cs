@@ -34,7 +34,7 @@ namespace Microsoft.AspNet.TestHost
             var config = Config ?? new Configuration();
             if (Environment != null)
             {
-                config[HostingFactory.EnvironmentKey] = Environment;
+                config[WebHostBuilder.EnvironmentKey] = Environment;
             }
             if (ApplicationName != null || ApplicationBasePath != null)
             {
@@ -44,23 +44,23 @@ namespace Microsoft.AspNet.TestHost
                 AdditionalServices.AddInstance<IApplicationEnvironment>(appEnv);
             }
 
-            var engine = WebHost.CreateEngine(fallbackServices,
-                config,
+            var builder = WebHost.CreateBuilder(fallbackServices,
                 services => services.Add(AdditionalServices));
+            // BUGBUG: this is busto when startup ctor uses things from ApplicationServices
             if (StartupType != null)
             {
                 Startup = new StartupLoader(fallbackServices).Load(StartupType, Environment, new List<string>());
             }
             if (Startup != null)
             {
-                engine.UseStartup(Startup.ConfigureDelegate, Startup.ConfigureServicesDelegate);
+                builder.UseStartup(Startup.ConfigureDelegate, Startup.ConfigureServicesDelegate);
             }
             else if (StartupAssemblyName != null)
             {
-                engine.UseStartup(StartupAssemblyName);
+                builder.UseStartup(StartupAssemblyName);
             }
 
-            return new TestServer(engine);
+            return new TestServer(builder, config);
         }
 
         private class TestApplicationEnvironment : IApplicationEnvironment

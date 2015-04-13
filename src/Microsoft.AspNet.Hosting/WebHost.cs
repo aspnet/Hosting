@@ -38,26 +38,31 @@ namespace Microsoft.AspNet.Hosting
 
         public static IHostingEngine CreateEngine(IServiceProvider fallbackServices, IConfiguration config, Action<IServiceCollection> configureServices)
         {
-            return CreateFactory(fallbackServices, configureServices).Create(config);
+            return CreateBuilder(fallbackServices, configureServices).Build(config);
         }
 
-        public static IHostingFactory CreateFactory()
+        public static IHostingBuilder CreateBuilder()
         {
-            return CreateFactory(fallbackServices: null, configureServices: null);
+            return CreateBuilder(fallbackServices: null, configureServices: null);
         }
 
-        public static IHostingFactory CreateFactory(Action<IServiceCollection> configureServices)
+        public static IHostingBuilder CreateBuilder(IServiceProvider services)
         {
-            return CreateFactory(fallbackServices: null, configureServices: configureServices);
+            return CreateBuilder(fallbackServices: services, configureServices: null);
         }
 
-        public static IHostingFactory CreateFactory(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
+        public static IHostingBuilder CreateBuilder(Action<IServiceCollection> configureServices)
+        {
+            return CreateBuilder(fallbackServices: null, configureServices: configureServices);
+        }
+
+        public static IHostingBuilder CreateBuilder(IServiceProvider fallbackServices, Action<IServiceCollection> configureServices)
         {
             fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
             return new RootHostingServiceCollectionInitializer(fallbackServices, configureServices)
                 .Build()
                 .BuildServiceProvider()
-                .GetRequiredService<IHostingFactory>();
+                .GetRequiredService<IHostingBuilder>();
         }
     }
 }
