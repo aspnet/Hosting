@@ -78,7 +78,6 @@ namespace Microsoft.AspNet.Hosting
 
         public IHostingEngine Build()
         {
-
             var hostingServices = BuildHostingServices();
 
             var hostingContainer = hostingServices.BuildServiceProvider();

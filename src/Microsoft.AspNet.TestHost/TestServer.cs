@@ -48,51 +48,51 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create(IServiceProvider fallbackServices, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            return CreateBuilder(fallbackServices, config: null, configureApp: configureApp, configureServices: configureServices).Build();
+            return new TestServer(CreateBuilder(fallbackServices, config: null, configureApp: configureApp, configureServices: configureServices));
         }
 
         public static TestServer Create(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return CreateBuilder(fallbackServices, config, configureApp, configureServices).Build();
+            return new TestServer(CreateBuilder(fallbackServices, config, configureApp, configureServices));
         }
 
-        public static TestServer Create<TStartup>() where TStartup : class
-        {
-            return Create<TStartup>(fallbackServices: null, config: null, configureApp: null, configureServices: null);
-        }
+        //public static TestServer Create<TStartup>() where TStartup : class
+        //{
+        //    return Create<TStartup>(fallbackServices: null, config: null, configureApp: null, configureServices: null);
+        //}
 
-        public static TestServer Create<TStartup>(Action<IApplicationBuilder> configureApp) where TStartup : class
-        {
-            return Create<TStartup>(fallbackServices: null, config: null, configureApp: configureApp, configureServices: null);
-        }
+        //public static TestServer Create<TStartup>(Action<IApplicationBuilder> configureApp) where TStartup : class
+        //{
+        //    return Create<TStartup>(fallbackServices: null, config: null, configureApp: configureApp, configureServices: null);
+        //}
 
-        public static TestServer Create<TStartup>(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
-        {
-            return Create<TStartup>(fallbackServices: null, config: null, configureApp: configureApp, configureServices: configureServices);
-        }
+        //public static TestServer Create<TStartup>(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
+        //{
+        //    return Create<TStartup>(fallbackServices: null, config: null, configureApp: configureApp, configureServices: configureServices);
+        //}
 
-        public static TestServer Create<TStartup>(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
-        {
-            var builder = CreateBuilder(fallbackServices, config, configureApp, configureServices);
-            builder.StartupType = typeof(TStartup);
-            return builder.Build();
-        }
+        //public static TestServer Create<TStartup>(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
+        //{
+        //    var builder = CreateBuilder(fallbackServices, config, configureApp, configureServices);
+        //    builder.StartupType = typeof(TStartup);
+        //    return builder.Build();
+        //}
 
-        public static TestServerBuilder CreateBuilder<TStartup>() where TStartup : class
-        {
-            var builder = CreateBuilder(fallbackServices: null, config: null, configureApp: null, configureServices: null);
-            builder.StartupType = typeof(TStartup);
-            return builder;
-        }
+        //public static TestServerBuilder CreateBuilder<TStartup>() where TStartup : class
+        //{
+        //    var builder = CreateBuilder(fallbackServices: null, config: null, configureApp: null, configureServices: null);
+        //    builder.StartupType = typeof(TStartup);
+        //    return builder;
+        //}
 
-        public static TestServerBuilder CreateBuilder<TStartup>(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
-        {
-            var builder = CreateBuilder(fallbackServices, config, configureApp, configureServices);
-            builder.StartupType = typeof(TStartup);
-            return builder;
-        }
+        //public static TestServerBuilder CreateBuilder<TStartup>(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
+        //{
+        //    var builder = CreateBuilder(fallbackServices, config, configureApp, configureServices);
+        //    builder.StartupType = typeof(TStartup);
+        //    return builder;
+        //}
 
-        public static TestServerBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public static WebHostBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
             return CreateBuilder(fallbackServices, config, configureApp,
                 services =>
@@ -105,20 +105,14 @@ namespace Microsoft.AspNet.TestHost
                 });
         }
 
-        public static TestServerBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config)
+        public static WebHostBuilder CreateBuilder(IServiceProvider fallbackServices)
         {
-            return new TestServerBuilder
-            {
-                FallbackServices = fallbackServices,
-                Config = config
-            };
+            return new WebHostBuilder(fallbackServices);
         }
 
-        public static TestServerBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        public static WebHostBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            var builder = CreateBuilder(fallbackServices, config);
-            builder.Startup = new StartupMethods(configureApp, configureServices);
-            return builder;
+            return CreateBuilder(fallbackServices).UseStartup(configureApp, configureServices);
         }
 
         public HttpMessageHandler CreateHandler()
