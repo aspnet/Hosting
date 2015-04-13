@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Fakes;

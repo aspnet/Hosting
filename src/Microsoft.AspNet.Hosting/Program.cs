@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
@@ -23,17 +24,9 @@ namespace Microsoft.AspNet.Hosting
             _serviceProvider = serviceProvider;
         }
 
-        public void Main(string[] args)
+        public IHostingEngine CreateHost(IConfiguration config)
         {
-            var config = new Configuration();
-            if (File.Exists(HostingIniFile))
-            {
-                config.AddIniFile(HostingIniFile);
-            }
-            config.AddEnvironmentVariables();
-            config.AddCommandLine(args);
-
-            var builder = WebHost.CreateBuilder(_serviceProvider);
+            var builder = new WebHostBuilder(_serviceProvider);
             var server = config.Get("server");
             if (server != null)
             {
@@ -45,7 +38,20 @@ namespace Microsoft.AspNet.Hosting
                 builder.UseStartup(startup);
             }
 
-            var host = builder.Build(config);
+            return builder.Build();
+        }
+
+        public void Main(string[] args)
+        {
+            var config = new Configuration();
+            if (File.Exists(HostingIniFile))
+            {
+                config.AddIniFile(HostingIniFile);
+            }
+            config.AddEnvironmentVariables();
+            config.AddCommandLine(args);
+
+            var host = CreateHost(config);
             var serverShutdown = host.Start();
             var loggerFactory = host.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var appShutdownService = host.ApplicationServices.GetRequiredService<IApplicationShutdown>();

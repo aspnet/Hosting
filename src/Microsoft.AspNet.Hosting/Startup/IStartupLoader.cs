@@ -8,6 +8,7 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public interface IStartupLoader
     {
+        // REVIEW: Could remove environmentName and it service could get it from IHostingEnvironment
         StartupMethods Load(
             string startupAssemblyName,
             string environmentName,

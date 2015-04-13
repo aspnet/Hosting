@@ -29,16 +29,23 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void HostingEngineThrowsWithNoServer()
         {
-            Assert.Throws<InvalidOperationException>(() => WebHost.CreateEngine().Start());
+            var ex = Assert.Throws<InvalidOperationException>(() => new WebHostBuilder().Build().Start());
+            Assert.True(ex.Message.Contains("UseServer()"));
         }
 
         [Fact]
+        public void UseStartupThrowsWithNull()
+        {
+            Assert.Throws<ArgumentNullException>(() => new WebHostBuilder().UseStartup((string)null));
+        }
+
+    [Fact]
         public void HostingEngineCanBeStarted()
         {
-            var engine = WebHost.CreateBuilder()
+            var engine = new WebHostBuilder()
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests")
-                .Build(new Configuration())
+                .Build()
                 .Start();
 
             Assert.NotNull(engine);
@@ -53,11 +60,11 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void HostingEngineInjectsHostingEnvironment()
         {
-            var engine = WebHost.CreateBuilder()
+            var engine = new WebHostBuilder()
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests")
                 .UseEnvironment("WithHostingEnvironment")
-                .Build(new Configuration());
+                .Build();
 
             using (var server = engine.Start())
             {
@@ -66,21 +73,21 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-        [Fact]
-        public void CanReplaceHostingBuilder()
-        {
-            var builder = WebHost.CreateBuilder(services => services.AddTransient<IHostingBuilder, TestHostingBuilder>());
+        //[Fact]
+        //public void CanReplaceHostingBuilder()
+        //{
+        //    var builder = WebHost.CreateBuilder(services => services.AddTransient<IHostingBuilder, TestHostingBuilder>());
 
-            Assert.NotNull(builder as TestHostingBuilder);
-        }
+        //    Assert.NotNull(builder as TestHostingBuilder);
+        //}
 
         [Fact]
         public void CanReplaceStartupLoader()
         {
-            var engine = WebHost.CreateBuilder(services => services.AddTransient<IStartupLoader, TestLoader>())
+            var engine = new WebHostBuilder().UseServices(services => services.AddTransient<IStartupLoader, TestLoader>())
                 .UseServer(this)
                 .UseStartup("Microsoft.AspNet.Hosting.Tests")
-                .Build(new Configuration());
+                .Build();
 
             Assert.Throws<NotImplementedException>(() => engine.Start());
         }
@@ -88,14 +95,14 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void CanCreateApplicationServicesWithAddedServices()
         {
-            var engineStart = WebHost.CreateEngine(services => services.AddOptions());
-            Assert.NotNull(engineStart.ApplicationServices.GetRequiredService<IOptions<object>>());
+            var host = new WebHostBuilder().UseServices(services => services.AddOptions()).Build();
+            Assert.NotNull(host.ApplicationServices.GetRequiredService<IOptions<object>>());
         }
 
         [Fact]
         public void EnvDefaultsToDevelopmentIfNoConfig()
         {
-            var engine = WebHost.CreateEngine(new Configuration());
+            var engine = new WebHostBuilder().Build();
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal("Development", env.EnvironmentName);
         }
@@ -111,7 +118,7 @@ namespace Microsoft.AspNet.Hosting
             var config = new Configuration()
                 .Add(new MemoryConfigurationSource(vals));
 
-            var engine = WebHost.CreateEngine(config);
+            var engine = new WebHostBuilder().UseConfiguration(config).Build();
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal("Staging", env.EnvironmentName);
         }
@@ -119,7 +126,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void WebRootCanBeResolvedFromTheProjectJson()
         {
-            var engine = WebHost.CreateBuilder().UseServer(this).Build(new Configuration());
+            var engine = new WebHostBuilder().UseServer(this).Build();
             var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             Assert.Equal(Path.GetFullPath("testroot"), env.WebRootPath);
             Assert.True(env.WebRootFileProvider.GetFileInfo("TextFile.txt").Exists);
@@ -128,7 +135,7 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void IsEnvironment_Extension_Is_Case_Insensitive()
         {
-            var engine = WebHost.CreateBuilder().UseServer(this).Build(new Configuration());
+            var engine = new WebHostBuilder().UseServer(this).Build();
 
             using (engine.Start())
             {
@@ -269,7 +276,7 @@ namespace Microsoft.AspNet.Hosting
 
         private void RunMapPath(string virtualPath, string expectedSuffix)
         {
-            var engine = WebHost.CreateBuilder().UseServer(this).Build(new Configuration());
+            var engine = new WebHostBuilder().UseServer(this).Build();
 
             using (engine.Start())
             {
@@ -312,49 +319,6 @@ namespace Microsoft.AspNet.Hosting
         private class TestLoader : IStartupLoader
         {
             public StartupMethods Load(string startupAssemblyName, string environmentName, IList<string> diagnosticMessages)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        private class TestHostingBuilder : IHostingBuilder
-        {
-            public IHostingEngine Build(IConfiguration config)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseEnvironment(string environment)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseServer(IServerFactory factory)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseServer(string assemblyName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseStartup(Action<IApplicationBuilder> configureApp)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseStartup(string startupAssemblyName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IHostingBuilder UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
             {
                 throw new NotImplementedException();
             }

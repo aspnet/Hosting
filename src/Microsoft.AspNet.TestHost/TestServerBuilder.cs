@@ -44,8 +44,9 @@ namespace Microsoft.AspNet.TestHost
                 AdditionalServices.AddInstance<IApplicationEnvironment>(appEnv);
             }
 
-            var builder = WebHost.CreateBuilder(fallbackServices,
-                services => services.Add(AdditionalServices));
+            var builder = new WebHostBuilder(fallbackServices)
+                .UseServices(services => services.Add(AdditionalServices))
+                .UseConfiguration(config);
             // BUGBUG: this is busto when startup ctor uses things from ApplicationServices
             if (StartupType != null)
             {
@@ -60,7 +61,7 @@ namespace Microsoft.AspNet.TestHost
                 builder.UseStartup(StartupAssemblyName);
             }
 
-            return new TestServer(builder, config);
+            return new TestServer(builder);
         }
 
         private class TestApplicationEnvironment : IApplicationEnvironment
