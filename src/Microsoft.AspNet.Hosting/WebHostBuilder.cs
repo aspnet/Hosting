@@ -9,22 +9,23 @@ using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Internal;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
-using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.Hosting
 {
     public class WebHostBuilder
     {
-        public const string EnvironmentKey = "ASPNET_ENV";
+        public const string OldEnvironmentKey = "ASPNET_ENV";
+        public const string EnvironmentKey = "Hosting:Environment";
 
-        private readonly IServiceProvider _fallbackServices;
+        private readonly IServiceProvider _services;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IConfiguration _config;
 
         private Action<IServiceCollection> _configureServices;
-        private IConfiguration _config;
 
         // Only one of these should be set
         private StartupMethods _startup;
@@ -35,13 +36,14 @@ namespace Microsoft.AspNet.Hosting
         private string _serverFactoryLocation;
         private IServerFactory _serverFactory;
 
-        public WebHostBuilder() : this(null) { }
+        public WebHostBuilder([NotNull] IServiceProvider services) : this(services, config: new Configuration()) { }
 
-        public WebHostBuilder(IServiceProvider fallbackServices)
+        public WebHostBuilder([NotNull] IServiceProvider services, [NotNull] IConfiguration config)
         {
             _hostingEnvironment = new HostingEnvironment();
             _loggerFactory = new LoggerFactory();
-            _fallbackServices = fallbackServices ?? CallContextServiceLocator.Locator.ServiceProvider;
+            _services = services;
+            _config = config;
         }
 
         private IServiceCollection BuildHostingServices()
@@ -49,10 +51,13 @@ namespace Microsoft.AspNet.Hosting
             var services = new ServiceCollection();
 
             // Import from manifest
-            var manifest = _fallbackServices.GetRequiredService<IServiceManifest>();
-            foreach (var service in manifest.Services)
+            var manifest = _services.GetService<IServiceManifest>();
+            if (manifest != null)
             {
-                services.AddTransient(service, sp => _fallbackServices.GetService(service));
+                foreach (var service in manifest.Services)
+                {
+                    services.AddTransient(service, sp => _services.GetService(service));
+                }
             }
 
             services.AddInstance(_hostingEnvironment);
@@ -86,7 +91,7 @@ namespace Microsoft.AspNet.Hosting
             var appEnvironment = hostingContainer.GetRequiredService<IApplicationEnvironment>();
             var startupLoader = hostingContainer.GetRequiredService<IStartupLoader>();
 
-            _hostingEnvironment.Initialize(appEnvironment.ApplicationBasePath, _config?[EnvironmentKey]);
+            _hostingEnvironment.Initialize(appEnvironment.ApplicationBasePath, _config?[EnvironmentKey] ?? _config?[OldEnvironmentKey]);
 
             var engine = new HostingEngine(hostingServices, startupLoader, _config);
 
@@ -102,25 +107,19 @@ namespace Microsoft.AspNet.Hosting
             return engine;
         }
 
-        public WebHostBuilder UseConfiguration(IConfiguration config)
-        {
-            _config = config;
-            return this;
-        }
-
         public WebHostBuilder UseServices(Action<IServiceCollection> configureServices)
         {
             _configureServices = configureServices;
             return this;
         }
 
-        public WebHostBuilder UseEnvironment(string environment)
+        public WebHostBuilder UseEnvironment([NotNull] string environment)
         {
             _hostingEnvironment.EnvironmentName = environment;
             return this;
         }
 
-        public WebHostBuilder UseServer(string assemblyName)
+        public WebHostBuilder UseServer([NotNull] string assemblyName)
         {
             _serverFactoryLocation = assemblyName;
             return this;
@@ -132,7 +131,7 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public WebHostBuilder UseStartup(string startupAssemblyName)
+        public WebHostBuilder UseStartup([NotNull] string startupAssemblyName)
         {
             if (startupAssemblyName == null)
             {
@@ -142,7 +141,7 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public WebHostBuilder UseStartup(Type startupType)
+        public WebHostBuilder UseStartup([NotNull] Type startupType)
         {
             if (startupType == null)
             {
@@ -157,18 +156,18 @@ namespace Microsoft.AspNet.Hosting
             return UseStartup(typeof(TStartup));
         }
 
-        public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp)
+        public WebHostBuilder UseStartup([NotNull] Action<IApplicationBuilder> configureApp)
         {
             return UseStartup(configureApp, configureServices: null);
         }
 
-        public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        public WebHostBuilder UseStartup([NotNull] Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
             _startup = new StartupMethods(configureApp, configureServices);
             return this;
         }
 
-        public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public WebHostBuilder UseStartup([NotNull] Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
             _startup = new StartupMethods(configureApp,
                 services => {
