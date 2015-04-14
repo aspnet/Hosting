@@ -12,6 +12,7 @@ using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Runtime.Infrastructure;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -33,86 +34,48 @@ namespace Microsoft.AspNet.TestHost
 
         public static TestServer Create()
         {
-            return Create(fallbackServices: null, config: null, configureApp: null, configureServices: null);
+            return Create(services: null, config: null, configureApp: null, configureServices: null);
         }
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp)
         {
-            return Create(fallbackServices: null, config: null, configureApp: configureApp, configureServices: null);
+            return Create(services: null, config: null, configureApp: configureApp, configureServices: null);
         }
 
         public static TestServer Create(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return Create(fallbackServices: null, config: null, configureApp: configureApp, configureServices: configureServices);
+            return Create(services: null, config: null, configureApp: configureApp, configureServices: configureServices);
         }
 
-        public static TestServer Create(IServiceProvider fallbackServices, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
+        public static TestServer Create(IServiceProvider services, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            return new TestServer(CreateBuilder(fallbackServices, config: null, configureApp: configureApp, configureServices: configureServices));
+            return new TestServer(CreateBuilder(services, config: null, configureApp: configureApp, configureServices: configureServices));
         }
 
-        public static TestServer Create(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public static TestServer Create(IServiceProvider services, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return new TestServer(CreateBuilder(fallbackServices, config, configureApp, configureServices));
+            return new TestServer(CreateBuilder(services, config, configureApp, configureServices));
         }
 
-        //public static TestServer Create<TStartup>() where TStartup : class
-        //{
-        //    return Create<TStartup>(fallbackServices: null, config: null, configureApp: null, configureServices: null);
-        //}
-
-        //public static TestServer Create<TStartup>(Action<IApplicationBuilder> configureApp) where TStartup : class
-        //{
-        //    return Create<TStartup>(fallbackServices: null, config: null, configureApp: configureApp, configureServices: null);
-        //}
-
-        //public static TestServer Create<TStartup>(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
-        //{
-        //    return Create<TStartup>(fallbackServices: null, config: null, configureApp: configureApp, configureServices: configureServices);
-        //}
-
-        //public static TestServer Create<TStartup>(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
-        //{
-        //    var builder = CreateBuilder(fallbackServices, config, configureApp, configureServices);
-        //    builder.StartupType = typeof(TStartup);
-        //    return builder.Build();
-        //}
-
-        //public static TestServerBuilder CreateBuilder<TStartup>() where TStartup : class
-        //{
-        //    var builder = CreateBuilder(fallbackServices: null, config: null, configureApp: null, configureServices: null);
-        //    builder.StartupType = typeof(TStartup);
-        //    return builder;
-        //}
-
-        //public static TestServerBuilder CreateBuilder<TStartup>(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices) where TStartup : class
-        //{
-        //    var builder = CreateBuilder(fallbackServices, config, configureApp, configureServices);
-        //    builder.StartupType = typeof(TStartup);
-        //    return builder;
-        //}
-
-        public static WebHostBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public static WebHostBuilder CreateBuilder(IServiceProvider services, IConfiguration config, Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
-            return CreateBuilder(fallbackServices, config, configureApp,
-                services =>
+            return CreateBuilder(services, config, configureApp,
+                s =>
                 {
                     if (configureServices != null)
                     {
-                        configureServices(services);
+                        configureServices(s);
                     }
-                    return services.BuildServiceProvider();
+                    return s.BuildServiceProvider();
                 });
         }
 
-        public static WebHostBuilder CreateBuilder(IServiceProvider fallbackServices)
+        public static WebHostBuilder CreateBuilder(IServiceProvider services, IConfiguration config, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
-            return new WebHostBuilder(fallbackServices);
-        }
-
-        public static WebHostBuilder CreateBuilder(IServiceProvider fallbackServices, IConfiguration config, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
-        {
-            return CreateBuilder(fallbackServices).UseStartup(configureApp, configureServices);
+            return new WebHostBuilder(
+                services ?? CallContextServiceLocator.Locator.ServiceProvider, 
+                config ?? new Configuration())
+                .UseStartup(configureApp, configureServices);
         }
 
         public HttpMessageHandler CreateHandler()
