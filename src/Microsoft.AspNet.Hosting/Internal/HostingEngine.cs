@@ -8,12 +8,12 @@ using System.Threading;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Builder;
-using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Internal;
 using Microsoft.Framework.Logging;
 
 namespace Microsoft.AspNet.Hosting.Internal
@@ -37,12 +37,24 @@ namespace Microsoft.AspNet.Hosting.Internal
         internal string ServerFactoryLocation { get; set; }
         private IServerInformation _serverInstance;
 
-        public HostingEngine(IServiceCollection appServices, IStartupLoader startupLoader, IConfiguration config)
+        public HostingEngine(
+            [NotNull] IServiceCollection appServices, 
+            [NotNull] IStartupLoader startupLoader, 
+            [NotNull] IConfiguration config)
         {
-            _config = config ?? new Configuration();
+            _config = config;
             _applicationServiceCollection = appServices;
             _startupLoader = startupLoader;
             _applicationLifetime = new ApplicationLifetime();
+        }
+
+        public IServiceProvider ApplicationServices
+        {
+            get
+            {
+                EnsureApplicationServices();
+                return _applicationServices;
+            }
         }
 
         public virtual IDisposable Start()
@@ -141,15 +153,6 @@ namespace Microsoft.AspNet.Hosting.Internal
             configure(builder);
 
             return builder.Build();
-        }
-
-        public IServiceProvider ApplicationServices
-        {
-            get
-            {
-                EnsureApplicationServices();
-                return _applicationServices;
-            }
         }
 
         private Guid GetRequestIdentifier(HttpContext httpContext)

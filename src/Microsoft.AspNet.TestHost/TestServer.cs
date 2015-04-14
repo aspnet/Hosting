@@ -72,10 +72,19 @@ namespace Microsoft.AspNet.TestHost
 
         public static WebHostBuilder CreateBuilder(IServiceProvider services, IConfiguration config, Action<IApplicationBuilder> configureApp, ConfigureServicesDelegate configureServices)
         {
+            return CreateBuilder(services, config).UseStartup(configureApp, configureServices);
+        }
+
+        public static WebHostBuilder CreateBuilder(IServiceProvider services, IConfiguration config)
+        {
             return new WebHostBuilder(
-                services ?? CallContextServiceLocator.Locator.ServiceProvider, 
-                config ?? new Configuration())
-                .UseStartup(configureApp, configureServices);
+                services ?? CallContextServiceLocator.Locator.ServiceProvider,
+                config ?? new Configuration());
+        }
+
+        public static WebHostBuilder CreateBuilder()
+        {
+            return CreateBuilder(services: null, config: null);
         }
 
         public HttpMessageHandler CreateHandler()
