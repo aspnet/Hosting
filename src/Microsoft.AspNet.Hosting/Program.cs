@@ -24,23 +24,6 @@ namespace Microsoft.AspNet.Hosting
             _serviceProvider = serviceProvider;
         }
 
-        public IHostingEngine CreateHost(IConfiguration config)
-        {
-            var builder = new WebHostBuilder(_serviceProvider);
-            var server = config.Get("server");
-            if (server != null)
-            {
-                builder.UseServer(server);
-            }
-            var startup = config.Get("app");
-            if (startup != null)
-            {
-                builder.UseStartup(startup);
-            }
-
-            return builder.Build();
-        }
-
         public void Main(string[] args)
         {
             var config = new Configuration();
@@ -51,7 +34,7 @@ namespace Microsoft.AspNet.Hosting
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
 
-            var host = CreateHost(config);
+            var host = new WebHostBuilder(_serviceProvider).Build();
             var serverShutdown = host.Start();
             var loggerFactory = host.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var appShutdownService = host.ApplicationServices.GetRequiredService<IApplicationShutdown>();

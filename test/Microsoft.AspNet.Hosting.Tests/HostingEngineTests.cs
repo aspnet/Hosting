@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
@@ -41,6 +40,21 @@ namespace Microsoft.AspNet.Hosting
         }
 
         [Fact]
+        public void CanStartWithServerConfig()
+        {
+            var vals = new Dictionary<string, string>
+            {
+                { "server", "Microsoft.AspNet.Hosting.Tests" }
+            };
+
+            var config = new Configuration()
+                .Add(new MemoryConfigurationSource(vals));
+            var host = new WebHostBuilder(CallContextServiceLocator.Locator.ServiceProvider, config).Build();
+            host.Start();
+            Assert.NotNull(host.ApplicationServices.GetRequiredService<IHostingEnvironment>());
+        }
+
+        [Fact]
         public void HostingEngineCanBeStarted()
         {
             var engine = CreateBuilder()
@@ -73,14 +87,6 @@ namespace Microsoft.AspNet.Hosting
                 Assert.Equal("Changed", env.EnvironmentName);
             }
         }
-
-        //[Fact]
-        //public void CanReplaceHostingBuilder()
-        //{
-        //    var builder = WebHost.CreateBuilder(services => services.AddTransient<IHostingBuilder, TestHostingBuilder>());
-
-        //    Assert.NotNull(builder as TestHostingBuilder);
-        //}
 
         [Fact]
         public void CanReplaceStartupLoader()

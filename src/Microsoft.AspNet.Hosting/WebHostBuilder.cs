@@ -20,6 +20,12 @@ namespace Microsoft.AspNet.Hosting
         public const string OldEnvironmentKey = "ASPNET_ENV";
         public const string EnvironmentKey = "Hosting:Environment";
 
+        public const string OldApplicationKey = "app";
+        public const string ApplicationKey = "Hosting:Application";
+
+        public const string OldServerKey = "server";
+        public const string ServerKey = "Hosting:Server";
+
         private readonly IServiceProvider _services;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILoggerFactory _loggerFactory;
@@ -97,12 +103,12 @@ namespace Microsoft.AspNet.Hosting
 
             // Only one of these should be set, but they are used in priority
             engine.ServerFactory = _serverFactory;
-            engine.ServerFactoryLocation = _serverFactoryLocation;
+            engine.ServerFactoryLocation = _config.Get(ServerKey) ?? _config.Get(OldServerKey) ?? _serverFactoryLocation;
 
             // Only one of these should be set, but they are used in priority
             engine.Startup = _startup;
             engine.StartupType = _startupType;
-            engine.StartupAssemblyName = appEnvironment.ApplicationName;
+            engine.StartupAssemblyName = _config.Get(ApplicationKey) ?? _config.Get(OldApplicationKey) ?? appEnvironment.ApplicationName;
 
             return engine;
         }
