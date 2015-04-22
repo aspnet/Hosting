@@ -66,7 +66,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             var logger = _applicationServices.GetRequiredService<ILogger<HostingEngine>>();
             var contextFactory = _applicationServices.GetRequiredService<IHttpContextFactory>();
             var contextAccessor = _applicationServices.GetRequiredService<IHttpContextAccessor>();
-            var server = _serverFactory.Start(_serverInstance,
+            var server = ServerFactory.Start(_serverInstance,
                 async features =>
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
@@ -75,7 +75,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                     using (logger.BeginScope("Request Id: {RequestId}", requestIdentifier))
                     {
                         contextAccessor.HttpContext = httpContext;
-                        await applicationDelegate(httpContext);
+                        await application(httpContext);
                     }
                 });
 
@@ -127,10 +127,6 @@ namespace Microsoft.AspNet.Hosting.Internal
 
         private RequestDelegate BuildApplication()
         {
-            var builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
-            var builder = builderFactory.CreateBuilder();
-            builder.ApplicationServices = _applicationServices;
-
             if (ServerFactory == null)
             {
                 // Blow up if we don't have a server set at this point
@@ -142,7 +138,11 @@ namespace Microsoft.AspNet.Hosting.Internal
                 ServerFactory = _applicationServices.GetRequiredService<IServerLoader>().LoadServerFactory(ServerFactoryLocation);
             }
 
-            _serverInstance = _serverFactory.Initialize(_config);
+            _serverInstance = ServerFactory.Initialize(_config);
+            var builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
+            var builder = builderFactory.CreateBuilder(_serverInstance);
+            builder.ApplicationServices = _applicationServices;
+
             var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
             var configure = Startup.ConfigureDelegate;
             foreach (var filter in startupFilters)
@@ -161,7 +161,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             if (requestIdentifierFeature == null)
             {
                 requestIdentifierFeature = new DefaultRequestIdentifierFeature();
-                httpContext.SetFeature<IRequestIdentifierFeature>(requestIdentifierFeature);
+                httpContext.SetFeature(requestIdentifierFeature);
             }
 
             return requestIdentifierFeature.TraceIdentifier;

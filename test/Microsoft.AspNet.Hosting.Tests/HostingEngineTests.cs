@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
@@ -40,7 +41,7 @@ namespace Microsoft.AspNet.Hosting
         }
 
         [Fact]
-        public void CanStartWithServerConfig()
+        public void CanStartWithOldServerConfig()
         {
             var vals = new Dictionary<string, string>
             {
@@ -49,7 +50,22 @@ namespace Microsoft.AspNet.Hosting
 
             var config = new Configuration()
                 .Add(new MemoryConfigurationSource(vals));
-            var host = new WebHostBuilder(CallContextServiceLocator.Locator.ServiceProvider, config).Build();
+            var host = CreateBuilder().Build();
+            host.Start();
+            Assert.NotNull(host.ApplicationServices.GetRequiredService<IHostingEnvironment>());
+        }
+
+        [Fact]
+        public void CanStartWithServerConfig()
+        {
+            var vals = new Dictionary<string, string>
+            {
+                { "Hosting:Server", "Microsoft.AspNet.Hosting.Tests" }
+            };
+
+            var config = new Configuration()
+                .Add(new MemoryConfigurationSource(vals));
+            var host = CreateBuilder().Build();
             host.Start();
             Assert.NotNull(host.ApplicationServices.GetRequiredService<IHostingEnvironment>());
         }
@@ -259,9 +275,7 @@ namespace Microsoft.AspNet.Hosting
             Assert.Same(requestIdentifierFeature, httpContext.GetFeature<IRequestIdentifierFeature>());
         }
 
-        private IHostingEngine CreateHostingEngine(
-            IFeatureCollection featuresSupportedByHost,
-            RequestDelegate requestDelegate)
+        private IHostingEngine CreateHostingEngine(IFeatureCollection featuresSupportedByHost, RequestDelegate requestDelegate)
         {
             var applicationBuilder = new Mock<IApplicationBuilder>();
             applicationBuilder.Setup(appBuilder => appBuilder.Build()).Returns(requestDelegate);
@@ -270,31 +284,20 @@ namespace Microsoft.AspNet.Hosting
                 .Setup(abf => abf.CreateBuilder(It.IsAny<object>()))
                 .Returns(applicationBuilder.Object);
 
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(
-                new ServiceDescriptor(typeof(IApplicationBuilderFactory), applicationBuilderFactory.Object));
-            serviceCollection.Add(
-                new ServiceDescriptor(typeof(ILogger<HostingEngine>), new Mock<ILogger<HostingEngine>>().Object));
-            serviceCollection.Add(
-                new ServiceDescriptor(typeof(IHttpContextFactory), new HttpContextFactory()));
-            serviceCollection.Add(
-                new ServiceDescriptor(typeof(IHttpContextAccessor), new Mock<IHttpContextAccessor>().Object));
-
-            var startupLoader = new Mock<IStartupLoader>();
-            var startupMethods = new StartupMethods(
-                (appBuilder) => { },
-                (configureServices) => configureServices.BuildServiceProvider());
-            startupLoader.Setup(sl => sl.Load(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<List<string>>()))
-                .Returns(startupMethods);
-
-            var hostingEngine = new HostingEngine(
-                serviceCollection,
-                startupLoader.Object,
-                new Mock<IConfiguration>().Object,
-                new Mock<IHostingEnvironment>().Object,
-                "TestAppName");
-
-            return hostingEngine.UseServer(new TestServerFactory(featuresSupportedByHost));
+            var host = CreateBuilder()
+                .UseServer(new TestServerFactory(featuresSupportedByHost))
+                .UseServices(s =>
+                {
+                    s.AddInstance(applicationBuilderFactory.Object);
+                    s.AddInstance(new Mock<ILogger<HostingEngine>>().Object);
+                    s.AddSingleton<IHttpContextFactory, HttpContextFactory>();
+                    s.AddInstance(new Mock<IHttpContextAccessor>().Object);
+                    s.AddInstance(new Mock<IHostingEnvironment>().Object);
+                })
+                .UseStartup(
+                    appBuilder => { },
+                    configureServices => configureServices.BuildServiceProvider());
+            return host.Build();
         }
 
         private void RunMapPath(string virtualPath, string expectedSuffix)
@@ -356,14 +359,13 @@ namespace Microsoft.AspNet.Hosting
                 throw new NotImplementedException();
             }
         }
-
         private class TestServerFactory : IServerFactory
         {
             private readonly IFeatureCollection _featuresSupportedByThisHost;
 
-            public TestServerFactory(IFeatureCollection featuresSupportedByThisHost)
+            public TestServerFactory(IFeatureCollection featuresSupportedByThisHost = null)
             {
-                _featuresSupportedByThisHost = featuresSupportedByThisHost;
+                _featuresSupportedByThisHost = featuresSupportedByThisHost ?? new FeatureCollection();
             }
 
             public IServerInformation Initialize(IConfiguration configuration)
@@ -377,5 +379,6 @@ namespace Microsoft.AspNet.Hosting
                 return null;
             }
         }
+
     }
 }
