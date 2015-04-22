@@ -176,7 +176,6 @@ namespace Microsoft.AspNet.Hosting
         public void IsEnvironment_Extension_Is_Case_Insensitive()
         {
             var engine = CreateBuilder().UseServer(this).Build();
-
             using (engine.Start())
             {
                 var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
@@ -328,6 +327,7 @@ namespace Microsoft.AspNet.Hosting
         {
             var startInstance = new StartInstance(application);
             _startInstances.Add(startInstance);
+            application(_featuresSupportedByThisHost);
             return startInstance;
         }
 
