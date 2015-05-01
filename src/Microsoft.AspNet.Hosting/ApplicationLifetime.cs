@@ -35,6 +35,9 @@ namespace Microsoft.AspNet.Hosting
             get { return _stoppedSource.Token; }
         }
 
+        public Action ApplicationStarted { get; set; }
+
+
         /// <summary>
         /// Signals the ApplicationStopping event and blocks until it completes.
         /// </summary>
