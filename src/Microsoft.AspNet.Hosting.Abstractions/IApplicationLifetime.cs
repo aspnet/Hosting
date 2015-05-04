@@ -26,6 +26,15 @@ namespace Microsoft.AspNet.Hosting
         /// <returns></returns>
         CancellationToken ApplicationStopped { get; }
 
-        Action ApplicationStarted { get; set; }
+        /// <summary>
+        /// Sends the notification that the application has started
+        /// </summary>
+        void ApplicationStarted();
+
+        /// <summary>
+        /// Registers a new application started action
+        /// </summary>
+        /// <param name="action">The action to register</param>
+        void OnApplicationStarted(Action action);
     }
 }

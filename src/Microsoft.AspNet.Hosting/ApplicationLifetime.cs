@@ -3,6 +3,8 @@
 
 using System;
 using System.Threading;
+using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -13,6 +15,7 @@ namespace Microsoft.AspNet.Hosting
     {
         private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
+        private Action _applicationStarted;
 
         /// <summary>
         /// Triggered when the application host is performing a graceful shutdown.
@@ -34,8 +37,6 @@ namespace Microsoft.AspNet.Hosting
         {
             get { return _stoppedSource.Token; }
         }
-
-        public Action ApplicationStarted { get; set; }
 
 
         /// <summary>
@@ -66,6 +67,19 @@ namespace Microsoft.AspNet.Hosting
             {
                 // TODO: LOG
             }
+        }
+
+        public void ApplicationStarted()
+        {
+            if (_applicationStarted != null)
+            {
+                _applicationStarted();
+            }
+        }
+
+        public void OnApplicationStarted(Action action)
+        {
+            _applicationStarted = action;
         }
     }
 }

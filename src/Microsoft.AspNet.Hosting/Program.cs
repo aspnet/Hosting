@@ -54,20 +54,8 @@ namespace Microsoft.AspNet.Hosting
                 shutdownHandle.Set();
             });
 
-            var appLifeline = host.ApplicationServices.GetRequiredService<IApplicationLifetime>();
-            if (appLifeline.ApplicationStarted == null)
-            {
-                appLifeline.ApplicationStarted = ()=> {
-                    var ignored = Task.Run(() =>
-                    {
-                        Console.WriteLine("Started");
-                        Console.ReadLine();
-                        appShutdownService.RequestShutdown();
-                    });
-                };
-            }
-
-            appLifeline.ApplicationStarted();
+            var appLifetime = host.ApplicationServices.GetRequiredService<IApplicationLifetime>();
+            appLifetime.ApplicationStarted();
             shutdownHandle.WaitOne();
         }
     }
