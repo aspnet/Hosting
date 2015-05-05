@@ -32,7 +32,7 @@ namespace Microsoft.AspNet.TestHost
         {
             if (onFirstWrite == null)
             {
-                throw new ArgumentNullException("onFirstWrite");
+                throw new ArgumentNullException(nameof(onFirstWrite));
             }
             _onFirstWrite = onFirstWrite;
             _firstWrite = true;
