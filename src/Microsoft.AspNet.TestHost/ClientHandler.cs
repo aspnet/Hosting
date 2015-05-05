@@ -32,7 +32,7 @@ namespace Microsoft.AspNet.TestHost
         {
             if (next == null)
             {
-                throw new ArgumentNullException("next");
+                throw new ArgumentNullException(nameof(next));
             }
 
             _next = next;
@@ -58,7 +58,7 @@ namespace Microsoft.AspNet.TestHost
         {
             if (request == null)
             {
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
             }
 
             var state = new RequestState(request, _pathBase, cancellationToken);

@@ -117,7 +117,7 @@ namespace Microsoft.AspNet.TestHost
         {
             if (!(serverInformation.GetType() == typeof(ServerInformation)))
             {
-                throw new ArgumentException(string.Format("The server must be {0}", ServerName), "serverInformation");
+                throw new ArgumentException(string.Format("The server must be {0}", ServerName), nameof(serverInformation));
             }
 
             _appDelegate = application;

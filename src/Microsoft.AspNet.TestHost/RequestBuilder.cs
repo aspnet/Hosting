@@ -30,7 +30,7 @@ namespace Microsoft.AspNet.TestHost
         {
             if (server == null)
             {
-                throw new ArgumentNullException("server");
+                throw new ArgumentNullException(nameof(server));
             }
 
             _server = server;
@@ -46,7 +46,7 @@ namespace Microsoft.AspNet.TestHost
         {
             if (configure == null)
             {
-                throw new ArgumentNullException("configure");
+                throw new ArgumentNullException(nameof(configure));
             }
 
             configure(_req);
