@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.Server.Testing
 {
@@ -21,11 +20,16 @@ namespace Microsoft.AspNet.Server.Testing
         /// <param name="runtimeFlavor">Flavor of the clr to run against.</param>
         /// <param name="runtimeArchitecture">Architecture of the DNX to be used.</param>
         public DeploymentParameters(
-            [NotNull] string applicationPath,
+            string applicationPath,
             ServerType serverType,
             RuntimeFlavor runtimeFlavor,
             RuntimeArchitecture runtimeArchitecture)
         {
+            if (string.IsNullOrEmpty(applicationPath))
+            {
+                throw new ArgumentException("Value cannot be null.", "applicationPath");
+            }
+
             if (!Directory.Exists(applicationPath))
             {
                 throw new DirectoryNotFoundException(string.Format("Application path {0} does not exist.", applicationPath));

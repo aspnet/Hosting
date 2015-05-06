@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.Hosting.Server
 {
@@ -19,8 +18,13 @@ namespace Microsoft.AspNet.Hosting.Server
             _services = services;
         }
 
-        public IServerFactory LoadServerFactory([NotNull] string serverFactoryIdentifier)
+        public IServerFactory LoadServerFactory(string serverFactoryIdentifier)
         {
+            if (string.IsNullOrEmpty(serverFactoryIdentifier))
+            {
+                throw new ArgumentException(string.Empty, "serverFactoryIdentifier");
+            }
+
             var nameParts = HostingUtilities.SplitTypeName(serverFactoryIdentifier);
             string typeName = nameParts.Item1;
             string assemblyName = nameParts.Item2;
