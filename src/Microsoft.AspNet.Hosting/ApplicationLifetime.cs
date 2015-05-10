@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using Microsoft.Framework.Runtime;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -11,9 +12,15 @@ namespace Microsoft.AspNet.Hosting
     /// </summary>
     public class ApplicationLifetime : IApplicationLifetime
     {
+        private readonly IApplicationShutdown _applicationShutdown;
         private readonly CancellationTokenSource _startedSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
+
+        public ApplicationLifetime(IApplicationShutdown applicationShutdown)
+        {
+            _applicationShutdown = applicationShutdown;
+        }
 
         /// <summary>
         /// Triggered when the application host has fully started and is about to wait
@@ -23,6 +30,11 @@ namespace Microsoft.AspNet.Hosting
         {
             get { return _startedSource.Token; }
         }
+
+        /// <summary>
+        /// Terminates the application
+        /// </summary>
+        public void StopApplication() => _applicationShutdown.RequestShutdown();
 
         /// <summary>
         /// Triggered when the application host is performing a graceful shutdown.
