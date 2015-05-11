@@ -294,7 +294,10 @@ namespace Microsoft.AspNet.Hosting
         [Fact]
         public void HostingEngine_InvokesConfigureMethodsOnlyOnce()
         {
-            var engine = CreateBuilder().UseStartup<CountStartup>().Build();
+            var engine = CreateBuilder()
+                .UseServer(this)
+                .UseStartup<CountStartup>()
+                .Build();
             using (engine.Start())
             {
                 var services = engine.ApplicationServices;
