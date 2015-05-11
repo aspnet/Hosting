@@ -323,9 +323,6 @@ namespace Microsoft.AspNet.Hosting
             }
         }
 
-
-
-
         private IHostingEngine CreateHostingEngine(RequestDelegate requestDelegate)
         {
             var applicationBuilder = new Mock<IApplicationBuilder>();
