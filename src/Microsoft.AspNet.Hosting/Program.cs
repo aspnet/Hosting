@@ -38,30 +38,29 @@ namespace Microsoft.AspNet.Hosting
             var serverShutdown = host.Start();
             var loggerFactory = host.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var appShutdownService = host.ApplicationServices.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEvent(false);
+            var hostingKeepAlive = host.ApplicationServices.GetRequiredService<IHostingKeepAlive>();
+
+            var hostingKeepAliveTask = hostingKeepAlive.SetupAsync();
+            var shutdownTcs = new TaskCompletionSource<int>();
+            var shutdownRequestedTask = shutdownTcs.Task;
 
             appShutdownService.ShutdownRequested.Register(() =>
             {
-                try
-                {
-                    serverShutdown.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    var logger = loggerFactory.CreateLogger<Program>();
-                    logger.LogError("Dispose threw an exception.", ex);
-                }
-                shutdownHandle.Set();
+                shutdownTcs.SetResult(0);
             });
 
-            var ignored = Task.Run(() =>
+            try
             {
-                Console.WriteLine("Started");
-                Console.ReadLine();
-                appShutdownService.RequestShutdown();
-            });
-
-            shutdownHandle.WaitOne();
+                using (serverShutdown)
+                {
+                    Task.WaitAny(hostingKeepAliveTask, shutdownRequestedTask);
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = loggerFactory.CreateLogger<Program>();
+                logger.LogError("Dispose threw an exception.", ex);
+            }
         }
     }
 }

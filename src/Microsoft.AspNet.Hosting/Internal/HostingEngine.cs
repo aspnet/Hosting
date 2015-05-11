@@ -93,6 +93,7 @@ namespace Microsoft.AspNet.Hosting.Internal
         {
             EnsureStartup();
 
+            _applicationServiceCollection.AddSingleton<IHostingKeepAlive, ConsoleHostingKeepAlive>();
             _applicationServiceCollection.AddInstance<IApplicationLifetime>(_applicationLifetime);
 
             _applicationServices = Startup.ConfigureServicesDelegate(_applicationServiceCollection);
