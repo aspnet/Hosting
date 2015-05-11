@@ -3,6 +3,8 @@
 
 using System;
 using System.Threading;
+using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.Hosting
 {
@@ -14,6 +16,7 @@ namespace Microsoft.AspNet.Hosting
         private readonly CancellationTokenSource _startedSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
+        private Action _applicationStarted;
 
         /// <summary>
         /// Triggered when the application host has fully started and is about to wait
@@ -44,6 +47,7 @@ namespace Microsoft.AspNet.Hosting
         {
             get { return _stoppedSource.Token; }
         }
+
 
         /// <summary>
         /// Signals the ApplicationStarted event and blocks until it completes.
@@ -88,6 +92,19 @@ namespace Microsoft.AspNet.Hosting
             {
                 // TODO: LOG
             }
+        }
+
+        public void ApplicationStarted()
+        {
+            if (_applicationStarted != null)
+            {
+                _applicationStarted();
+            }
+        }
+
+        public void OnApplicationStarted(Action action)
+        {
+            _applicationStarted = action;
         }
     }
 }

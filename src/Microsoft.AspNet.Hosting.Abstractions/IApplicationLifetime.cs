@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Threading;
 
 namespace Microsoft.AspNet.Hosting
@@ -30,5 +31,16 @@ namespace Microsoft.AspNet.Hosting
         /// </summary>
         /// <returns></returns>
         CancellationToken ApplicationStopped { get; }
+
+        /// <summary>
+        /// Sends the notification that the application has started
+        /// </summary>
+        void ApplicationStarted();
+
+        /// <summary>
+        /// Registers a new application started action
+        /// </summary>
+        /// <param name="action">The action to register</param>
+        void OnApplicationStarted(Action action);
     }
 }

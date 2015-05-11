@@ -15,6 +15,7 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Internal;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.Runtime;
 
 namespace Microsoft.AspNet.Hosting.Internal
 {
@@ -38,14 +39,23 @@ namespace Microsoft.AspNet.Hosting.Internal
         private IServerInformation _serverInstance;
 
         public HostingEngine(
-            [NotNull] IServiceCollection appServices, 
-            [NotNull] IStartupLoader startupLoader, 
+            [NotNull] IServiceCollection appServices,
+            [NotNull] IStartupLoader startupLoader,
             [NotNull] IConfiguration config)
         {
             _config = config;
             _applicationServiceCollection = appServices;
             _startupLoader = startupLoader;
             _applicationLifetime = new ApplicationLifetime();
+
+            // Default behaviour
+            _applicationLifetime.OnApplicationStarted(() =>
+            {
+                var appShutdownService = ApplicationServices.GetRequiredService<IApplicationShutdown>();
+                Console.WriteLine("Started");
+                Console.ReadLine();
+                appShutdownService.RequestShutdown();
+            });
         }
 
         public IServiceProvider ApplicationServices

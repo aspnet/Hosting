@@ -54,13 +54,8 @@ namespace Microsoft.AspNet.Hosting
                 shutdownHandle.Set();
             });
 
-            var ignored = Task.Run(() =>
-            {
-                Console.WriteLine("Started");
-                Console.ReadLine();
-                appShutdownService.RequestShutdown();
-            });
-
+            var appLifetime = host.ApplicationServices.GetRequiredService<IApplicationLifetime>();
+            appLifetime.ApplicationStarted();
             shutdownHandle.WaitOne();
         }
     }
