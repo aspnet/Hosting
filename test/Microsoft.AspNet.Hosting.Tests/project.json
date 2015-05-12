@@ -1,9 +1,9 @@
 {
     "dependencies": {
-        "Microsoft.AspNet.Hosting": "1.0.0-*",
-        "Microsoft.AspNet.Owin": "1.0.0-*",
-        "Microsoft.Framework.OptionsModel": "1.0.0-*",
-        "xunit.runner.aspnet": "2.0.0-aspnet-*"
+        "Microsoft.AspNet.Hosting": "1.0.0-beta4",
+        "Microsoft.AspNet.Owin": "1.0.0-beta4",
+        "Microsoft.Framework.OptionsModel": "1.0.0-beta4",
+        "xunit.runner.aspnet": "2.0.0-aspnet-beta4"
     },
     "frameworks": {
         "dnx451": {}

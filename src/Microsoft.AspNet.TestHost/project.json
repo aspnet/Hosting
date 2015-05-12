@@ -1,8 +1,8 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta4",
     "description": "ASP.NET 5 web server for writing and running tests.",
     "dependencies": {
-        "Microsoft.AspNet.Hosting": "1.0.0-*"
+        "Microsoft.AspNet.Hosting": "1.0.0-beta4"
     },
     "frameworks": {
         "dnx451": {
@@ -12,8 +12,8 @@
         },
         "dnxcore50": {
             "dependencies": {
-                "System.Diagnostics.Contracts": "4.0.0-beta-*",
-                "System.Net.Http": "4.0.0-beta-*"
+                "System.Diagnostics.Contracts": "4.0.0-beta-22816",
+                "System.Net.Http": "4.0.0-beta-22816"
             }
         }
     }

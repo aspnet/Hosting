@@ -1,11 +1,11 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta4",
     "dependencies": {
-        "Microsoft.AspNet.Http": "1.0.0-*",
-        "Microsoft.AspNet.FeatureModel": "1.0.0-*",
-        "Microsoft.AspNet.FileProviders.Interfaces": "1.0.0-*",
-        "Microsoft.Framework.ConfigurationModel": "1.0.0-*",
-        "Microsoft.Framework.NotNullAttribute.Internal": { "type": "build", "version": "1.0.0-*" }
+        "Microsoft.AspNet.Http": "1.0.0-beta4",
+        "Microsoft.AspNet.FeatureModel": "1.0.0-beta4",
+        "Microsoft.AspNet.FileProviders.Interfaces": "1.0.0-beta4",
+        "Microsoft.Framework.ConfigurationModel": "1.0.0-beta4",
+        "Microsoft.Framework.NotNullAttribute.Internal": { "type": "build", "version": "1.0.0-beta4" }
     },
     "frameworks": {
         "dnx451": {},
