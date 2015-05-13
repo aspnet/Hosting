@@ -12,7 +12,7 @@ namespace Microsoft.AspNet.Hosting
 {
     public class Program
     {
-        private const string HostingIniFile = "Microsoft.AspNet.Hosting.ini";
+        private const string HostingJsonFile = "Microsoft.AspNet.Hosting.json";
 
         private readonly IServiceProvider _serviceProvider;
 
@@ -24,9 +24,9 @@ namespace Microsoft.AspNet.Hosting
         public void Main(string[] args)
         {
             var config = new Configuration();
-            if (File.Exists(HostingIniFile))
+            if (File.Exists(HostingJsonFile))
             {
-                config.AddIniFile(HostingIniFile);
+                config.AddJsonFile(HostingJsonFile);
             }
             config.AddEnvironmentVariables();
             config.AddCommandLine(args);
