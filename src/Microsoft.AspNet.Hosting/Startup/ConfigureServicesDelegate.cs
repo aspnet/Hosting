@@ -33,20 +33,16 @@ namespace Microsoft.AspNet.Hosting.Startup
             return services => Invoke(instance, services);
         }
 
-        private IServiceProvider Invoke(object instance, IServiceCollection exportServices)
+        private IServiceProvider Invoke(object instance, [NotNull] IServiceCollection exportServices)
         {
-            var parameterInfos = MethodInfo.GetParameters();
-            var parameters = new object[parameterInfos.Length];
-            for (var index = 0; index != parameterInfos.Length; ++index)
+            var parameters = new object[MethodInfo.GetParameters().Length];
+
+            // Ctor ensures we have at most one IServiceCollection parameter
+            if (parameters.Length > 0)
             {
-                var parameterInfo = parameterInfos[index];
-                if (exportServices != null && parameterInfo.ParameterType == typeof(IServiceCollection))
-                {
-                    parameters[index] = exportServices;
-                }
+                parameters[0] = exportServices;
             }
 
-            // REVIEW: We null ref if exportServices is null, cuz it should not be null
             return MethodInfo.Invoke(instance, parameters) as IServiceProvider ?? exportServices.BuildServiceProvider();
         }
     }
