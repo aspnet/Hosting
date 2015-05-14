@@ -28,10 +28,7 @@ namespace Microsoft.AspNet.Hosting.Startup
 
         public MethodInfo MethodInfo { get; }
 
-        public ConfigureServicesDelegate Build(object instance)
-        {
-            return services => Invoke(instance, services);
-        }
+        public ConfigureServicesDelegate Build(object instance) => services => Invoke(instance, services);
 
         private IServiceProvider Invoke(object instance, [NotNull] IServiceCollection exportServices)
         {
