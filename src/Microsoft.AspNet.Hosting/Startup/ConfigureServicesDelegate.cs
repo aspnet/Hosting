@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.Hosting.Startup
 {
@@ -11,8 +13,16 @@ namespace Microsoft.AspNet.Hosting.Startup
 
     public class ConfigureServicesBuilder
     {
-        public ConfigureServicesBuilder(MethodInfo configureServices)
+        public ConfigureServicesBuilder([NotNull] MethodInfo configureServices)
         {
+            // Only support IServiceCollection parameters
+            var parameters = configureServices.GetParameters();
+            if (parameters.Length > 1 ||
+                parameters.Any(p => p.ParameterType != typeof(IServiceCollection)))
+            {
+                throw new InvalidOperationException("ConfigureServices can take at most a single IServiceCollection parameter.");
+            }
+
             MethodInfo = configureServices;
         }
 
