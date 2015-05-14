@@ -340,7 +340,6 @@ namespace Microsoft.AspNet.Hosting
             public void Configure(IApplicationBuilder app) { }
         }
 
-
         private IHostingEngine CreateHostingEngine(RequestDelegate requestDelegate)
         {
             var applicationBuilder = new Mock<IApplicationBuilder>();
