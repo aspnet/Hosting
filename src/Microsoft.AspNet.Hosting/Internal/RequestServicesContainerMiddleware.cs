@@ -30,7 +30,8 @@ namespace Microsoft.AspNet.Hosting.Internal
             }
 
             // Resolve the ScopeFactory from the correct SP
-            var serviceProvider = httpContext.ApplicationServices ?? _services;
+            var priorApplicationServices = httpContext.ApplicationServices;
+            var serviceProvider = priorApplicationServices ?? _services;
             var appServiceProvider = serviceProvider.GetRequiredService<IServiceProvider>();
             if (serviceProvider != appServiceProvider)
             {
@@ -51,8 +52,8 @@ namespace Microsoft.AspNet.Hosting.Internal
             }
             finally
             {
-                httpContext.RequestServices = serviceProvider; // REVIEW: should this go back to null instead?
-                httpContext.ApplicationServices = serviceProvider;
+                httpContext.RequestServices = null;
+                httpContext.ApplicationServices = priorApplicationServices;
             }
         }
     }
