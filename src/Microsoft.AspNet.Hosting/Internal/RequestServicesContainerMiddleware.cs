@@ -29,16 +29,14 @@ namespace Microsoft.AspNet.Hosting.Internal
                 return;
             }
 
+            // Resolve the ScopeFactory from the correct SP
             var serviceProvider = httpContext.ApplicationServices ?? _services;
-
             var appServiceProvider = serviceProvider.GetRequiredService<IServiceProvider>();
-            var appServiceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-
             if (serviceProvider != appServiceProvider)
             {
                 appServiceProvider = serviceProvider;
-                appServiceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
             }
+            var appServiceScopeFactory = appServiceProvider.GetRequiredService<IServiceScopeFactory>();
 
             try
             {
