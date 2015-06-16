@@ -13,6 +13,7 @@ namespace Microsoft.AspNet.Hosting.Internal
         {
             return builder =>
             {
+                // REVIEW: we could inline the entire request services container middleware here instead?
                 app.UseMiddleware<RequestServicesContainerMiddleware>();
                 next(builder);
             };
