@@ -40,7 +40,7 @@ namespace Microsoft.AspNet.Hosting.Internal
 
             try
             {
-                // Creates the scope and tempororarily swap services
+                // Creates the scope and temporarily swap services
                 using (var scope = appServiceScopeFactory.CreateScope())
                 {
                     httpContext.ApplicationServices = appServiceProvider;
