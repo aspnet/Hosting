@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Framework.DependencyInjection;
@@ -31,16 +32,16 @@ namespace Microsoft.AspNet.Hosting.Server
                 throw new Exception(string.Format("The assembly {0} failed to load.", assemblyName));
             }
 
-            var serverType = assembly.DefinedTypes.Where(
+            var serverTypeInfo = assembly.DefinedTypes.Where(
                 t => t.ImplementedInterfaces.FirstOrDefault(interf => interf.Equals(typeof(IServerFactory))) != null)
                 .FirstOrDefault();
 
-            if (serverType == null)
+            if (serverTypeInfo == null)
             {
                 throw new InvalidOperationException($"No server type found that implements IServerFactory in assembly: {assemblyName}.");
             }
 
-            return (IServerFactory)ActivatorUtilities.GetServiceOrCreateInstance(_services, serverType.AsType());
+            return (IServerFactory)ActivatorUtilities.GetServiceOrCreateInstance(_services, serverTypeInfo.AsType());
         }
     }
 }
