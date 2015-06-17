@@ -40,7 +40,7 @@ namespace Microsoft.AspNet.Hosting.Server
                 throw new InvalidOperationException($"No server type found that implements IServerFactory in assembly: {assemblyName}.");
             }
 
-            return (IServerFactory)ActivatorUtilities.GetServiceOrCreateInstance(_services, serverType);
+            return (IServerFactory)ActivatorUtilities.GetServiceOrCreateInstance(_services, serverType.AsType());
         }
     }
 }
