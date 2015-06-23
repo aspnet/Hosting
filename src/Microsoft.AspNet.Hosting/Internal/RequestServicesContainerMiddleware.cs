@@ -21,30 +21,24 @@ namespace Microsoft.AspNet.Hosting.Internal
             _next = next;
         }
 
-        public async Task Invoke(HttpContext httpContext)
+        public async Task Invoke([NotNull] HttpContext httpContext)
         {
-            // All done if we already have a request services
+            // All done if there request services is set
             if (httpContext.RequestServices != null)
             {
                 return;
             }
 
-            // Resolve the ScopeFactory from the correct SP
             var priorApplicationServices = httpContext.ApplicationServices;
             var serviceProvider = priorApplicationServices ?? _services;
-            var appServiceProvider = serviceProvider.GetRequiredService<IServiceProvider>();
-            if (serviceProvider != appServiceProvider)
-            {
-                appServiceProvider = serviceProvider;
-            }
-            var appServiceScopeFactory = appServiceProvider.GetRequiredService<IServiceScopeFactory>();
+            var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
             try
             {
                 // Creates the scope and temporarily swap services
-                using (var scope = appServiceScopeFactory.CreateScope())
+                using (var scope = scopeFactory.CreateScope())
                 {
-                    httpContext.ApplicationServices = appServiceProvider;
+                    httpContext.ApplicationServices = serviceProvider;
                     httpContext.RequestServices = scope.ServiceProvider;
 
                     await _next.Invoke(httpContext);
