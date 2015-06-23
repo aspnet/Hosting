@@ -26,6 +26,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             // All done if there request services is set
             if (httpContext.RequestServices != null)
             {
+                await _next.Invoke(httpContext);
                 return;
             }
 
