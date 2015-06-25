@@ -29,7 +29,7 @@ namespace Microsoft.AspNet.Hosting.Internal
         private IServiceProvider _applicationServices;
 
         // Only one of these should be set
-        internal string StartupAssemblyName { get; set; }
+        internal string StartupName { get; set; }
         internal StartupMethods Startup { get; set; }
         internal Type StartupType { get; set; }
 
@@ -110,12 +110,12 @@ namespace Microsoft.AspNet.Hosting.Internal
             if (StartupType == null)
             {
                 var diagnosticTypeMessages = new List<string>();
-                StartupType = _startupLoader.FindStartupType(StartupAssemblyName, diagnosticTypeMessages);
+                StartupType = _startupLoader.FindStartupType(StartupName, diagnosticTypeMessages);
                 if (StartupType == null)
                 {
                     throw new ArgumentException(
                         diagnosticTypeMessages.Aggregate("Failed to find a startup type for the web application.", (a, b) => a + "\r\n" + b),
-                        StartupAssemblyName);
+                        StartupName);
                 }
             }
 
@@ -125,7 +125,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             {
                 throw new ArgumentException(
                     diagnosticMessages.Aggregate("Failed to find a startup entry point for the web application.", (a, b) => a + "\r\n" + b),
-                    StartupAssemblyName);
+                    StartupName);
             }
         }
 

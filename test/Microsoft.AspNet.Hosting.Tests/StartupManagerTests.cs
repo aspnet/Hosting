@@ -123,6 +123,34 @@ namespace Microsoft.AspNet.Hosting.Tests
         }
 
         [Fact]
+        public void StartupLoaderCanLoadByTypeName()
+        {
+            var serviceCollection = new ServiceCollection();
+            var services = serviceCollection.BuildServiceProvider();
+
+            var diagnosticMessages = new List<string>();
+            var hostingEnv = new HostingEnvironment();
+            var loader = new StartupLoader(services, hostingEnv);
+            var type = loader.FindStartupType("NamedStartup, Microsoft.AspNet.Hosting.Tests", diagnosticMessages);
+            Assert.Equal(typeof(NamedStartup), type);
+            var startup = loader.LoadMethods(type, diagnosticMessages);
+        }
+
+        [Fact]
+        public void StartupLoaderCanLoadByTypeNameWithEnvironment()
+        {
+            var serviceCollection = new ServiceCollection();
+            var services = serviceCollection.BuildServiceProvider();
+
+            var diagnosticMessages = new List<string>();
+            var hostingEnv = new HostingEnvironment { EnvironmentName = "Dev" };
+            var loader = new StartupLoader(services, hostingEnv);
+            var type = loader.FindStartupType("NamedStartup, Microsoft.AspNet.Hosting.Tests", diagnosticMessages);
+            Assert.Equal(typeof(NamedStartupDev), type);
+            var startup = loader.LoadMethods(type, diagnosticMessages);
+        }
+
+        [Fact]
         public void StartupLoaderCanLoadByType()
         {
             var serviceCollection = new ServiceCollection();

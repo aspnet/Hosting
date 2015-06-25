@@ -16,7 +16,7 @@ namespace Microsoft.AspNet.Hosting
 
             var engine = (HostingEngine)builder.Build();
 
-            Assert.Equal("Microsoft.AspNet.Hosting.Tests", engine.StartupAssemblyName);
+            Assert.Equal("Microsoft.AspNet.Hosting.Tests", engine.StartupName);
         }
 
         [Fact]
@@ -26,7 +26,7 @@ namespace Microsoft.AspNet.Hosting
 
             var engine = (HostingEngine)builder.UseStartup("MyStartupAssembly").Build();
 
-            Assert.Equal("MyStartupAssembly", engine.StartupAssemblyName);
+            Assert.Equal("MyStartupAssembly", engine.StartupName);
         }
 
         private WebHostBuilder CreateWebHostBuilder() => new WebHostBuilder(CallContextServiceLocator.Locator.ServiceProvider);

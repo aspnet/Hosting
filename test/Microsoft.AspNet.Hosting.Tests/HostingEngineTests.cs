@@ -423,7 +423,7 @@ namespace Microsoft.AspNet.Hosting
 
         private class TestLoader : IStartupLoader
         {
-            public Type FindStartupType(string startupAssemblyName, IList<string> diagnosticMessages)
+            public Type FindStartupType(string startupName, IList<string> diagnosticMessages)
             {
                 throw new NotImplementedException();
             }

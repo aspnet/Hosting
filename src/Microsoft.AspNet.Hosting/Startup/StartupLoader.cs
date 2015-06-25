@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Startup
@@ -38,37 +39,45 @@ namespace Microsoft.AspNet.Hosting.Startup
             return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
         }
 
-        public Type FindStartupType(string startupAssemblyName, IList<string> diagnosticMessages)
+        public Type FindStartupType(string startupName, IList<string> diagnosticMessages)
         {
             var environmentName = _hostingEnv.EnvironmentName;
-            if (string.IsNullOrEmpty(startupAssemblyName))
+            if (string.IsNullOrEmpty(startupName))
             {
-                throw new ArgumentException("Value cannot be null or empty.", nameof(startupAssemblyName));
+                throw new ArgumentException("Value cannot be null or empty.", nameof(startupName));
             }
 
-            var assembly = Assembly.Load(new AssemblyName(startupAssemblyName));
+            var nameParts = HostingUtilities.SplitTypeName(startupName);
+            var typeName = nameParts.Item1;
+            var assemblyName = nameParts.Item2;
+
+            var assembly = Assembly.Load(new AssemblyName(assemblyName));
             if (assembly == null)
             {
-                throw new InvalidOperationException(String.Format("The assembly '{0}' failed to load.", startupAssemblyName));
+                throw new InvalidOperationException($"The assembly '{assemblyName}' failed to load.");
             }
 
-            var startupNameWithEnv = "Startup" + environmentName;
-            var startupNameWithoutEnv = "Startup";
+            if (string.IsNullOrEmpty(typeName))
+            {
+                typeName = "Startup";
+            }
+
+            var typeNameWithEnv = typeName + environmentName;
 
             // Check the most likely places first
             var type =
-                assembly.GetType(startupNameWithEnv) ??
-                assembly.GetType(startupAssemblyName + "." + startupNameWithEnv) ??
-                assembly.GetType(startupNameWithoutEnv) ??
-                assembly.GetType(startupAssemblyName + "." + startupNameWithoutEnv);
+                assembly.GetType(typeNameWithEnv) ??
+                assembly.GetType(assemblyName + "." + typeNameWithEnv) ??
+                assembly.GetType(typeName) ??
+                assembly.GetType(assemblyName + "." + typeName);
 
             if (type == null)
             {
                 // Full scan
                 var definedTypes = assembly.DefinedTypes.ToList();
 
-                var startupType1 = definedTypes.Where(info => info.Name.Equals(startupNameWithEnv, StringComparison.Ordinal));
-                var startupType2 = definedTypes.Where(info => info.Name.Equals(startupNameWithoutEnv, StringComparison.Ordinal));
+                var startupType1 = definedTypes.Where(info => info.Name.Equals(typeNameWithEnv, StringComparison.Ordinal));
+                var startupType2 = definedTypes.Where(info => info.Name.Equals(typeName, StringComparison.Ordinal));
 
                 var typeInfo = startupType1.Concat(startupType2).FirstOrDefault();
                 if (typeInfo != null)
@@ -80,9 +89,9 @@ namespace Microsoft.AspNet.Hosting.Startup
             if (type == null)
             {
                 throw new InvalidOperationException(String.Format("A type named '{0}' or '{1}' could not be found in assembly '{2}'.",
-                    startupNameWithEnv,
-                    startupNameWithoutEnv,
-                    startupAssemblyName));
+                    typeNameWithEnv,
+                    typeName,
+                    assemblyName));
             }
 
             return type;
