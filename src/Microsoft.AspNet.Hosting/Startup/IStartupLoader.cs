@@ -8,7 +8,7 @@ namespace Microsoft.AspNet.Hosting.Startup
 {
     public interface IStartupLoader
     {
-        Type FindStartupType(string startupAssemblyName, IList<string> diagnosticMessages);
+        Type FindStartupType(string startupName, IList<string> diagnosticMessages);
 
         StartupMethods LoadMethods(Type startupType, IList<string> diagnosticMessages);
     }

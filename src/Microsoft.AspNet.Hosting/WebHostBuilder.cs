@@ -36,7 +36,7 @@ namespace Microsoft.AspNet.Hosting
         // Only one of these should be set
         private StartupMethods _startup;
         private Type _startupType;
-        private string _startupAssemblyName;
+        private string _startupName;
 
         // Only one of these should be set
         private string _serverFactoryLocation;
@@ -111,7 +111,7 @@ namespace Microsoft.AspNet.Hosting
             // Only one of these should be set, but they are used in priority
             engine.Startup = _startup;
             engine.StartupType = _startupType;
-            engine.StartupAssemblyName = _startupAssemblyName ?? _config.Get(ApplicationKey) ?? _config.Get(OldApplicationKey) ?? appEnvironment.ApplicationName;
+            engine.StartupName = _startupName ?? _config.Get(ApplicationKey) ?? _config.Get(OldApplicationKey) ?? appEnvironment.ApplicationName;
 
             return engine;
         }
@@ -140,13 +140,13 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public WebHostBuilder UseStartup([NotNull] string startupAssemblyName)
+        public WebHostBuilder UseStartup([NotNull] string startupName)
         {
-            if (startupAssemblyName == null)
+            if (startupName == null)
             {
-                throw new ArgumentNullException(nameof(startupAssemblyName));
+                throw new ArgumentNullException(nameof(startupName));
             }
-            _startupAssemblyName = startupAssemblyName;
+            _startupName = startupName;
             return this;
         }
 
