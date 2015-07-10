@@ -1,8 +1,8 @@
-﻿{
-    "version": "1.0.0-*",
+{
+    "version": "1.0.0-beta5",
     "dependencies": {
-        "Microsoft.AspNet.FeatureModel": "1.0.0-*",
-        "Microsoft.Framework.Configuration.Abstractions": "1.0.0-*"
+        "Microsoft.AspNet.FeatureModel": "1.0.0-beta5",
+        "Microsoft.Framework.Configuration.Abstractions": "1.0.0-beta5"
     },
 
     "frameworks": {

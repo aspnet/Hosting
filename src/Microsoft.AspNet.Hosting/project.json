@@ -1,28 +1,28 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta5",
     "description": "ASP.NET 5 core hosting infrastructure and startup logic for web applications.",
     "compilationOptions": { "warningsAsErrors": "true" },
     "dependencies": {
-        "Microsoft.AspNet.FileProviders.Physical": "1.0.0-*",
-        "Microsoft.AspNet.Hosting.Abstractions": "1.0.0-*",
-        "Microsoft.AspNet.Hosting.Server.Abstractions": "1.0.0-*",
-        "Microsoft.AspNet.Http": "1.0.0-*",
-        "Microsoft.AspNet.Http.Extensions": "1.0.0-*",
-        "Microsoft.Framework.Configuration": "1.0.0-*",
-        "Microsoft.Framework.Configuration.CommandLine": "1.0.0-*",
-        "Microsoft.Framework.Configuration.EnvironmentVariables": "1.0.0-*",
-        "Microsoft.Framework.Configuration.Ini": "1.0.0-*",
-        "Microsoft.Framework.DependencyInjection": "1.0.0-*",
-        "Microsoft.Framework.Logging": "1.0.0-*",
-        "Microsoft.Framework.Runtime.Abstractions": "1.0.0-*",
-        "Microsoft.Framework.NotNullAttribute.Sources": { "type": "build", "version": "1.0.0-*" },
+        "Microsoft.AspNet.FileProviders.Physical": "1.0.0-beta5",
+        "Microsoft.AspNet.Hosting.Abstractions": "1.0.0-beta5",
+        "Microsoft.AspNet.Hosting.Server.Abstractions": "1.0.0-beta5",
+        "Microsoft.AspNet.Http": "1.0.0-beta5",
+        "Microsoft.AspNet.Http.Extensions": "1.0.0-beta5",
+        "Microsoft.Framework.Configuration": "1.0.0-beta5",
+        "Microsoft.Framework.Configuration.CommandLine": "1.0.0-beta5",
+        "Microsoft.Framework.Configuration.EnvironmentVariables": "1.0.0-beta5",
+        "Microsoft.Framework.Configuration.Ini": "1.0.0-beta5",
+        "Microsoft.Framework.DependencyInjection": "1.0.0-beta5",
+        "Microsoft.Framework.Logging": "1.0.0-beta5",
+        "Microsoft.Framework.Runtime.Abstractions": "1.0.0-beta5",
+        "Microsoft.Framework.NotNullAttribute.Sources": { "type": "build", "version": "1.0.0-beta5" },
         "Newtonsoft.Json": "6.0.6"
     },
     "frameworks": {
         "dnx451": { },
         "dnxcore50": {
             "dependencies": {
-                "System.Console": "4.0.0-beta-*"
+                "System.Console": "4.0.0-beta-23019"
             }
         }
     }

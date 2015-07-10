@@ -1,10 +1,10 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta5",
     "description": "ASP.NET 5 helpers to deploy applications to IIS Express, IIS, WebListener and Kestrel for testing.",
     "dependencies": {
-        "Microsoft.AspNet.Testing": "1.0.0-*",
-        "Microsoft.Framework.Logging.Abstractions": "1.0.0-*",
-        "Microsoft.Framework.Runtime.Abstractions": "1.0.0-*"
+        "Microsoft.AspNet.Testing": "1.0.0-beta5",
+        "Microsoft.Framework.Logging.Abstractions": "1.0.0-beta5",
+        "Microsoft.Framework.Runtime.Abstractions": "1.0.0-beta5"
     },
     "frameworks": {
         "dnx451": {
@@ -18,13 +18,13 @@
         },
         "dnxcore50": {
             "dependencies": {
-                "System.Diagnostics.Process": "4.0.0-beta-*",
+                "System.Diagnostics.Process": "4.0.0-beta-23019",
                 "System.IO.FileSystem": "4.0.0-*",
-                "System.Net.Http": "4.0.0-beta-*",
-                "System.Net.Primitives": "4.0.10-beta-*",
-                "System.Runtime.Extensions": "4.0.10-beta-*",
-                "System.Text.RegularExpressions": "4.0.10-beta-*",
-                "System.Threading": "4.0.10-beta-*",
+                "System.Net.Http": "4.0.0-beta-23019",
+                "System.Net.Primitives": "4.0.10-beta-23019",
+                "System.Runtime.Extensions": "4.0.10-beta-23019",
+                "System.Text.RegularExpressions": "4.0.10-beta-23019",
+                "System.Threading": "4.0.10-beta-23019",
                 "System.Threading.Thread": "4.0.0-*"
             }
         }
