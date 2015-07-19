@@ -38,6 +38,8 @@ namespace Microsoft.AspNet.Hosting
             using (host.Start())
             {
                 Console.WriteLine("Started");
+                Console.WriteLine("Press enter to shutdown.");
+
                 var appShutdownService = host.ApplicationServices.GetRequiredService<IApplicationShutdown>();
                 Console.CancelKeyPress += (sender, eventArgs) =>
                 {
