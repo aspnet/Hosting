@@ -207,10 +207,19 @@ namespace Microsoft.AspNet.Hosting
         [Theory]
         [InlineData(null, "")]
         [InlineData("", "")]
-        [InlineData("/", "/")]
-        [InlineData(@"\", @"\")]
-        [InlineData("sub", "sub")]
-        [InlineData("sub/sub2/sub3", @"sub/sub2/sub3")]
+        [InlineData("/", @"")]
+        [InlineData(@"\", @"")]
+        [InlineData("sub", @"\sub")]
+        [InlineData("/sub", @"\sub")]
+        [InlineData("sub/sub2/sub3", @"\sub\sub2\sub3")]
+        [InlineData("/index.html", @"\index.html")]
+        [InlineData("~", "")]
+        [InlineData("/sub/..", "")]
+        [InlineData("~/sub", @"\sub")]
+        [InlineData(".", "")]
+        [InlineData("/sub/./sub2", @"\sub\sub2")]
+        [InlineData("/~", @"\~")]
+        [InlineData("~folder", @"\~folder")]
         public void MapPath_Facts(string virtualPath, string expectedSuffix)
         {
             RunMapPath(virtualPath, expectedSuffix);
@@ -218,10 +227,21 @@ namespace Microsoft.AspNet.Hosting
 
         [ConditionalTheory]
         [OSSkipCondition(OperatingSystems.Linux | OperatingSystems.MacOSX)]
-        [InlineData(@"sub/sub2\sub3\", @"sub/sub2/sub3/")]
+        [InlineData(@"sub/sub2\sub3\", @"\sub\sub2\sub3\")]
         public void MapPath_Windows_Facts(string virtualPath, string expectedSuffix)
         {
             RunMapPath(virtualPath, expectedSuffix);
+        }
+
+        [Theory]
+        [InlineData(@"..")]
+        [InlineData(@"/sub/../..")]
+        [InlineData("~/..")]
+        public void MapPathThrowsForPathsOutsideApplication(string virtualPath)
+        {
+            Assert.Equal(
+                "The mapped path is above the application directory.",
+                Assert.Throws<InvalidOperationException>(() => RunMapPath(virtualPath, string.Empty)).Message);
         }
 
         [Fact]
@@ -377,8 +397,8 @@ namespace Microsoft.AspNet.Hosting
             {
                 var env = engine.ApplicationServices.GetRequiredService<IHostingEnvironment>();
                 var mappedPath = env.MapPath(virtualPath);
-                expectedSuffix = expectedSuffix.Replace('/', Path.DirectorySeparatorChar);
-                Assert.Equal(Path.Combine(env.WebRootPath, expectedSuffix), mappedPath);
+                expectedSuffix = expectedSuffix.Replace('\\', Path.DirectorySeparatorChar);
+                Assert.Equal(env.WebRootPath + expectedSuffix, mappedPath);
             }
         }
 

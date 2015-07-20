@@ -58,14 +58,36 @@ namespace Microsoft.AspNet.Hosting
             [NotNull]this IHostingEnvironment hostingEnvironment,
             string virtualPath)
         {
-            if (virtualPath == null)
+            if (string.IsNullOrEmpty(virtualPath) || string.CompareOrdinal(virtualPath, "~") == 0)
             {
                 return hostingEnvironment.WebRootPath;
             }
 
-            // On windows replace / with \.
-            virtualPath = virtualPath.Replace('/', Path.DirectorySeparatorChar);
-            return Path.Combine(hostingEnvironment.WebRootPath, virtualPath);
+            // "~/index.html" -> "index.html" (makes it relative to the web root)
+            // "~\index.html" -> "index.html" (makes it relative to the web root)
+            if (virtualPath.StartsWith("~/", StringComparison.OrdinalIgnoreCase) ||
+                virtualPath.StartsWith("~\\", StringComparison.OrdinalIgnoreCase))
+            {
+                virtualPath = virtualPath.Substring(2);
+            }
+
+            // "/index.html" -> "index.html" (makes it relative to the web root)
+            var pathStartIdx = 0;
+            while (pathStartIdx < virtualPath.Length && (virtualPath[pathStartIdx] == '\\' || virtualPath[pathStartIdx] == '/'))
+            {
+                pathStartIdx++;
+            }
+
+            virtualPath = virtualPath.Substring(pathStartIdx);
+
+            var normalizedPath = Path.GetFullPath(Path.Combine(hostingEnvironment.WebRootPath, virtualPath));
+
+            if (normalizedPath.Length < hostingEnvironment.WebRootPath.Length)
+            {
+                throw new InvalidOperationException("The mapped path is above the application directory.");
+            }
+
+            return normalizedPath;
         }
     }
 }
