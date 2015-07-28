@@ -1,16 +1,15 @@
-﻿{
-    "version": "1.0.0-*",
+{
+    "version": "1.0.0-beta6",
     "repository": {
         "type": "git",
         "url": "git://github.com/aspnet/hosting"
     },
     "dependencies": {
-        "Microsoft.AspNet.FeatureModel": "1.0.0-*",
-        "Microsoft.Framework.Configuration.Abstractions": "1.0.0-*"
+        "Microsoft.AspNet.FeatureModel": "1.0.0-beta6",
+        "Microsoft.Framework.Configuration.Abstractions": "1.0.0-beta6"
     },
-
     "frameworks": {
-        "dnx451": { },
-        "dnxcore50": { }
+        "dnx451": {},
+        "dnxcore50": {}
     }
 }
