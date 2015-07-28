@@ -1,32 +1,37 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta6",
     "description": "ASP.NET 5 core hosting infrastructure and startup logic for web applications.",
     "repository": {
         "type": "git",
         "url": "git://github.com/aspnet/hosting"
     },
-    "compilationOptions": { "warningsAsErrors": "true" },
+    "compilationOptions": {
+        "warningsAsErrors": "true"
+    },
     "dependencies": {
-        "Microsoft.AspNet.FileProviders.Physical": "1.0.0-*",
-        "Microsoft.AspNet.Hosting.Abstractions": "1.0.0-*",
-        "Microsoft.AspNet.Hosting.Server.Abstractions": "1.0.0-*",
-        "Microsoft.AspNet.Http": "1.0.0-*",
-        "Microsoft.AspNet.Http.Extensions": "1.0.0-*",
-        "Microsoft.Framework.Configuration": "1.0.0-*",
-        "Microsoft.Framework.Configuration.CommandLine": "1.0.0-*",
-        "Microsoft.Framework.Configuration.EnvironmentVariables": "1.0.0-*",
-        "Microsoft.Framework.Configuration.Ini": "1.0.0-*",
-        "Microsoft.Framework.DependencyInjection": "1.0.0-*",
-        "Microsoft.Framework.Logging": "1.0.0-*",
-        "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-*",
-        "Microsoft.Framework.NotNullAttribute.Sources": { "type": "build", "version": "1.0.0-*" },
+        "Microsoft.AspNet.FileProviders.Physical": "1.0.0-beta6",
+        "Microsoft.AspNet.Hosting.Abstractions": "1.0.0-beta6",
+        "Microsoft.AspNet.Hosting.Server.Abstractions": "1.0.0-beta6",
+        "Microsoft.AspNet.Http": "1.0.0-beta6",
+        "Microsoft.AspNet.Http.Extensions": "1.0.0-beta6",
+        "Microsoft.Framework.Configuration": "1.0.0-beta6",
+        "Microsoft.Framework.Configuration.CommandLine": "1.0.0-beta6",
+        "Microsoft.Framework.Configuration.EnvironmentVariables": "1.0.0-beta6",
+        "Microsoft.Framework.Configuration.Ini": "1.0.0-beta6",
+        "Microsoft.Framework.DependencyInjection": "1.0.0-beta6",
+        "Microsoft.Framework.Logging": "1.0.0-beta6",
+        "Microsoft.Framework.Runtime.Abstractions": "1.0.0-beta6",
+        "Microsoft.Framework.NotNullAttribute.Sources": {
+            "type": "build",
+            "version": "1.0.0-beta6"
+        },
         "Newtonsoft.Json": "6.0.6"
     },
     "frameworks": {
-        "dnx451": { },
+        "dnx451": {},
         "dnxcore50": {
             "dependencies": {
-                "System.Console": "4.0.0-beta-*"
+                "System.Console": "4.0.0-beta-23109"
             }
         }
     }
