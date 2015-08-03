@@ -39,8 +39,8 @@ namespace Microsoft.AspNet.Hosting.Internal
         private IServerInformation _serverInstance;
 
         public HostingEngine(
-            [NotNull] IServiceCollection appServices, 
-            [NotNull] IStartupLoader startupLoader, 
+            [NotNull] IServiceCollection appServices,
+            [NotNull] IStartupLoader startupLoader,
             [NotNull] IConfiguration config)
         {
             _config = config;
@@ -64,7 +64,8 @@ namespace Microsoft.AspNet.Hosting.Internal
 
             var application = BuildApplication();
 
-            var logger = _applicationServices.GetRequiredService<ILogger<HostingEngine>>();
+            var loggerFactory = _applicationServices.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger<HostingEngine>();
             var contextFactory = _applicationServices.GetRequiredService<IHttpContextFactory>();
             var contextAccessor = _applicationServices.GetRequiredService<IHttpContextAccessor>();
             var server = ServerFactory.Start(_serverInstance,
@@ -87,6 +88,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                 _applicationLifetime.NotifyStopping();
                 server.Dispose();
                 _applicationLifetime.NotifyStopped();
+                loggerFactory.Dispose();
             });
         }
 
