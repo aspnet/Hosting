@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
+using Microsoft.AspNet.Hosting.Builder;
 using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
@@ -18,6 +19,7 @@ using Microsoft.Dnx.Runtime.Infrastructure;
 using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Internal;
+using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Moq;
 using Xunit;
@@ -303,6 +305,28 @@ namespace Microsoft.AspNet.Hosting
                 Assert.Equal(1, CountStartup.ConfigureCount);
                 Assert.Equal(1, CountStartup.ConfigureServicesCount);
             }
+        }
+
+        [Fact]
+        public void DisposingHostingEngine_DisposesLoggerFactory()
+        {
+            // Arrange
+            var loggerFactory = new Mock<ILoggerFactory>();
+            loggerFactory.Setup(lf => lf.Dispose()).Verifiable();
+
+            var engine = CreateBuilder()
+               .UseServer(this)
+               .UseServices(s =>
+               {
+                   s.AddInstance(loggerFactory.Object);
+               }).Build();
+            var disposable = engine.Start();
+
+            // Act
+            disposable.Dispose();
+
+            // Assert
+            loggerFactory.Verify(lf => lf.Dispose(), Times.Once(), "Dispose not called on logger factory");
         }
 
         public class CountStartup
