@@ -16,7 +16,7 @@ namespace Microsoft.AspNet.TestHost
     // when requested by the client.
     internal class ResponseStream : Stream
     {
-        private bool _disposed;
+        private bool _responseFinished;
         private bool _aborted;
         private Exception _abortException;
         private ConcurrentQueue<byte[]> _bufferedData;
@@ -25,6 +25,7 @@ namespace Microsoft.AspNet.TestHost
         private SemaphoreSlim _writeLock;
         private TaskCompletionSource<object> _readWaitingForData;
         private object _signalReadLock;
+        private CancellationTokenSource _requestAbortedSource;
 
         private Action _onFirstWrite;
         private bool _firstWrite;
@@ -39,6 +40,7 @@ namespace Microsoft.AspNet.TestHost
             _bufferedData = new ConcurrentQueue<byte[]>();
             _readWaitingForData = new TaskCompletionSource<object>();
             _signalReadLock = new object();
+            _requestAbortedSource = new CancellationTokenSource();
         }
 
         public override bool CanRead
@@ -81,9 +83,15 @@ namespace Microsoft.AspNet.TestHost
 
         #endregion NotSupported
 
+        internal CancellationToken RequestAborted
+        {
+            get { return _requestAbortedSource.Token; }
+        }
+
+
         public override void Flush()
         {
-            CheckDisposed();
+            CheckResponding();
 
             _writeLock.Wait();
             try
@@ -130,7 +138,7 @@ namespace Microsoft.AspNet.TestHost
                         byte[] topBuffer = null;
                         while (!_bufferedData.TryDequeue(out topBuffer))
                         {
-                            if (_disposed)
+                            if (_responseFinished)
                             {
                                 CheckAborted();
                                 // Graceful close
@@ -189,7 +197,7 @@ namespace Microsoft.AspNet.TestHost
                         byte[] topBuffer = null;
                         while (!_bufferedData.TryDequeue(out topBuffer))
                         {
-                            if (_disposed)
+                            if (_responseFinished)
                             {
                                 CheckAborted();
                                 // Graceful close
@@ -233,7 +241,7 @@ namespace Microsoft.AspNet.TestHost
         public override void Write(byte[] buffer, int offset, int count)
         {
             VerifyBuffer(buffer, offset, count, allowEmpty: true);
-            CheckDisposed();
+            CheckResponding();
 
             _writeLock.Wait();
             try
@@ -317,7 +325,7 @@ namespace Microsoft.AspNet.TestHost
             {
                 _readWaitingForData = new TaskCompletionSource<object>();
 
-                if (!_bufferedData.IsEmpty || _disposed)
+                if (!_bufferedData.IsEmpty || _responseFinished)
                 {
                     // Race, data could have arrived before we created the TCS.
                     _readWaitingForData.TrySetResult(null);
@@ -337,7 +345,18 @@ namespace Microsoft.AspNet.TestHost
             Contract.Requires(innerException != null);
             _aborted = true;
             _abortException = innerException;
-            Dispose();
+            Complete();
+        }
+
+        internal void Complete()
+        {
+            // Prevent race with WaitForDataAsync
+            lock (_signalReadLock)
+            {
+                // Throw for further writes, but not reads.  Allow reads to drain the buffered data and then return 0 for further reads.
+                _responseFinished = true;
+                _readWaitingForData.TrySetResult(null);
+            }
         }
 
         private void CheckAborted()
@@ -354,23 +373,19 @@ namespace Microsoft.AspNet.TestHost
         {
             if (disposing)
             {
-                // Prevent race with WaitForDataAsync
-                lock (_signalReadLock)
+                if (!_responseFinished)
                 {
-                    // Throw for further writes, but not reads.  Allow reads to drain the buffered data and then return 0 for further reads.
-                    _disposed = true;
-                    _readWaitingForData.TrySetResult(null);
+                    _requestAbortedSource.Cancel();
                 }
             }
-
             base.Dispose(disposing);
         }
 
-        private void CheckDisposed()
+        private void CheckResponding()
         {
-            if (_disposed)
+            if (_responseFinished)
             {
-                throw new ObjectDisposedException(GetType().FullName);
+                throw new InvalidOperationException(GetType().FullName);
             }
         }
     }

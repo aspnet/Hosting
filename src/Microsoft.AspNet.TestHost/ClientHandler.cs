@@ -71,7 +71,7 @@ namespace Microsoft.AspNet.TestHost
                     try
                     {
                         await _next(state.FeatureCollection);
-                        state.CompleteResponse();
+                        state.Complete();
                     }
                     catch (Exception ex)
                     {
@@ -80,14 +80,13 @@ namespace Microsoft.AspNet.TestHost
                     finally
                     {
                         registration.Dispose();
-                        state.Dispose();
                     }
                 });
 
             return await state.ResponseTask;
         }
 
-        private class RequestState : IDisposable
+        private class RequestState
         {
             private readonly HttpRequestMessage _request;
             private TaskCompletionSource<HttpResponseMessage> _responseTcs;
@@ -150,6 +149,7 @@ namespace Microsoft.AspNet.TestHost
                 _responseStream = new ResponseStream(CompleteResponse);
                 HttpContext.Response.Body = _responseStream;
                 HttpContext.Response.StatusCode = 200;
+                HttpContext.RequestAborted = _responseStream.RequestAborted;
             }
 
             public HttpContext HttpContext { get; private set; }
@@ -159,6 +159,12 @@ namespace Microsoft.AspNet.TestHost
             public Task<HttpResponseMessage> ResponseTask
             {
                 get { return _responseTcs.Task; }
+            }
+
+            internal void Complete()
+            {
+                CompleteResponse();
+                _responseStream.Complete();
             }
 
             internal void CompleteResponse()
@@ -206,12 +212,6 @@ namespace Microsoft.AspNet.TestHost
             {
                 _responseStream.Abort(exception);
                 _responseTcs.TrySetException(exception);
-            }
-
-            public void Dispose()
-            {
-                _responseStream.Dispose();
-                // Do not dispose the request, that will be disposed by the caller.
             }
         }
     }

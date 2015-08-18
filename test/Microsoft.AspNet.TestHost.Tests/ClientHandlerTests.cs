@@ -158,32 +158,6 @@ namespace Microsoft.AspNet.TestHost
         }
 
         [Fact]
-        public async Task ClientDisposalCloses()
-        {
-            ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(env =>
-            {
-                var context = new DefaultHttpContext((IFeatureCollection)env);
-                context.Response.Headers["TestHeader"] = "TestValue";
-                context.Response.Body.Flush();
-                block.WaitOne();
-                return Task.FromResult(0);
-            }, PathString.Empty);
-            var httpClient = new HttpClient(handler);
-            HttpResponseMessage response = await httpClient.GetAsync("https://example.com/",
-                HttpCompletionOption.ResponseHeadersRead);
-            Assert.Equal("TestValue", response.Headers.GetValues("TestHeader").First());
-            Stream responseStream = await response.Content.ReadAsStreamAsync();
-            Task<int> readTask = responseStream.ReadAsync(new byte[100], 0, 100);
-            Assert.False(readTask.IsCompleted);
-            responseStream.Dispose();
-            Thread.Sleep(50);
-            Assert.True(readTask.IsCompleted);
-            Assert.Equal(0, readTask.Result);
-            block.Set();
-        }
-
-        [Fact]
         public async Task ClientCancellationAborts()
         {
             ManualResetEvent block = new ManualResetEvent(false);
