@@ -132,14 +132,11 @@ namespace Microsoft.AspNet.TestHost
             var client = server.CreateClient();
             var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:12345");
             var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-            var stream = await response.Content.ReadAsStreamAsync();
-            var reader = new StreamReader(stream);
             // Abort Request
             response.Dispose();
 
             // Assert
-            var exception = await Assert.ThrowsAsync<IOException>(async () => await reader.ReadToEndAsync());
-            Assert.IsType<OperationCanceledException>(exception.InnerException);
+            var exception = await Assert.ThrowsAsync<OperationCanceledException>(response.PipelineCompleteAsync);
         }
     }
 }
