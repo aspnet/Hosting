@@ -1,14 +1,14 @@
 {
-    "version": "1.0.0-beta6",
+    "version": "1.0.0-*",
     "description": "ASP.NET 5 helpers to deploy applications to IIS Express, IIS, WebListener and Kestrel for testing.",
     "repository": {
         "type": "git",
         "url": "git://github.com/aspnet/hosting"
     },
     "dependencies": {
-        "Microsoft.AspNet.Testing": "1.0.0-beta6",
-        "Microsoft.Framework.Logging.Abstractions": "1.0.0-beta6",
-        "Microsoft.Framework.Runtime.Abstractions": "1.0.0-beta6"
+        "Microsoft.AspNet.Testing": "1.0.0-*",
+        "Microsoft.Framework.Logging.Abstractions": "1.0.0-*",
+        "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-*"
     },
     "frameworks": {
         "dnx451": {
@@ -22,14 +22,14 @@
         },
         "dnxcore50": {
             "dependencies": {
-                "System.Diagnostics.Process": "4.0.0-beta-23109",
-                "System.IO.FileSystem": "4.0.0-beta-23109",
-                "System.Net.Http": "4.0.0-beta-23109",
-                "System.Net.Primitives": "4.0.10-beta-23109",
-                "System.Runtime.Extensions": "4.0.10-beta-23109",
-                "System.Text.RegularExpressions": "4.0.10-beta-23109",
-                "System.Threading": "4.0.10-beta-23109",
-                "System.Threading.Thread": "4.0.0-beta-23109"
+                "System.Diagnostics.Process": "4.0.0-beta-*",
+                "System.IO.FileSystem": "4.0.1-beta-*",
+                "System.Net.Http": "4.0.1-beta-*",
+                "System.Net.Primitives": "4.0.11-beta-*",
+                "System.Runtime.Extensions": "4.0.11-beta-*",
+                "System.Text.RegularExpressions": "4.0.11-beta-*",
+                "System.Threading": "4.0.11-beta-*",
+                "System.Threading.Thread": "4.0.0-*"
             }
         }
     }
