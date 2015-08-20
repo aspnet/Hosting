@@ -63,40 +63,45 @@ namespace Microsoft.AspNet.TestHost
                 body.Seek(0, SeekOrigin.Begin);
             }
             state.HttpContext.Request.Body = body;
-            var registration = cancellationToken.Register(state.Abort);
+            var registration = cancellationToken.Register(state.AbortRequest);
 
             // Async offload, don't let the test code block the caller.
-            var offload = Task.Factory.StartNew(async () =>
+            var offload = Task.Factory.StartNew((Func<Task>)(async () =>
                 {
                     try
                     {
                         await _next(state.FeatureCollection);
-                        state.Complete();
+                        state.PipelineComplete();
                     }
                     catch (Exception ex)
                     {
-                        state.Abort(ex);
+                        state.PipelineFailed(ex);
                     }
                     finally
                     {
                         registration.Dispose();
                     }
-                });
+                }));
 
             return await state.ResponseTask;
         }
 
-        private class RequestState
+        internal class RequestState
         {
             private readonly HttpRequestMessage _request;
             private TaskCompletionSource<HttpResponseMessage> _responseTcs;
+            private TaskCompletionSource<object> _pipelineTcs;
             private ResponseStream _responseStream;
             private ResponseFeature _responseFeature;
+            private CancellationTokenSource _requestAbortedSource;
+            private bool _pipelineFinished;
 
             internal RequestState(HttpRequestMessage request, PathString pathBase, CancellationToken cancellationToken)
             {
                 _request = request;
                 _responseTcs = new TaskCompletionSource<HttpResponseMessage>();
+                _pipelineTcs = new TaskCompletionSource<object>();
+                _requestAbortedSource = new CancellationTokenSource();
 
                 if (request.RequestUri.IsDefaultPort)
                 {
@@ -146,10 +151,10 @@ namespace Microsoft.AspNet.TestHost
                     }
                 }
 
-                _responseStream = new ResponseStream(CompleteResponse);
+                _responseStream = new ResponseStream(ReturnResponseMessage, AbortRequest);
                 HttpContext.Response.Body = _responseStream;
                 HttpContext.Response.StatusCode = 200;
-                HttpContext.RequestAborted = _responseStream.RequestAborted;
+                HttpContext.RequestAborted = _requestAbortedSource.Token;
             }
 
             public HttpContext HttpContext { get; private set; }
@@ -161,13 +166,33 @@ namespace Microsoft.AspNet.TestHost
                 get { return _responseTcs.Task; }
             }
 
-            internal void Complete()
+            public Task PipelineTask
             {
-                CompleteResponse();
+                get { return _pipelineTcs.Task; }
+            }
+
+            public CancellationToken RequestAborted
+            {
+                get { return _requestAbortedSource.Token; }
+            }
+
+            public void AbortRequest()
+            {
+                if (!_pipelineFinished)
+                {
+                    _requestAbortedSource.Cancel();
+                }
                 _responseStream.Complete();
             }
 
-            internal void CompleteResponse()
+            internal void PipelineComplete()
+            {
+                ReturnResponseMessage();
+                _responseStream.Complete();
+                _pipelineTcs.SetResult(null);
+            }
+
+            internal void ReturnResponseMessage()
             {
                 if (!_responseTcs.Task.IsCompleted)
                 {
@@ -184,7 +209,7 @@ namespace Microsoft.AspNet.TestHost
             {
                 _responseFeature.FireOnSendingHeaders();
 
-                var response = new HttpResponseMessage();
+                var response = new ResponseMessage(this);
                 response.StatusCode = (HttpStatusCode)HttpContext.Response.StatusCode;
                 response.ReasonPhrase = HttpContext.GetFeature<IHttpResponseFeature>().ReasonPhrase;
                 response.RequestMessage = _request;
@@ -203,15 +228,11 @@ namespace Microsoft.AspNet.TestHost
                 return response;
             }
 
-            internal void Abort()
-            {
-                Abort(new OperationCanceledException());
-            }
-
-            internal void Abort(Exception exception)
+            internal void PipelineFailed(Exception exception)
             {
                 _responseStream.Abort(exception);
                 _responseTcs.TrySetException(exception);
+                _pipelineTcs.SetException(exception);
             }
         }
     }
