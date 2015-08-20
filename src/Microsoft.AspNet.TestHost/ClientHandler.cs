@@ -101,6 +101,7 @@ namespace Microsoft.AspNet.TestHost
                 _responseTcs = new TaskCompletionSource<HttpResponseMessage>();
                 _pipelineTcs = new TaskCompletionSource<object>();
                 _requestAbortedSource = new CancellationTokenSource();
+                _pipelineFinished = false;
 
                 if (request.RequestUri.IsDefaultPort)
                 {
@@ -186,6 +187,7 @@ namespace Microsoft.AspNet.TestHost
 
             internal void PipelineComplete()
             {
+                _pipelineFinished = true;
                 ReturnResponseMessage();
                 _responseStream.Complete();
                 _pipelineTcs.SetResult(null);
@@ -229,6 +231,7 @@ namespace Microsoft.AspNet.TestHost
 
             internal void PipelineFailed(Exception exception)
             {
+                _pipelineFinished = true;
                 _responseStream.Abort(exception);
                 _responseTcs.TrySetException(exception);
                 _pipelineTcs.SetException(exception);
