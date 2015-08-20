@@ -65,7 +65,7 @@ namespace Microsoft.AspNet.TestHost
             var registration = cancellationToken.Register(state.AbortRequest);
 
             // Async offload, don't let the test code block the caller.
-            var offload = Task.Factory.StartNew((Func<Task>)(async () =>
+            var offload = Task.Factory.StartNew(async () =>
                 {
                     try
                     {
@@ -80,7 +80,7 @@ namespace Microsoft.AspNet.TestHost
                     {
                         registration.Dispose();
                     }
-                }));
+                });
 
             return await state.ResponseTask;
         }
