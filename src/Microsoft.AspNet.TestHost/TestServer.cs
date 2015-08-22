@@ -97,6 +97,11 @@ namespace Microsoft.AspNet.TestHost
             return new HttpClient(CreateHandler()) { BaseAddress = BaseAddress };
         }
 
+        public WebSocketClient CreateWebSocketClient()
+        {
+            return new WebSocketClient(this);
+        }
+
         /// <summary>
         /// Begins constructing a request message for submission.
         /// </summary>

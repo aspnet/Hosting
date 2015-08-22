@@ -86,10 +86,11 @@ namespace Microsoft.AspNet.TestHost
             return await state.ResponseTask;
         }
 
-        private class RequestState : IDisposable
+        internal class RequestState : IDisposable, IHttpUpgradeFeature
         {
             private readonly HttpRequestMessage _request;
             private TaskCompletionSource<HttpResponseMessage> _responseTcs;
+            private TaskCompletionSource<Stream> _upgradeTcs;
             private ResponseStream _responseStream;
             private ResponseFeature _responseFeature;
 
@@ -97,6 +98,7 @@ namespace Microsoft.AspNet.TestHost
             {
                 _request = request;
                 _responseTcs = new TaskCompletionSource<HttpResponseMessage>();
+                _upgradeTcs = new TaskCompletionSource<Stream>();
 
                 if (request.RequestUri.IsDefaultPort)
                 {
@@ -110,6 +112,7 @@ namespace Microsoft.AspNet.TestHost
                 FeatureCollection = new FeatureCollection();
                 HttpContext = new DefaultHttpContext(FeatureCollection);
                 HttpContext.SetFeature<IHttpRequestFeature>(new RequestFeature());
+                HttpContext.SetFeature<IHttpUpgradeFeature>(this);
                 _responseFeature = new ResponseFeature();
                 HttpContext.SetFeature<IHttpResponseFeature>(_responseFeature);
                 var serverRequest = HttpContext.Request;
@@ -177,7 +180,7 @@ namespace Microsoft.AspNet.TestHost
             {
                 _responseFeature.FireOnSendingHeaders();
 
-                var response = new HttpResponseMessage();
+                var response = new ResponseMessage(this);
                 response.StatusCode = (HttpStatusCode)HttpContext.Response.StatusCode;
                 response.ReasonPhrase = HttpContext.GetFeature<IHttpResponseFeature>().ReasonPhrase;
                 response.RequestMessage = _request;
@@ -211,6 +214,39 @@ namespace Microsoft.AspNet.TestHost
             {
                 _responseStream.Dispose();
                 // Do not dispose the request, that will be disposed by the caller.
+            }
+
+            bool IHttpUpgradeFeature.IsUpgradableRequest
+            {
+                get
+                {
+                    string[] values;
+                    if (HttpContext.Request.Headers.TryGetValue("Connection", out values))
+                    {
+                        return values.Any(value => value.IndexOf("Upgrade", StringComparison.OrdinalIgnoreCase) != -1);
+                    }
+                    return false;
+                }
+            }
+
+            async Task<Stream> IHttpUpgradeFeature.UpgradeAsync()
+            {
+                var streams = WebSocketStream.CreatePair();
+                _upgradeTcs.SetResult(streams.Item1);
+
+                HttpContext.Response.StatusCode = 101;
+                await _responseStream.FlushAsync();
+                _responseStream.Dispose();
+
+                return streams.Item2;
+            }
+
+            internal Task<Stream> UpgradeTask
+            {
+                get
+                {
+                    return _upgradeTcs.Task;
+                }
             }
         }
     }

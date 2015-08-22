@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
 using Xunit;
+using System.Threading;
+using System.Net.WebSockets;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -110,6 +112,36 @@ namespace Microsoft.AspNet.TestHost
 
             // Assert
             Assert.Equal("Hello world POST Response", await response.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task WebSocketWorks()
+        {
+            // Arrange
+            RequestDelegate appDelegate = async ctx =>
+            {
+                if (ctx.WebSockets.IsWebSocketRequest)
+                {
+                    var websocket = await ctx.WebSockets.AcceptWebSocketAsync();
+                    await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Normal Closure", CancellationToken.None);
+                }
+            };
+            var server = TestServer.Create(app =>
+            {
+                app.UseWebSockets();
+                app.Run(appDelegate);
+            });
+
+            // Act
+            var client = server.CreateWebSocketClient();
+            var clientSocket = await client.ConnectAsync(new System.Uri("http://localhost"), CancellationToken.None);
+            byte[] buffer = new byte[0];
+            var msg = await clientSocket.ReceiveAsync(new System.ArraySegment<byte>(buffer), CancellationToken.None);
+            await clientSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Normal Closure", CancellationToken.None);
+
+            // Assert
+            Assert.Equal(WebSocketMessageType.Close, msg.MessageType);
+            Assert.Equal(WebSocketState.Closed, clientSocket.State);
         }
     }
 }
