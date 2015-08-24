@@ -85,7 +85,7 @@ namespace Microsoft.AspNet.TestHost
             return await state.ResponseTask;
         }
 
-        internal class RequestState
+        private class RequestState
         {
             private readonly HttpRequestMessage _request;
             private TaskCompletionSource<HttpResponseMessage> _responseTcs;
