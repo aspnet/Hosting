@@ -89,7 +89,6 @@ namespace Microsoft.AspNet.TestHost
         {
             private readonly HttpRequestMessage _request;
             private TaskCompletionSource<HttpResponseMessage> _responseTcs;
-            private TaskCompletionSource<object> _pipelineTcs;
             private ResponseStream _responseStream;
             private ResponseFeature _responseFeature;
             private CancellationTokenSource _requestAbortedSource;
@@ -99,7 +98,6 @@ namespace Microsoft.AspNet.TestHost
             {
                 _request = request;
                 _responseTcs = new TaskCompletionSource<HttpResponseMessage>();
-                _pipelineTcs = new TaskCompletionSource<object>();
                 _requestAbortedSource = new CancellationTokenSource();
                 _pipelineFinished = false;
 
@@ -166,11 +164,6 @@ namespace Microsoft.AspNet.TestHost
                 get { return _responseTcs.Task; }
             }
 
-            public Task PipelineTask
-            {
-                get { return _pipelineTcs.Task; }
-            }
-
             public CancellationToken RequestAborted
             {
                 get { return _requestAbortedSource.Token; }
@@ -190,7 +183,6 @@ namespace Microsoft.AspNet.TestHost
                 _pipelineFinished = true;
                 ReturnResponseMessage();
                 _responseStream.Complete();
-                _pipelineTcs.SetResult(null);
             }
 
             internal void ReturnResponseMessage()
@@ -206,7 +198,7 @@ namespace Microsoft.AspNet.TestHost
 
             [SuppressMessage("Microsoft.Reliability", "CA2000:DisposeObjectsBeforeLosingScope",
                 Justification = "HttpResposneMessage must be returned to the caller.")]
-            internal HttpResponseMessage GenerateResponse()
+            private HttpResponseMessage GenerateResponse()
             {
                 _responseFeature.FireOnSendingHeaders();
 
@@ -234,7 +226,6 @@ namespace Microsoft.AspNet.TestHost
                 _pipelineFinished = true;
                 _responseStream.Abort(exception);
                 _responseTcs.TrySetException(exception);
-                _pipelineTcs.SetException(exception);
             }
         }
     }
