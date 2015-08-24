@@ -43,7 +43,7 @@ namespace Microsoft.AspNet.TestHost
         [Fact]
         public async Task RequestServicesAutoCreated()
         {
-            TestServer server = TestServer.Create(app =>
+            var server = TestServer.Create(app =>
             {
                 app.Run(context =>
                 {
@@ -53,6 +53,33 @@ namespace Microsoft.AspNet.TestHost
 
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("RequestServices:True", result);
+        }
+
+        public class CustomContainerStartup
+        {
+            public IServiceProvider Services;
+            public IServiceProvider ConfigureServices(IServiceCollection services)
+            {
+                Services = services.BuildServiceProvider();
+                return Services;
+            }
+
+            public void Configure(IApplicationBuilder app)
+            {
+                app.Run(async context =>
+                {
+                    await context.Response.WriteAsync("ApplicationServicesEqual:" + (context.ApplicationServices == Services));
+                });
+            }
+
+        }
+
+        [Fact]
+        public async Task CustomServiceProviderReplacesApplicationServices()
+        {
+            var server = new TestServer(TestServer.CreateBuilder().UseStartup<CustomContainerStartup>());
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("ApplicationServicesEqual:True", result);
         }
 
         public class TestService { }
