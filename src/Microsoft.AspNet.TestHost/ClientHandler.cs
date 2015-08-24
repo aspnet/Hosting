@@ -210,7 +210,7 @@ namespace Microsoft.AspNet.TestHost
             {
                 _responseFeature.FireOnSendingHeaders();
 
-                var response = new ResponseMessage(this);
+                var response = new HttpResponseMessage();
                 response.StatusCode = (HttpStatusCode)HttpContext.Response.StatusCode;
                 response.ReasonPhrase = HttpContext.GetFeature<IHttpResponseFeature>().ReasonPhrase;
                 response.RequestMessage = _request;

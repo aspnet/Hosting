@@ -118,13 +118,21 @@ namespace Microsoft.AspNet.TestHost
         public async Task ClientDisposalAbortsRequest()
         {
             // Arrange
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
             RequestDelegate appDelegate = async ctx =>
             {
                 // Write Headers
                 await ctx.Response.Body.FlushAsync();
 
                 var sem = new SemaphoreSlim(0);
-                await sem.WaitAsync(ctx.RequestAborted);
+                try
+                {
+                    await sem.WaitAsync(ctx.RequestAborted);
+                }
+                catch(Exception e)
+                {
+                    tcs.SetException(e);
+                }
             };
 
             // Act
@@ -136,7 +144,7 @@ namespace Microsoft.AspNet.TestHost
             response.Dispose();
 
             // Assert
-            var exception = await Assert.ThrowsAsync<OperationCanceledException>(response.PipelineCompleteAsync);
+            var exception = await Assert.ThrowsAsync<OperationCanceledException>(async () => await tcs.Task);
         }
     }
 }
