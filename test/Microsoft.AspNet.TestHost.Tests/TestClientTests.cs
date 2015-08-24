@@ -128,7 +128,6 @@ namespace Microsoft.AspNet.TestHost
             };
             var server = TestServer.Create(app =>
             {
-                app.UseWebSockets();
                 app.Run(appDelegate);
             });
 
