@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.AspNet.TestHost
 {
-    class WebSocket : System.Net.WebSockets.WebSocket
+    internal class TestWebSocket : System.Net.WebSockets.WebSocket
     {
         private ReceiverSenderBuffer _receiveBuffer;
         private ReceiverSenderBuffer _sendBuffer;
@@ -20,12 +20,12 @@ namespace Microsoft.AspNet.TestHost
         private string _closeStatusDescription;
         private Message _receiveMessage;
 
-        public static Tuple<WebSocket, WebSocket> CreatePair(string subProtocol)
+        public static Tuple<TestWebSocket, TestWebSocket> CreatePair(string subProtocol)
         {
             var buffers = new[] { new ReceiverSenderBuffer(), new ReceiverSenderBuffer() };
             return Tuple.Create(
-                new WebSocket(subProtocol, buffers[0], buffers[1]),
-                new WebSocket(subProtocol, buffers[1], buffers[0]));
+                new TestWebSocket(subProtocol, buffers[0], buffers[1]),
+                new TestWebSocket(subProtocol, buffers[1], buffers[0]));
         }
 
         public override WebSocketCloseStatus? CloseStatus
@@ -48,16 +48,6 @@ namespace Microsoft.AspNet.TestHost
             get { return _subProtocol; }
         }
 
-        public override void Abort()
-        {
-            if (_state >= WebSocketState.Closed) // or Aborted
-            {
-                return;
-            }
-
-            _state = WebSocketState.Aborted;
-        }
-
         public async override Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -71,7 +61,7 @@ namespace Microsoft.AspNet.TestHost
             if (State == WebSocketState.CloseSent)
             {
                 // Do a receiving drain
-                byte[] data = new byte[1024];
+                var data = new byte[1024];
                 WebSocketReceiveResult result;
                 do
                 {
@@ -96,7 +86,19 @@ namespace Microsoft.AspNet.TestHost
             else if (State == WebSocketState.CloseReceived)
             {
                 _state = WebSocketState.Closed;
+                Close();
             }
+        }
+
+        public override void Abort()
+        {
+            if (_state >= WebSocketState.Closed) // or Aborted
+            {
+                return;
+            }
+
+            _state = WebSocketState.Aborted;
+            Close();
         }
 
         public override void Dispose()
@@ -107,8 +109,7 @@ namespace Microsoft.AspNet.TestHost
             }
 
             _state = WebSocketState.Closed;
-            _receiveBuffer.SetReceiverClosed();
-            _sendBuffer.SetSenderClosed();
+            Close();
         }
 
         public override async Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken cancellationToken)
@@ -128,7 +129,7 @@ namespace Microsoft.AspNet.TestHost
             {
                 _closeStatus = receiveMessage.CloseStatus;
                 _closeStatusDescription = receiveMessage.CloseStatusDescription ?? string.Empty;
-                WebSocketReceiveResult result = new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, _closeStatus, _closeStatusDescription);
+                var result = new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, _closeStatus, _closeStatusDescription);
                 if (_state == WebSocketState.Open)
                 {
                     _state = WebSocketState.CloseReceived;
@@ -136,6 +137,7 @@ namespace Microsoft.AspNet.TestHost
                 else if (_state == WebSocketState.CloseSent)
                 {
                     _state = WebSocketState.Closed;
+                    Close();
                 }
                 return result;
             }
@@ -149,7 +151,7 @@ namespace Microsoft.AspNet.TestHost
                     receiveMessage.Buffer = new ArraySegment<byte>(receiveMessage.Buffer.Array, receiveMessage.Buffer.Offset + count, receiveMessage.Buffer.Count - count);
                     _receiveMessage = receiveMessage;
                 }
-                endOfMessage = endOfMessage || receiveMessage.EndOfMessage;
+                endOfMessage = endOfMessage && receiveMessage.EndOfMessage;
                 return new WebSocketReceiveResult(count, receiveMessage.MessageType, endOfMessage);
             }
         }
@@ -166,11 +168,18 @@ namespace Microsoft.AspNet.TestHost
             var message = new Message(buffer, messageType, endOfMessage, cancellationToken);
             return _sendBuffer.SendAsync(message, cancellationToken);
         }
+
+        private void Close()
+        {
+            _receiveBuffer.SetReceiverClosed();
+            _sendBuffer.SetSenderClosed();
+        }
+
         private void ThrowIfDisposed()
         {
             if (_state >= WebSocketState.Closed) // or Aborted
             {
-                throw new ObjectDisposedException(typeof(WebSocket).FullName);
+                throw new ObjectDisposedException(typeof(TestWebSocket).FullName);
             }
         }
 
@@ -206,7 +215,7 @@ namespace Microsoft.AspNet.TestHost
             }
         }
 
-        private WebSocket(string subProtocol, ReceiverSenderBuffer readBuffer, ReceiverSenderBuffer writeBuffer)
+        private TestWebSocket(string subProtocol, ReceiverSenderBuffer readBuffer, ReceiverSenderBuffer writeBuffer)
         {
             _state = WebSocketState.Open;
             _subProtocol = subProtocol;
@@ -251,7 +260,7 @@ namespace Microsoft.AspNet.TestHost
             
             public ReceiverSenderBuffer()
             {
-                _sem = new SemaphoreSlim(0, 1);
+                _sem = new SemaphoreSlim(0);
                 _messageQueue = new Queue<Message>();
             }
 
@@ -280,15 +289,15 @@ namespace Microsoft.AspNet.TestHost
                 {
                     if (_senderClosed)
                     {
-                        throw new ObjectDisposedException(typeof(WebSocket).FullName);
+                        throw new ObjectDisposedException(typeof(TestWebSocket).FullName);
                     }
                     if (_receiverClosed)
                     {
-                        throw new IOException("The remote end closed the connection.", new ObjectDisposedException(typeof(WebSocket).FullName));
+                        throw new IOException("The remote end closed the connection.", new ObjectDisposedException(typeof(TestWebSocket).FullName));
                     }
 
                     // we return immediately so we need to copy the buffer since the sender can re-use it
-                    byte[] array = new byte[message.Buffer.Count];
+                    var array = new byte[message.Buffer.Count];
                     Array.Copy(message.Buffer.Array, message.Buffer.Offset, array, 0, message.Buffer.Count);
                     message.Buffer = new ArraySegment<byte>(array);
 
@@ -306,7 +315,10 @@ namespace Microsoft.AspNet.TestHost
                     if (!_receiverClosed)
                     {
                         _receiverClosed = true;
-                        _sem.Release();
+                        if (!_disposed)
+                        {
+                            _sem.Release();
+                        }
                     }
                 }
             }
@@ -318,7 +330,10 @@ namespace Microsoft.AspNet.TestHost
                     if (!_senderClosed)
                     {
                         _senderClosed = true;
-                        _sem.Release();
+                        if (!_disposed)
+                        {
+                            _sem.Release();
+                        }
                     }
                 }
             }
@@ -327,11 +342,11 @@ namespace Microsoft.AspNet.TestHost
             {
                 if (_receiverClosed)
                 {
-                    throw new ObjectDisposedException(typeof(WebSocket).FullName);
+                    throw new ObjectDisposedException(typeof(TestWebSocket).FullName);
                 }
                 else // _senderClosed
                 {
-                    throw new IOException("The remote end closed the connection.", new ObjectDisposedException(typeof(WebSocket).FullName));
+                    throw new IOException("The remote end closed the connection.", new ObjectDisposedException(typeof(TestWebSocket).FullName));
                 }
             }
         }

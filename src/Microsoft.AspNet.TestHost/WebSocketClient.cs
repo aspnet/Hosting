@@ -4,15 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net.Http;
 using System.Security.Cryptography;
 using Microsoft.Framework.Internal;
 using Microsoft.AspNet.Http.Features;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Internal;
+using System.Net.WebSockets;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -41,7 +40,7 @@ namespace Microsoft.AspNet.TestHost
             private set;
         }
 
-        public Action<HttpRequestMessage> ConfigureRequest
+        public Action<HttpRequest> ConfigureRequest
         {
             get;
             set;
@@ -49,22 +48,12 @@ namespace Microsoft.AspNet.TestHost
 
         public async Task<System.Net.WebSockets.WebSocket> ConnectAsync(Uri uri, CancellationToken cancellationToken)
         {
-            // clientRequest
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.Add("Connection", "Upgrade");
-            request.Headers.Add("Upgrade", "websocket");
-            request.Headers.Add("Sec-WebSocket-Version", "13");
-            request.Headers.Add("Sec-WebSocket-Key", CreateRequestKey());
-            if (SubProtocols.Count > 0)
-            {
-                request.Headers.Add("SecWebSocketProtocol", string.Join(", ", SubProtocols));
-            }
+            var state = new RequestState(uri, _pathBase, cancellationToken);
+
             if (ConfigureRequest != null)
             {
-                ConfigureRequest(request);
+                ConfigureRequest(state.HttpContext.Request);
             }
-
-            var state = new RequestState(request, _pathBase, cancellationToken);
 
             // Async offload, don't let the test code block the caller.
             var offload = Task.Factory.StartNew(async () =>
@@ -78,76 +67,94 @@ namespace Microsoft.AspNet.TestHost
                 {
                     state.PipelineFailed(ex);
                 }
+                finally
+                {
+                    state.Dispose();
+                }
             });
 
             return await state.WebSocketTask;
         }
 
-        private class RequestState : IHttpWebSocketFeature
+        private class RequestState : IDisposable, IHttpWebSocketFeature
         {
+            private TaskCompletionSource<System.Net.WebSockets.WebSocket> _clientWebSocketTcs;
+            private WebSocket _serverWebSocket;
+
             public IFeatureCollection FeatureCollection { get; private set; }
-            public Task<System.Net.WebSockets.WebSocket> WebSocketTask { get { return _websocketTcs.Task; } }
+            public HttpContext HttpContext { get; private set; }
+            public Task<System.Net.WebSockets.WebSocket> WebSocketTask { get { return _clientWebSocketTcs.Task; } }
 
-            private TaskCompletionSource<System.Net.WebSockets.WebSocket> _websocketTcs;
-
-            public RequestState(HttpRequestMessage clientRequest, PathString pathBase, CancellationToken cancellationToken)
+            public RequestState(Uri uri, PathString pathBase, CancellationToken cancellationToken)
             {
-                _websocketTcs = new TaskCompletionSource<System.Net.WebSockets.WebSocket>();
+                _clientWebSocketTcs = new TaskCompletionSource<System.Net.WebSockets.WebSocket>();
 
                 // HttpContext
                 FeatureCollection = new FeatureCollection();
-                var httpContext = new DefaultHttpContext(FeatureCollection);
+                HttpContext = new DefaultHttpContext(FeatureCollection);
 
                 // Request
-                httpContext.SetFeature<IHttpRequestFeature>(new RequestFeature());
-                var serverRequest = httpContext.Request;
-                serverRequest.Protocol = "HTTP/" + clientRequest.Version.ToString(2);
-                serverRequest.Scheme = clientRequest.RequestUri.Scheme;
-                serverRequest.Method = clientRequest.Method.ToString();
-                var fullPath = PathString.FromUriComponent(clientRequest.RequestUri);
+                HttpContext.SetFeature<IHttpRequestFeature>(new RequestFeature());
+                var request = HttpContext.Request;
+                request.Protocol = "HTTP/1.1";
+                var scheme = uri.Scheme;
+                scheme = (scheme == "ws") ? "http" : scheme;
+                scheme = (scheme == "wss") ? "https" : scheme;
+                request.Scheme = scheme;
+                request.Method = "GET";
+                var fullPath = PathString.FromUriComponent(uri);
                 PathString remainder;
                 if (fullPath.StartsWithSegments(pathBase, out remainder))
                 {
-                    serverRequest.PathBase = pathBase;
-                    serverRequest.Path = remainder;
+                    request.PathBase = pathBase;
+                    request.Path = remainder;
                 }
                 else
                 {
-                    serverRequest.PathBase = PathString.Empty;
-                    serverRequest.Path = fullPath;
+                    request.PathBase = PathString.Empty;
+                    request.Path = fullPath;
                 }
-                serverRequest.QueryString = QueryString.FromUriComponent(clientRequest.RequestUri);
-                foreach (var header in clientRequest.Headers)
-                {
-                    serverRequest.Headers.AppendValues(header.Key, header.Value.ToArray());
-                }
-                var requestContent = clientRequest.Content;
-                if (requestContent != null)
-                {
-                    foreach (var header in clientRequest.Content.Headers)
-                    {
-                        serverRequest.Headers.AppendValues(header.Key, header.Value.ToArray());
-                    }
-                }
-                serverRequest.Body = Stream.Null;
+                request.QueryString = QueryString.FromUriComponent(uri);
+                request.Headers.Add("Connection", new string[] { "Upgrade" });
+                request.Headers.Add("Upgrade", new string[] { "websocket" });
+                request.Headers.Add("Sec-WebSocket-Version", new string[] { "13" });
+                request.Headers.Add("Sec-WebSocket-Key", new string[] { CreateRequestKey() });
+                request.Body = Stream.Null;
 
                 // Response
-                httpContext.SetFeature<IHttpResponseFeature>(new ResponseFeature());
-                httpContext.Response.Body = Stream.Null;
-                httpContext.Response.StatusCode = 200;
+                HttpContext.SetFeature<IHttpResponseFeature>(new ResponseFeature());
+                var response = HttpContext.Response;
+                response.Body = Stream.Null;
+                response.StatusCode = 200;
 
                 // WebSocket
-                httpContext.SetFeature<IHttpWebSocketFeature>(this);
+                HttpContext.SetFeature<IHttpWebSocketFeature>(this);
             }
 
             public void PipelineComplete()
             {
-                PipelineFailed(null);
+                PipelineFailed(new InvalidOperationException("Incomplete handshake, status code: " + HttpContext.Response.StatusCode));
             }
 
             public void PipelineFailed(Exception ex)
             {
-                _websocketTcs.TrySetException(new InvalidOperationException("The websocket was not accepted.", ex));
+                _clientWebSocketTcs.TrySetException(new InvalidOperationException("The websocket was not accepted.", ex));
+            }
+
+            public void Dispose()
+            {
+                if (_serverWebSocket != null)
+                {
+                    _serverWebSocket.Dispose();
+                }
+            }
+
+            private string CreateRequestKey()
+            {
+                byte[] data = new byte[16];
+                var rng = RandomNumberGenerator.Create();
+                rng.GetBytes(data);
+                return Convert.ToBase64String(data);
             }
 
             bool IHttpWebSocketFeature.IsWebSocketRequest
@@ -158,20 +165,15 @@ namespace Microsoft.AspNet.TestHost
                 }
             }
 
-            Task<System.Net.WebSockets.WebSocket> IHttpWebSocketFeature.AcceptAsync(WebSocketAcceptContext context)
+            Task<WebSocket> IHttpWebSocketFeature.AcceptAsync(WebSocketAcceptContext context)
             {
-                var websockets = WebSocket.CreatePair(context.SubProtocol);
-                _websocketTcs.SetResult(websockets.Item1);
-                return Task.FromResult<System.Net.WebSockets.WebSocket>(websockets.Item2);
-            }
-        }
+                HttpContext.Response.StatusCode = 101; // Switching Protocols
 
-        private string CreateRequestKey()
-        {
-            byte[] data = new byte[16];
-            var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(data);
-            return Convert.ToBase64String(data);
+                var websockets = TestWebSocket.CreatePair(context.SubProtocol);
+                _clientWebSocketTcs.SetResult(websockets.Item1);
+                _serverWebSocket = websockets.Item2;
+                return Task.FromResult<WebSocket>(_serverWebSocket);
+            }
         }
     }
 }
