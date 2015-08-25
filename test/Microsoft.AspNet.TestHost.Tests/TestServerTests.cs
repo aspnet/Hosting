@@ -131,6 +131,29 @@ namespace Microsoft.AspNet.TestHost
             Assert.Equal("Found:True", result);
         }
 
+        public class EnsureApplicationServicesFilter : IStartupFilter
+        {
+            public Action<IApplicationBuilder> Configure(IApplicationBuilder app, Action<IApplicationBuilder> next)
+            {
+                return builder =>
+                {
+                    app.Run(context => {
+                        Assert.NotNull(context.ApplicationServices);
+                        return context.Response.WriteAsync("Done");
+                    });
+                };
+            }
+        }
+
+        [Fact]
+        public async Task ApplicationServicesShouldSetBeforeStatupFilters()
+        {
+            var server = TestServer.Create(app => { },
+                services => services.AddTransient<IStartupFilter, EnsureApplicationServicesFilter>());
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("Done", result);
+        }
+
 
         [Fact]
         public async Task CanAccessLogger()
