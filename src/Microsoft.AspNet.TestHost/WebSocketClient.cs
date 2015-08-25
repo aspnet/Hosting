@@ -4,14 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.WebSockets;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
-using Microsoft.Framework.Internal;
 using Microsoft.AspNet.Http.Features;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Internal;
-using System.Net.WebSockets;
+using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.TestHost
 {
