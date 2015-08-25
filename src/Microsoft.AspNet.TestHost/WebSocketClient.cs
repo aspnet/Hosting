@@ -46,7 +46,7 @@ namespace Microsoft.AspNet.TestHost
             set;
         }
 
-        public async Task<System.Net.WebSockets.WebSocket> ConnectAsync(Uri uri, CancellationToken cancellationToken)
+        public async Task<WebSocket> ConnectAsync(Uri uri, CancellationToken cancellationToken)
         {
             var state = new RequestState(uri, _pathBase, cancellationToken);
 
@@ -78,16 +78,16 @@ namespace Microsoft.AspNet.TestHost
 
         private class RequestState : IDisposable, IHttpWebSocketFeature
         {
-            private TaskCompletionSource<System.Net.WebSockets.WebSocket> _clientWebSocketTcs;
+            private TaskCompletionSource<WebSocket> _clientWebSocketTcs;
             private WebSocket _serverWebSocket;
 
             public IFeatureCollection FeatureCollection { get; private set; }
             public HttpContext HttpContext { get; private set; }
-            public Task<System.Net.WebSockets.WebSocket> WebSocketTask { get { return _clientWebSocketTcs.Task; } }
+            public Task<WebSocket> WebSocketTask { get { return _clientWebSocketTcs.Task; } }
 
             public RequestState(Uri uri, PathString pathBase, CancellationToken cancellationToken)
             {
-                _clientWebSocketTcs = new TaskCompletionSource<System.Net.WebSockets.WebSocket>();
+                _clientWebSocketTcs = new TaskCompletionSource<WebSocket>();
 
                 // HttpContext
                 FeatureCollection = new FeatureCollection();

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.AspNet.TestHost
 {
-    internal class TestWebSocket : System.Net.WebSockets.WebSocket
+    internal class TestWebSocket : WebSocket
     {
         private ReceiverSenderBuffer _receiveBuffer;
         private ReceiverSenderBuffer _sendBuffer;
