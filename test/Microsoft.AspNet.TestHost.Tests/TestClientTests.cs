@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
 using Xunit;
+using System.Threading;
+using System;
 
 namespace Microsoft.AspNet.TestHost
 {
@@ -110,6 +112,39 @@ namespace Microsoft.AspNet.TestHost
 
             // Assert
             Assert.Equal("Hello world POST Response", await response.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task ClientDisposalAbortsRequest()
+        {
+            // Arrange
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            RequestDelegate appDelegate = async ctx =>
+            {
+                // Write Headers
+                await ctx.Response.Body.FlushAsync();
+
+                var sem = new SemaphoreSlim(0);
+                try
+                {
+                    await sem.WaitAsync(ctx.RequestAborted);
+                }
+                catch(Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            };
+
+            // Act
+            var server = TestServer.Create(app => app.Run(appDelegate));
+            var client = server.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:12345");
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            // Abort Request
+            response.Dispose();
+
+            // Assert
+            var exception = await Assert.ThrowsAsync<OperationCanceledException>(async () => await tcs.Task);
         }
     }
 }

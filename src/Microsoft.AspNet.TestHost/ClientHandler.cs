@@ -63,7 +63,7 @@ namespace Microsoft.AspNet.TestHost
                 body.Seek(0, SeekOrigin.Begin);
             }
             state.HttpContext.Request.Body = body;
-            var registration = cancellationToken.Register(state.Abort);
+            var registration = cancellationToken.Register(state.AbortRequest);
 
             // Async offload, don't let the test code block the caller.
             var offload = Task.Factory.StartNew(async () =>
@@ -71,33 +71,36 @@ namespace Microsoft.AspNet.TestHost
                     try
                     {
                         await _next(state.FeatureCollection);
-                        state.CompleteResponse();
+                        state.PipelineComplete();
                     }
                     catch (Exception ex)
                     {
-                        state.Abort(ex);
+                        state.PipelineFailed(ex);
                     }
                     finally
                     {
                         registration.Dispose();
-                        state.Dispose();
                     }
                 });
 
             return await state.ResponseTask;
         }
 
-        private class RequestState : IDisposable
+        private class RequestState
         {
             private readonly HttpRequestMessage _request;
             private TaskCompletionSource<HttpResponseMessage> _responseTcs;
             private ResponseStream _responseStream;
             private ResponseFeature _responseFeature;
+            private CancellationTokenSource _requestAbortedSource;
+            private bool _pipelineFinished;
 
             internal RequestState(HttpRequestMessage request, PathString pathBase, CancellationToken cancellationToken)
             {
                 _request = request;
                 _responseTcs = new TaskCompletionSource<HttpResponseMessage>();
+                _requestAbortedSource = new CancellationTokenSource();
+                _pipelineFinished = false;
 
                 if (request.RequestUri.IsDefaultPort)
                 {
@@ -147,9 +150,10 @@ namespace Microsoft.AspNet.TestHost
                     }
                 }
 
-                _responseStream = new ResponseStream(CompleteResponse);
+                _responseStream = new ResponseStream(ReturnResponseMessage, AbortRequest);
                 HttpContext.Response.Body = _responseStream;
                 HttpContext.Response.StatusCode = 200;
+                HttpContext.RequestAborted = _requestAbortedSource.Token;
             }
 
             public HttpContext HttpContext { get; private set; }
@@ -161,7 +165,28 @@ namespace Microsoft.AspNet.TestHost
                 get { return _responseTcs.Task; }
             }
 
-            internal void CompleteResponse()
+            public CancellationToken RequestAborted
+            {
+                get { return _requestAbortedSource.Token; }
+            }
+
+            public void AbortRequest()
+            {
+                if (!_pipelineFinished)
+                {
+                    _requestAbortedSource.Cancel();
+                }
+                _responseStream.Complete();
+            }
+
+            internal void PipelineComplete()
+            {
+                _pipelineFinished = true;
+                ReturnResponseMessage();
+                _responseStream.Complete();
+            }
+
+            internal void ReturnResponseMessage()
             {
                 if (!_responseTcs.Task.IsCompleted)
                 {
@@ -174,7 +199,7 @@ namespace Microsoft.AspNet.TestHost
 
             [SuppressMessage("Microsoft.Reliability", "CA2000:DisposeObjectsBeforeLosingScope",
                 Justification = "HttpResposneMessage must be returned to the caller.")]
-            internal HttpResponseMessage GenerateResponse()
+            private HttpResponseMessage GenerateResponse()
             {
                 _responseFeature.FireOnSendingHeaders();
 
@@ -197,21 +222,11 @@ namespace Microsoft.AspNet.TestHost
                 return response;
             }
 
-            internal void Abort()
+            internal void PipelineFailed(Exception exception)
             {
-                Abort(new OperationCanceledException());
-            }
-
-            internal void Abort(Exception exception)
-            {
+                _pipelineFinished = true;
                 _responseStream.Abort(exception);
                 _responseTcs.TrySetException(exception);
-            }
-
-            public void Dispose()
-            {
-                _responseStream.Dispose();
-                // Do not dispose the request, that will be disposed by the caller.
             }
         }
     }
