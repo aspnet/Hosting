@@ -1,12 +1,12 @@
 {
     "dependencies": {
-        "Microsoft.AspNet.Hosting": "1.0.0-*",
-        "Microsoft.AspNet.Owin": "1.0.0-*",
-        "Microsoft.AspNet.Testing": "1.0.0-*",
-        "Microsoft.Framework.OptionsModel": "1.0.0-*",
-        "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-*",
+        "Microsoft.AspNet.Hosting": "1.0.0-beta7",
+        "Microsoft.AspNet.Owin": "1.0.0-beta7",
+        "Microsoft.AspNet.Testing": "1.0.0-beta7",
+        "Microsoft.Framework.OptionsModel": "1.0.0-beta7",
+        "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-beta7",
         "Moq": "4.2.1312.1622",
-        "xunit.runner.aspnet": "2.0.0-aspnet-*"
+        "xunit.runner.aspnet": "2.0.0-aspnet-beta7"
     },
     "frameworks": {
         "dnx451": {}
