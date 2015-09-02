@@ -169,7 +169,7 @@ namespace Microsoft.AspNet.TestHost
             var server = TestServer.Create(app => app.Run(appDelegate));
             var client = server.CreateClient();
             var cts = new CancellationTokenSource();
-            cts.Cancel();
+            cts.CancelAfter(500);
             var response = await client.GetAsync("http://localhost:12345", cts.Token);
 
             // Assert
