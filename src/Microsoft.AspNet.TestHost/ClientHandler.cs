@@ -70,11 +70,11 @@ namespace Microsoft.AspNet.TestHost
                     try
                     {
                         await _next(state.FeatureCollection);
-                        state.PipelineComplete();
+                        state.CompleteResponse();
                     }
                     catch (Exception ex)
                     {
-                        state.PipelineFailed(ex);
+                        state.Abort(ex);
                     }
                     finally
                     {
@@ -177,7 +177,7 @@ namespace Microsoft.AspNet.TestHost
                 _responseStream.Complete();
             }
 
-            internal void PipelineComplete()
+            internal void CompleteResponse()
             {
                 _pipelineFinished = true;
                 ReturnResponseMessage();
@@ -220,7 +220,7 @@ namespace Microsoft.AspNet.TestHost
                 return response;
             }
 
-            internal void PipelineFailed(Exception exception)
+            internal void Abort(Exception exception)
             {
                 _pipelineFinished = true;
                 _responseStream.Abort(exception);
