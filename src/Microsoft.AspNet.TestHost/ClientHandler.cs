@@ -53,7 +53,7 @@ namespace Microsoft.AspNet.TestHost
             [NotNull] HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            var state = new RequestState(request, _pathBase, cancellationToken);
+            var state = new RequestState(request, _pathBase);
             var requestContent = request.Content ?? new StreamContent(Stream.Null);
             var body = await requestContent.ReadAsStreamAsync();
             if (body.CanSeek)
@@ -94,7 +94,7 @@ namespace Microsoft.AspNet.TestHost
             private CancellationTokenSource _requestAbortedSource;
             private bool _pipelineFinished;
 
-            internal RequestState(HttpRequestMessage request, PathString pathBase, CancellationToken cancellationToken)
+            internal RequestState(HttpRequestMessage request, PathString pathBase)
             {
                 _request = request;
                 _responseTcs = new TaskCompletionSource<HttpResponseMessage>();
@@ -134,7 +134,6 @@ namespace Microsoft.AspNet.TestHost
                 }
 
                 serverRequest.QueryString = QueryString.FromUriComponent(request.RequestUri);
-                // TODO: serverRequest.CallCancelled = cancellationToken;
 
                 foreach (var header in request.Headers)
                 {
