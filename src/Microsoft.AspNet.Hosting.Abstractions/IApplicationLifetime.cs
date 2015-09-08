@@ -17,6 +17,11 @@ namespace Microsoft.AspNet.Hosting
         CancellationToken ApplicationStarted { get; }
 
         /// <summary>
+        /// Terminates the application
+        /// </summary>
+        void StopApplication();
+
+        /// <summary>
         /// Triggered when the application host is performing a graceful shutdown.
         /// Request may still be in flight. Shutdown will block until this event completes.
         /// </summary>

@@ -16,6 +16,7 @@ using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Internal;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.Runtime;
 
 namespace Microsoft.AspNet.Hosting.Internal
 {
@@ -41,12 +42,13 @@ namespace Microsoft.AspNet.Hosting.Internal
         public HostingEngine(
             [NotNull] IServiceCollection appServices, 
             [NotNull] IStartupLoader startupLoader, 
-            [NotNull] IConfiguration config)
+            [NotNull] IConfiguration config,
+            [NotNull] IApplicationShutdown applicationShutdown)
         {
             _config = config;
             _applicationServiceCollection = appServices;
             _startupLoader = startupLoader;
-            _applicationLifetime = new ApplicationLifetime();
+            _applicationLifetime = new ApplicationLifetime(applicationShutdown);
         }
 
         public IServiceProvider ApplicationServices

@@ -101,10 +101,11 @@ namespace Microsoft.AspNet.Hosting
 
             var appEnvironment = hostingContainer.GetRequiredService<IApplicationEnvironment>();
             var startupLoader = hostingContainer.GetRequiredService<IStartupLoader>();
+            var applicationShutdown = hostingContainer.GetRequiredService<IApplicationShutdown>();
 
             _hostingEnvironment.Initialize(appEnvironment.ApplicationBasePath, _config?[EnvironmentKey] ?? _config?[OldEnvironmentKey]);
 
-            var engine = new HostingEngine(hostingServices, startupLoader, _config);
+            var engine = new HostingEngine(hostingServices, startupLoader, _config, applicationShutdown);
 
             // Only one of these should be set, but they are used in priority
             engine.ServerFactory = _serverFactory;
