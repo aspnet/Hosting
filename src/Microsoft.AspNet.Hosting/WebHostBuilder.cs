@@ -12,7 +12,6 @@ using Microsoft.AspNet.Http.Internal;
 using Microsoft.Dnx.Runtime;
 using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Internal;
 using Microsoft.Framework.Logging;
 
 namespace Microsoft.AspNet.Hosting
@@ -44,13 +43,27 @@ namespace Microsoft.AspNet.Hosting
         private string _serverFactoryLocation;
         private IServerFactory _serverFactory;
 
-        public WebHostBuilder([NotNull] IServiceProvider services)
+        public WebHostBuilder(IServiceProvider services)
             : this(services, config: new ConfigurationBuilder().Build())
         {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
         }
 
-        public WebHostBuilder([NotNull] IServiceProvider services, [NotNull] IConfiguration config)
+        public WebHostBuilder(IServiceProvider services, IConfiguration config)
         {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             _hostingEnvironment = new HostingEnvironment();
             _loggerFactory = new LoggerFactory();
             _services = services;
@@ -124,14 +137,24 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public WebHostBuilder UseEnvironment([NotNull] string environment)
+        public WebHostBuilder UseEnvironment(string environment)
         {
+            if (environment == null)
+            {
+                throw new ArgumentNullException(nameof(environment));
+            }
+
             _hostingEnvironment.EnvironmentName = environment;
             return this;
         }
 
-        public WebHostBuilder UseServer([NotNull] string assemblyName)
+        public WebHostBuilder UseServer(string assemblyName)
         {
+            if (assemblyName == null)
+            {
+                throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             _serverFactoryLocation = assemblyName;
             return this;
         }
@@ -142,8 +165,13 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public WebHostBuilder UseStartup([NotNull] string startupAssemblyName)
+        public WebHostBuilder UseStartup(string startupAssemblyName)
         {
+            if (startupAssemblyName == null)
+            {
+                throw new ArgumentNullException(nameof(startupAssemblyName));
+            }
+
             if (startupAssemblyName == null)
             {
                 throw new ArgumentNullException(nameof(startupAssemblyName));
@@ -152,8 +180,13 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        public WebHostBuilder UseStartup([NotNull] Type startupType)
+        public WebHostBuilder UseStartup(Type startupType)
         {
+            if (startupType == null)
+            {
+                throw new ArgumentNullException(nameof(startupType));
+            }
+
             if (startupType == null)
             {
                 throw new ArgumentNullException(nameof(startupType));
@@ -167,19 +200,34 @@ namespace Microsoft.AspNet.Hosting
             return UseStartup(typeof(TStartup));
         }
 
-        public WebHostBuilder UseStartup([NotNull] Action<IApplicationBuilder> configureApp)
+        public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp)
         {
+            if (configureApp == null)
+            {
+                throw new ArgumentNullException(nameof(configureApp));
+            }
+
             return UseStartup(configureApp, configureServices: null);
         }
 
-        public WebHostBuilder UseStartup([NotNull] Action<IApplicationBuilder> configureApp, Func<IServiceCollection, IServiceProvider> configureServices)
+        public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp, Func<IServiceCollection, IServiceProvider> configureServices)
         {
+            if (configureApp == null)
+            {
+                throw new ArgumentNullException(nameof(configureApp));
+            }
+
             _startup = new StartupMethods(configureApp, configureServices);
             return this;
         }
 
-        public WebHostBuilder UseStartup([NotNull] Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
+        public WebHostBuilder UseStartup(Action<IApplicationBuilder> configureApp, Action<IServiceCollection> configureServices)
         {
+            if (configureApp == null)
+            {
+                throw new ArgumentNullException(nameof(configureApp));
+            }
+
             _startup = new StartupMethods(configureApp,
                 services =>
                 {
