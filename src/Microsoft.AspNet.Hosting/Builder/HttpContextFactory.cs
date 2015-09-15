@@ -20,7 +20,7 @@ namespace Microsoft.AspNet.Hosting.Builder
             DefaultHttpContext context;
             if (_contextPool.TryDequeue(out context))
             {
-                context.Reinitalize(CreateFeatureCollection(featureCollection));
+                context.Initalize(CreateFeatureCollection(featureCollection));
                 return context;
             }
             return new DefaultHttpContext(CreateFeatureCollection(featureCollection), PoolContext);

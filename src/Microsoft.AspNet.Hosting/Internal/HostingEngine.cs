@@ -71,7 +71,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                 async features =>
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
-                    httpContext.Response.RegisterForDispose(httpContext);
 
                     httpContext.ApplicationServices = _applicationServices;
                     var requestIdentifier = GetRequestIdentifier(httpContext);
@@ -82,6 +81,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                         await application(httpContext);
                     }
 
+                    return httpContext;
                 });
 
             _applicationLifetime.NotifyStarted();
