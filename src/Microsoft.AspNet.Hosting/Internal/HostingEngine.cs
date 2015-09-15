@@ -70,14 +70,16 @@ namespace Microsoft.AspNet.Hosting.Internal
             var server = ServerFactory.Start(_serverInstance,
                 async features =>
                 {
-                    var httpContext = contextFactory.CreateHttpContext(features);
-                    httpContext.ApplicationServices = _applicationServices;
-                    var requestIdentifier = GetRequestIdentifier(httpContext);
-
-                    using (logger.BeginScope("Request Id: {RequestId}", requestIdentifier))
+                    using (var httpContext = contextFactory.CreateHttpContext(features))
                     {
-                        contextAccessor.HttpContext = httpContext;
-                        await application(httpContext);
+                        httpContext.ApplicationServices = _applicationServices;
+                        var requestIdentifier = GetRequestIdentifier(httpContext);
+
+                        using (logger.BeginScope("Request Id: {RequestId}", requestIdentifier))
+                        {
+                            contextAccessor.HttpContext = httpContext;
+                            await application(httpContext);
+                        }
                     }
                 });
 
