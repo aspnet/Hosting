@@ -91,6 +91,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                 async features =>
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
+
                     httpContext.ApplicationServices = _applicationServices;
                     var requestIdentifier = GetRequestIdentifier(httpContext);
 
@@ -121,6 +122,8 @@ namespace Microsoft.AspNet.Hosting.Internal
                     {
                         telemetrySource.WriteTelemetry("Microsoft.AspNet.Hosting.EndRequest", new { httpContext = httpContext });
                     }
+
+                    return httpContext;
                 });
 
             _applicationLifetime.NotifyStarted();

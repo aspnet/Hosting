@@ -11,6 +11,6 @@ namespace Microsoft.AspNet.Hosting.Server
     public interface IServerFactory
     {
         IFeatureCollection Initialize(IConfiguration configuration);
-        IDisposable Start(IFeatureCollection serverFeatures, Func<IFeatureCollection, Task> application);
+        IDisposable Start(IFeatureCollection serverFeatures, Func<IFeatureCollection, Task<IDisposable>> application);
     }
 }
