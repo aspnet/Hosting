@@ -47,11 +47,8 @@ namespace Microsoft.AspNet.Hosting.Internal
 
         public void Dispose()
         {
-            if (_scope != null)
-            {
-                _scope.Dispose();
-                _scope = null;
-            }
+            _scope?.Dispose();
+            _scope = null;
             _requestServices = null;
         }
     }
