@@ -9,6 +9,7 @@ namespace Microsoft.AspNet.Hosting.Internal
 {
     public class RequestServicesFeature : IServiceProvidersFeature, IDisposable
     {
+        private IServiceProvider _appServices;
         private IServiceProvider _requestServices;
         private IServiceScope _scope;
         private bool _requestServicesSet;
@@ -23,7 +24,21 @@ namespace Microsoft.AspNet.Hosting.Internal
             ApplicationServices = applicationServices;
         }
 
-        public IServiceProvider ApplicationServices { get; set; }
+        public IServiceProvider ApplicationServices
+        {
+            get
+            {
+                return _appServices;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(ApplicationServices));
+                }
+                _appServices = value;
+            }
+        }
 
         public IServiceProvider RequestServices
         {

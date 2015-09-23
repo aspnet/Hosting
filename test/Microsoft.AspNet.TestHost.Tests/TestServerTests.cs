@@ -135,6 +135,22 @@ namespace Microsoft.AspNet.TestHost
             Assert.Equal("Found:True", result);
         }
 
+        [Fact]
+        public async Task SettingApplicationServicesOnFeatureToNullThrows()
+        {
+            var server = TestServer.Create(app =>
+            {
+                app.Run(context =>
+                {
+                    var feature = context.Features.Get<IServiceProvidersFeature>();
+                    Assert.Throws<ArgumentNullException>(() => feature.ApplicationServices = null);
+                    return context.Response.WriteAsync("Success");
+                });
+            });
+            string result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("Success", result);
+        }
+
         public class ReplaceServiceProvidersFeatureFilter : IStartupFilter, IServiceProvidersFeature
         {
             public ReplaceServiceProvidersFeatureFilter(IServiceProvider appServices, IServiceProvider requestServices)
