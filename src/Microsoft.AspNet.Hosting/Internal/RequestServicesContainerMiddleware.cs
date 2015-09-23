@@ -5,6 +5,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
+using Microsoft.AspNet.Http.Features;
+using Microsoft.AspNet.Http.Features.Internal;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting.Internal
@@ -13,20 +15,25 @@ namespace Microsoft.AspNet.Hosting.Internal
     {
         private readonly RequestDelegate _next;
         private readonly IServiceProvider _services;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public RequestServicesContainerMiddleware(RequestDelegate next, IServiceProvider services)
+        public RequestServicesContainerMiddleware(RequestDelegate next, IServiceProvider services, IServiceScopeFactory scopeFactory)
         {
             if (next == null)
             {
                 throw new ArgumentNullException(nameof(next));
             }
-
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
+            if (scopeFactory == null)
+            {
+                throw new ArgumentNullException(nameof(scopeFactory));
+            }
 
             _services = services;
+            _scopeFactory = scopeFactory;
             _next = next;
         }
 
@@ -37,32 +44,26 @@ namespace Microsoft.AspNet.Hosting.Internal
                 throw new ArgumentNullException(nameof(httpContext));
             }
 
-            // All done if there request services is set
-            if (httpContext.RequestServices != null)
+            var existingFeature = httpContext.Features.Get<IServiceProvidersFeature>();
+
+            // All done if request services is set
+            if (existingFeature?.RequestServices != null)
             {
                 await _next.Invoke(httpContext);
                 return;
             }
 
-            var priorApplicationServices = httpContext.ApplicationServices;
-            var serviceProvider = priorApplicationServices ?? _services;
-            var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-
-            try
+            using (var feature = new RequestServicesFeature(_services, _scopeFactory))
             {
-                // Creates the scope and temporarily swap services
-                using (var scope = scopeFactory.CreateScope())
+                try
                 {
-                    httpContext.ApplicationServices = serviceProvider;
-                    httpContext.RequestServices = scope.ServiceProvider;
-
+                    httpContext.Features.Set<IServiceProvidersFeature>(feature);
                     await _next.Invoke(httpContext);
                 }
-            }
-            finally
-            {
-                httpContext.RequestServices = null;
-                httpContext.ApplicationServices = priorApplicationServices;
+                finally
+                {
+                    httpContext.Features.Set(existingFeature);
+                }
             }
         }
     }
