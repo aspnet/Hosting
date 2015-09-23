@@ -15,9 +15,8 @@ namespace Microsoft.AspNet.Hosting.Internal
     {
         private readonly RequestDelegate _next;
         private readonly IServiceProvider _services;
-        private readonly IServiceScopeFactory _scopeFactory;
 
-        public RequestServicesContainerMiddleware(RequestDelegate next, IServiceProvider services, IServiceScopeFactory scopeFactory)
+        public RequestServicesContainerMiddleware(RequestDelegate next, IServiceProvider services)
         {
             if (next == null)
             {
@@ -27,13 +26,8 @@ namespace Microsoft.AspNet.Hosting.Internal
             {
                 throw new ArgumentNullException(nameof(services));
             }
-            if (scopeFactory == null)
-            {
-                throw new ArgumentNullException(nameof(scopeFactory));
-            }
 
             _services = services;
-            _scopeFactory = scopeFactory;
             _next = next;
         }
 
@@ -53,7 +47,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                 return;
             }
 
-            using (var feature = new RequestServicesFeature(_services, _scopeFactory))
+            using (var feature = new RequestServicesFeature(_services))
             {
                 try
                 {

@@ -9,24 +9,18 @@ namespace Microsoft.AspNet.Hosting.Internal
 {
     public class RequestServicesFeature : IServiceProvidersFeature, IDisposable
     {
-        private readonly IServiceScopeFactory _scopeFactory;
         private IServiceProvider _requestServices;
         private IServiceScope _scope;
         private bool _requestServicesSet;
 
-        public RequestServicesFeature(IServiceProvider applicationServices, IServiceScopeFactory scopeFactory)
+        public RequestServicesFeature(IServiceProvider applicationServices)
         {
             if (applicationServices == null)
             {
                 throw new ArgumentNullException(nameof(applicationServices));
             }
-            if (scopeFactory == null)
-            {
-                throw new ArgumentNullException(nameof(scopeFactory));
-            }
 
             ApplicationServices = applicationServices;
-            _scopeFactory = scopeFactory;
         }
 
         public IServiceProvider ApplicationServices { get; set; }
@@ -37,7 +31,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             {
                 if (!_requestServicesSet)
                 {
-                    _scope = _scopeFactory.CreateScope();
+                    _scope = ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope();
                     _requestServices = _scope.ServiceProvider;
                     _requestServicesSet = true;
                 }
