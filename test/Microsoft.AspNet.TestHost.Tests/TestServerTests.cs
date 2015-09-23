@@ -175,7 +175,44 @@ namespace Microsoft.AspNet.TestHost
                 });
             },
             services => services.AddInstance<IStartupFilter>(new ReplaceServiceProvidersFeatureFilter(appServices, appServices)));
-            string result = await server.CreateClient().GetStringAsync("/path");
+            var result = await server.CreateClient().GetStringAsync("/path");
+            Assert.Equal("Success", result);
+        }
+
+        public class NullServiceProvidersFeatureFilter : IStartupFilter, IServiceProvidersFeature
+        {
+            public IServiceProvider ApplicationServices { get; set; }
+
+            public IServiceProvider RequestServices { get; set; }
+
+            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            {
+                return app =>
+                {
+                    app.Use(async (context, nxt) =>
+                    {
+                        context.Features.Set<IServiceProvidersFeature>(this);
+                        await nxt();
+                    });
+                    next(app);
+                };
+            }
+        }
+
+        [Fact]
+        public async Task WillReplaceServiceProviderFeatureWithNullRequestServices()
+        {
+            var server = TestServer.Create(app =>
+            {
+                app.Run(context =>
+                {
+                    Assert.NotNull(context.ApplicationServices);
+                    Assert.NotNull(context.RequestServices);
+                    return context.Response.WriteAsync("Success");
+                });
+            },
+            services => services.AddTransient<IStartupFilter, NullServiceProvidersFeatureFilter>());
+            var result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("Success", result);
         }
 
