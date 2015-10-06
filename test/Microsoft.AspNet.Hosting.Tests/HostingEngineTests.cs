@@ -319,7 +319,7 @@ namespace Microsoft.AspNet.Hosting
                 return Task.FromResult(0);
             });
 
-            _featuresSupportedByThisHost = new ReadOnlyFeatureCollection();
+            _featuresSupportedByThisHost = new FeatureCollection(new ReadOnlyFeatureCollection());
 
             var hostingEngine = CreateHostingEngine(requestDelegate);
 
