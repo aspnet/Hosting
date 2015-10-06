@@ -11,10 +11,7 @@ namespace Microsoft.AspNet.Hosting.Builder
     {
         public HttpContext CreateHttpContext(IFeatureCollection featureCollection)
         {
-            return new DefaultHttpContext(
-                            featureCollection.IsReadOnly 
-                            ? new FeatureCollection(featureCollection) 
-                            : featureCollection);
+            return new DefaultHttpContext(featureCollection);
         }
     }
 }
