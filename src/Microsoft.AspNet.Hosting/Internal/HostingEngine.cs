@@ -96,7 +96,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
                     httpContext.ApplicationServices = _applicationServices;
-                    var requestIdentifier = GetRequestIdentifier(httpContext);
                     contextAccessor.HttpContext = httpContext;
 #pragma warning disable 0618
                     if (telemetrySource.IsEnabled("Microsoft.AspNet.Hosting.BeginRequest"))
@@ -107,7 +106,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                     try
                     {
                         using (logger.IsEnabled(LogLevel.Critical)
-                            ? logger.BeginScope("Request Id: {RequestId}", requestIdentifier) 
+                            ? logger.BeginScope("Request Id: {RequestId}", httpContext.TraceIdentifier) 
                             : null)
                         {
                             await application(httpContext);
@@ -274,18 +273,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                     }
                 }
             }
-        }
-
-        private string GetRequestIdentifier(HttpContext httpContext)
-        {
-            var requestIdentifierFeature = httpContext.Features.Get<IHttpRequestIdentifierFeature>();
-            if (requestIdentifierFeature == null)
-            {
-                requestIdentifierFeature = new FastHttpRequestIdentifierFeature();
-                httpContext.Features.Set(requestIdentifierFeature);
-            }
-
-            return requestIdentifierFeature.TraceIdentifier;
         }
 
         private class Disposable : IDisposable
