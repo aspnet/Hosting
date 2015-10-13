@@ -58,12 +58,12 @@ namespace Microsoft.AspNet.Hosting
 
                 Console.CancelKeyPress += (sender, eventArgs) =>
                 {
-                    appLifetime.RequestShutdown();
+                    appLifetime.StopApplication();
                     // Don't terminate the process immediately, wait for the Main thread to exit gracefully.
                     eventArgs.Cancel = true;
                 };
 
-                appLifetime.ShutdownRequested.WaitHandle.WaitOne();
+                appLifetime.ApplicationStopping.WaitHandle.WaitOne();
             }
         }
     }

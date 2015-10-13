@@ -38,9 +38,19 @@ namespace Microsoft.AspNet.Hosting
         public CancellationToken ApplicationStopped => _stoppedSource.Token;
 
         /// <summary>
-        /// Gets a <see cref="CancellationToken"/> that is signaled when application shutdown is requested.
+        /// Signals the ApplicationStopping event and blocks until it completes.
         /// </summary>
-        public CancellationToken ShutdownRequested => _shutdownSource.Token;
+        public void StopApplication()
+        {
+            try
+            {
+                _stoppingSource.Cancel(throwOnFirstException: false);
+            }
+            catch (Exception)
+            {
+                // TODO: LOG
+            }
+        }
 
         /// <summary>
         /// Signals the ApplicationStarted event and blocks until it completes.
@@ -50,21 +60,6 @@ namespace Microsoft.AspNet.Hosting
             try
             {
                 _startedSource.Cancel(throwOnFirstException: false);
-            }
-            catch (Exception)
-            {
-                // TODO: LOG
-            }
-        }
-
-        /// <summary>
-        /// Signals the ApplicationStopping event and blocks until it completes.
-        /// </summary>
-        public void NotifyStopping()
-        {
-            try
-            {
-                _stoppingSource.Cancel(throwOnFirstException: false);
             }
             catch (Exception)
             {
@@ -84,21 +79,6 @@ namespace Microsoft.AspNet.Hosting
             catch (Exception)
             {
                 // TODO: LOG
-            }
-        }
-
-        /// <summary>
-        /// Requests termination the current application.
-        /// </summary>
-        public void RequestShutdown()
-        {
-            try
-            {
-                _shutdownSource.Cancel(throwOnFirstException: false);
-            }
-            catch (Exception)
-            {
-                // TODO: Log
             }
         }
     }
