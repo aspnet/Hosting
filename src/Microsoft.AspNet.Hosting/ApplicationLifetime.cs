@@ -14,7 +14,6 @@ namespace Microsoft.AspNet.Hosting
         private readonly CancellationTokenSource _startedSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
-        private readonly CancellationTokenSource _shutdownSource = new CancellationTokenSource();
 
         /// <summary>
         /// Triggered when the application host has fully started and is about to wait
