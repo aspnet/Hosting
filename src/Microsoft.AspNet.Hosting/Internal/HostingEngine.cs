@@ -96,7 +96,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
                     httpContext.ApplicationServices = _applicationServices;
-                    var requestIdentifier = GetRequestIdentifier(httpContext);
                     contextAccessor.HttpContext = httpContext;
 #pragma warning disable 0618
                     if (telemetrySource.IsEnabled("Microsoft.AspNet.Hosting.BeginRequest"))
@@ -104,24 +103,27 @@ namespace Microsoft.AspNet.Hosting.Internal
                         telemetrySource.WriteTelemetry("Microsoft.AspNet.Hosting.BeginRequest", new { httpContext = httpContext });
                     }
 #pragma warning restore 0618
-                    try
+                    using (logger.RequestScope(httpContext))
                     {
-                        using (logger.IsEnabled(LogLevel.Critical)
-                            ? logger.BeginScope("Request Id: {RequestId}", requestIdentifier) 
-                            : null)
+                        try
                         {
+                            logger.RequestStarting(httpContext);
                             await application(httpContext);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-#pragma warning disable 0618
-                        if (telemetrySource.IsEnabled("Microsoft.AspNet.Hosting.UnhandledException"))
+                        catch (Exception ex)
                         {
-                            telemetrySource.WriteTelemetry("Microsoft.AspNet.Hosting.UnhandledException", new { httpContext = httpContext, exception = ex });
-                        }
+#pragma warning disable 0618
+                            if (telemetrySource.IsEnabled("Microsoft.AspNet.Hosting.UnhandledException"))
+                            {
+                                telemetrySource.WriteTelemetry("Microsoft.AspNet.Hosting.UnhandledException", new { httpContext = httpContext, exception = ex });
+                            }
 #pragma warning restore 0618
-                        throw;
+                            throw;
+                        }
+                        finally
+                        {
+                            logger.RequestFinished(httpContext);
+                        }
                     }
 #pragma warning disable 0618
                     if (telemetrySource.IsEnabled("Microsoft.AspNet.Hosting.EndRequest"))
