@@ -30,5 +30,15 @@ namespace Microsoft.AspNet.Hosting
         /// </summary>
         /// <returns></returns>
         CancellationToken ApplicationStopped { get; }
+        
+        /// <summary>
+        /// Gets a <see cref="CancellationToken"/> that is signaled when application shutdown is requested.
+        /// </summary>
+        CancellationToken ShutdownRequested { get; }
+
+        /// <summary>
+        /// Requests termination the current application.
+        /// </summary>
+        void RequestShutdown();
     }
 }

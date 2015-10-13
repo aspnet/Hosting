@@ -14,25 +14,20 @@ namespace Microsoft.AspNet.Hosting
         private readonly CancellationTokenSource _startedSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _shutdownSource = new CancellationTokenSource();
 
         /// <summary>
         /// Triggered when the application host has fully started and is about to wait
         /// for a graceful shutdown.
         /// </summary>
-        public CancellationToken ApplicationStarted
-        {
-            get { return _startedSource.Token; }
-        }
+        public CancellationToken ApplicationStarted => _startedSource.Token;
 
         /// <summary>
         /// Triggered when the application host is performing a graceful shutdown.
         /// Request may still be in flight. Shutdown will block until this event completes.
         /// </summary>
         /// <returns></returns>
-        public CancellationToken ApplicationStopping
-        {
-            get { return _stoppingSource.Token; }
-        }
+        public CancellationToken ApplicationStopping => _stoppingSource.Token;
 
         /// <summary>
         /// Triggered when the application host is performing a graceful shutdown.
@@ -40,10 +35,12 @@ namespace Microsoft.AspNet.Hosting
         /// until this event completes.
         /// </summary>
         /// <returns></returns>
-        public CancellationToken ApplicationStopped
-        {
-            get { return _stoppedSource.Token; }
-        }
+        public CancellationToken ApplicationStopped => _stoppedSource.Token;
+
+        /// <summary>
+        /// Gets a <see cref="CancellationToken"/> that is signaled when application shutdown is requested.
+        /// </summary>
+        public CancellationToken ShutdownRequested => _shutdownSource.Token;
 
         /// <summary>
         /// Signals the ApplicationStarted event and blocks until it completes.
@@ -87,6 +84,21 @@ namespace Microsoft.AspNet.Hosting
             catch (Exception)
             {
                 // TODO: LOG
+            }
+        }
+
+        /// <summary>
+        /// Requests termination the current application.
+        /// </summary>
+        public void RequestShutdown()
+        {
+            try
+            {
+                _shutdownSource.Cancel(throwOnFirstException: false);
+            }
+            catch (Exception)
+            {
+                // TODO: Log
             }
         }
     }

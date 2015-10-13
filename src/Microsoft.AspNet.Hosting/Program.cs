@@ -54,14 +54,16 @@ namespace Microsoft.AspNet.Hosting
 
                 Console.WriteLine("Application started. Press Ctrl+C to shut down.");
 
-                var appShutdownService = app.Services.GetRequiredService<IApplicationShutdown>();
+                var appLifetime = app.Services.GetRequiredService<IApplicationLifetime>();
+
                 Console.CancelKeyPress += (sender, eventArgs) =>
                 {
-                    appShutdownService.RequestShutdown();
+                    appLifetime.RequestShutdown();
                     // Don't terminate the process immediately, wait for the Main thread to exit gracefully.
                     eventArgs.Cancel = true;
                 };
-                appShutdownService.ShutdownRequested.WaitHandle.WaitOne();
+
+                appLifetime.ShutdownRequested.WaitHandle.WaitOne();
             }
         }
     }
