@@ -306,7 +306,13 @@ namespace Microsoft.AspNet.Hosting
 
             // Assert
             Assert.NotNull(httpContext);
-            Assert.IsType<FastHttpRequestIdentifierFeature>(httpContext.Features.Get<IHttpRequestIdentifierFeature>());
+            Assert.Null(httpContext.Features.Get<IHttpRequestIdentifierFeature>());
+
+            Assert.NotNull(httpContext.TraceIdentifier);
+            Assert.NotNull(httpContext.Features.Get<IHttpRequestIdentifierFeature>());
+            Assert.IsType<HttpRequestIdentifierFeature>(httpContext.Features.Get<IHttpRequestIdentifierFeature>());
+
+            Assert.Same(httpContext.TraceIdentifier, httpContext.Features.Get<IHttpRequestIdentifierFeature>().TraceIdentifier);
         }
 
         [Fact]
