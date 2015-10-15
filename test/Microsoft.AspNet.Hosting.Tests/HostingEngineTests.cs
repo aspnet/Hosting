@@ -24,13 +24,24 @@ using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.OptionsModel;
 using Moq;
 using Xunit;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNet.Hosting
 {
     public class HostingEngineTests : IServerFactory
     {
         private readonly IList<StartInstance> _startInstances = new List<StartInstance>();
-        private IFeatureCollection _featuresSupportedByThisHost = new FeatureCollection();
+        private IFeatureCollection _featuresSupportedByThisHost = NewFeatureCollection();
+
+        static IFeatureCollection NewFeatureCollection()
+        {
+            var stub = new StubFeatures();
+            var features = new FeatureCollection();
+            features[typeof(IHttpRequestFeature)] = stub;
+            features[typeof(IHttpResponseFeature)] = stub;
+            return features;
+        }
 
         [Fact]
         public void HostingEngineThrowsWithNoServer()
@@ -385,7 +396,11 @@ namespace Microsoft.AspNet.Hosting
             var host = CreateBuilder()
                 .UseServer(this)
                 .UseStartup(
-                    appBuilder => { appBuilder.Run(requestDelegate); },
+                    appBuilder =>
+                    {
+                        appBuilder.ApplicationServices.GetRequiredService<ILoggerFactory>().AddProvider(new AllMessagesAreNeeded());
+                        appBuilder.Run(requestDelegate);
+                    },
                     configureServices => configureServices.BuildServiceProvider());
             return host.Build();
         }
@@ -491,6 +506,102 @@ namespace Microsoft.AspNet.Hosting
         private class ServerAddressesFeature : IServerAddressesFeature
         {
             public ICollection<string> Addresses { get; } = new List<string>();
+        }
+
+        private class AllMessagesAreNeeded : ILoggerProvider, ILogger
+        {
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public ILogger CreateLogger(string name) => this;
+
+            public IDisposable BeginScopeImpl(object state)
+            {
+                var stringified = state.ToString();
+                return this;
+            }
+            public void Log(LogLevel logLevel, int eventId, object state, Exception exception, Func<object, Exception, string> formatter)
+            {
+                var stringified = formatter(state, exception);
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
+        private class StubFeatures : IHttpRequestFeature, IHttpResponseFeature, IHeaderDictionary
+        {
+            public StubFeatures()
+            {
+                Headers = this;
+                Body = new MemoryStream();
+            }
+
+            public StringValues this[string key]
+            {
+                get { return StringValues.Empty; }
+                set { }
+            }
+
+            public Stream Body { get; set; }
+
+            public int Count => 0;
+
+            public bool HasStarted { get; set; }
+
+            public IHeaderDictionary Headers { get; set; }
+
+            public bool IsReadOnly => false;
+
+            public ICollection<string> Keys => null;
+
+            public string Method { get; set; }
+
+            public string Path { get; set; }
+
+            public string PathBase { get; set; }
+
+            public string Protocol { get; set; }
+
+            public string QueryString { get; set; }
+
+            public string ReasonPhrase { get; set; }
+
+            public string Scheme { get; set; }
+
+            public int StatusCode { get; set; }
+
+            public ICollection<StringValues> Values => null;
+
+            public void Add(KeyValuePair<string, StringValues> item) { }
+
+            public void Add(string key, StringValues value) { }
+
+            public void Clear() { }
+
+            public bool Contains(KeyValuePair<string, StringValues> item) => false;
+
+            public bool ContainsKey(string key) => false;
+
+            public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex) { }
+
+            public IEnumerator<KeyValuePair<string, StringValues>> GetEnumerator() => null;
+
+            public void OnCompleted(Func<object, Task> callback, object state) { }
+
+            public void OnStarting(Func<object, Task> callback, object state) { }
+
+            public bool Remove(KeyValuePair<string, StringValues> item) => false;
+
+            public bool Remove(string key) => false;
+
+            public bool TryGetValue(string key, out StringValues value)
+            {
+                value = StringValues.Empty;
+                return false;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => null;
         }
     }
 }

@@ -21,7 +21,12 @@ namespace Microsoft.AspNet.Hosting.Internal
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.Log(LogLevel.Information, 1, new HostingRequestStarting(httpContext), null, HostingRequestStarting.Callback);
+                logger.Log(
+                    logLevel: LogLevel.Information,
+                    eventId: 1,
+                    state: new HostingRequestStarting(httpContext),
+                    exception: null,
+                    formatter: HostingRequestStarting.Callback);
             }
         }
 
@@ -29,7 +34,12 @@ namespace Microsoft.AspNet.Hosting.Internal
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.Log(LogLevel.Information, 2, new HostingRequestFinished(httpContext), null, HostingRequestFinished.Callback);
+                logger.Log(
+                    logLevel: LogLevel.Information,
+                    eventId: 2,
+                    state: new HostingRequestFinished(httpContext),
+                    exception: null,
+                    formatter: HostingRequestFinished.Callback);
             }
         }
 
@@ -43,7 +53,7 @@ namespace Microsoft.AspNet.Hosting.Internal
 
             public HostingRequestScope(HttpContext httpContext)
             {
-                this._httpContext = httpContext;
+                _httpContext = httpContext;
             }
 
             public IHttpRequestIdentifierFeature RequestIdFeature =>
