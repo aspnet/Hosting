@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Http.Features;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNet.Hosting.Internal
@@ -47,29 +46,24 @@ namespace Microsoft.AspNet.Hosting.Internal
         {
             private readonly HttpContext _httpContext;
 
-            private FeatureReference<IHttpRequestIdentifierFeature> _requestIdentifierFeatureReference;
-            private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
             private string _cachedToString;
+            private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
 
             public HostingRequestScope(HttpContext httpContext)
             {
                 _httpContext = httpContext;
             }
 
-            public IHttpRequestIdentifierFeature RequestIdFeature =>
-                _requestIdentifierFeatureReference.Fetch(_httpContext.Features) ??
-                _requestIdentifierFeatureReference.Update(_httpContext.Features, new FastHttpRequestIdentifierFeature());
-
             public override string ToString() => _cachedToString ?? Interlocked.CompareExchange(
                 ref _cachedToString,
-                $"RequestId:{RequestIdFeature.TraceIdentifier} RequestPath:{_httpContext.Request.Path}",
+                $"RequestId:{_httpContext.TraceIdentifier} RequestPath:{_httpContext.Request.Path}",
                 null);
 
             public IEnumerable<KeyValuePair<string, object>> GetValues() => _cachedGetValues ?? Interlocked.CompareExchange(
                 ref _cachedGetValues,
                 new[]
                 {
-                    new KeyValuePair<string, object>("RequestId", RequestIdFeature.TraceIdentifier),
+                    new KeyValuePair<string, object>("RequestId", _httpContext.TraceIdentifier),
                     new KeyValuePair<string, object>("RequestPath", _httpContext.Request.Path.ToString()),
                 },
                 null);
@@ -80,8 +74,9 @@ namespace Microsoft.AspNet.Hosting.Internal
             internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestStarting)state).ToString();
 
             private readonly HttpContext _httpContext;
-            private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
+
             private string _cachedToString;
+            private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
 
             public HostingRequestStarting(HttpContext httpContext)
             {
@@ -116,6 +111,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestFinished)state).ToString();
 
             private readonly HttpContext _httpContext;
+
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
             private string _cachedToString;
 
