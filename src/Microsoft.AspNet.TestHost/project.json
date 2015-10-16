@@ -1,12 +1,12 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta8",
     "description": "ASP.NET 5 web server for writing and running tests.",
     "repository": {
         "type": "git",
         "url": "git://github.com/aspnet/hosting"
     },
     "dependencies": {
-        "Microsoft.AspNet.Hosting": "1.0.0-*"
+        "Microsoft.AspNet.Hosting": "1.0.0-beta8"
     },
     "frameworks": {
         "dnx451": {
@@ -16,8 +16,8 @@
         },
         "dnxcore50": {
             "dependencies": {
-                "System.Diagnostics.Contracts": "4.0.1-beta-*",
-                "System.Net.Http": "4.0.1-beta-*"
+                "System.Diagnostics.Contracts": "4.0.1-beta-23409",
+                "System.Net.Http": "4.0.1-beta-23409"
             }
         }
     }

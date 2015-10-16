@@ -1,13 +1,13 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.0-beta8",
     "description": "ASP.NET 5 Hosting abstractions.",
     "repository": {
         "type": "git",
         "url": "git://github.com/aspnet/hosting"
     },
     "dependencies": {
-        "Microsoft.AspNet.Http.Abstractions": "1.0.0-*",
-        "Microsoft.AspNet.FileProviders.Abstractions": "1.0.0-*"
+        "Microsoft.AspNet.Http.Abstractions": "1.0.0-beta8",
+        "Microsoft.AspNet.FileProviders.Abstractions": "1.0.0-beta8"
     },
     "frameworks": {
         "dnx451": {},
