@@ -148,7 +148,7 @@ namespace Microsoft.AspNet.Server.Testing
 
             ChosenRuntimePath = targetRuntimeBinDir.FullName;
             ChosenRuntimeName = targetRuntimeBinDir.Parent.Name;
-            DeploymentParameters.DnxRuntime = ChosenRuntimeName;
+            DeploymentParameters.DnxRuntime = PopulateChosenRuntimeInformation();
 
             Logger.LogInformation($"Chosen runtime path is {ChosenRuntimePath}");
 
