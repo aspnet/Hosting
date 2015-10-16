@@ -13,7 +13,7 @@ namespace Microsoft.AspNet.Hosting.Internal
     {
         public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext)
         {
-            return logger.BeginScopeImpl(new HostingRequestScope(httpContext));
+            return logger.BeginScopeImpl(new HostingLogScope(httpContext));
         }
 
         public static void RequestStarting(this ILogger logger, HttpContext httpContext)
@@ -42,14 +42,14 @@ namespace Microsoft.AspNet.Hosting.Internal
             }
         }
 
-        private class HostingRequestScope : ILogValues
+        private class HostingLogScope : ILogValues
         {
             private readonly HttpContext _httpContext;
 
             private string _cachedToString;
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
 
-            public HostingRequestScope(HttpContext httpContext)
+            public HostingLogScope(HttpContext httpContext)
             {
                 _httpContext = httpContext;
             }
