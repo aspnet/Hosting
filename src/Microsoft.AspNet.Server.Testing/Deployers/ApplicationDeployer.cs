@@ -99,41 +99,60 @@ namespace Microsoft.AspNet.Server.Testing
 
         protected string PopulateChosenRuntimeInformation()
         {
-            // ex: runtimes/dnx-coreclr-win-x64.1.0.0-rc1-15844/bin
-            var currentRuntimeBinPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-            Logger.LogInformation($"Current runtime path is : {currentRuntimeBinPath}");
-
-            var targetRuntimeName = new StringBuilder()
-                .Append("dnx")
-                .Append((DeploymentParameters.RuntimeFlavor == RuntimeFlavor.CoreClr) ? "-coreclr" : "-clr")
-                .Append($"-{OSPrefix}")
-                .Append((DeploymentParameters.RuntimeArchitecture == RuntimeArchitecture.x86) ? "-x86" : "-x64")
-                .ToString();
-
-            string targetRuntimeBinPath;
-            // Ex: When current runtime is Mono and the tests are being run for CoreClr
-            if (currentRuntimeBinPath.Contains("dnx-mono"))
+            if (TestPlatformHelper.IsMac && DeploymentParameters.RuntimeFlavor == RuntimeFlavor.CoreClr)
             {
-                targetRuntimeBinPath = currentRuntimeBinPath.Replace("dnx-mono", targetRuntimeName);
+                var path = Environment.GetEnvironmentVariable("PATH");
+                var runtimeBin = path.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries).
+                    Where(c => c.Contains("dnx-coreclr-darwin")).FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(runtimeBin))
+                {
+                    throw new Exception("Runtime not detected on the machine.");
+                }
+
+                var runtimeBinDir = new DirectoryInfo(runtimeBin);
+                ChosenRuntimePath = runtimeBinDir.FullName;
+                ChosenRuntimeName = runtimeBinDir.Parent.Name;
+                DeploymentParameters.DnxRuntime = ChosenRuntimeName;
             }
             else
             {
-                targetRuntimeBinPath = Regex.Replace(
-                    currentRuntimeBinPath,
-                    "dnx-(clr|coreclr)-(win|linux|darwin)-(x86|x64)",
-                    targetRuntimeName,
-                    RegexOptions.IgnoreCase);
-            }
+                // ex: runtimes/dnx-coreclr-win-x64.1.0.0-rc1-15844/bin
+                var currentRuntimeBinPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                Logger.LogInformation($"Current runtime path is : {currentRuntimeBinPath}");
 
-            var targetRuntimeBinDir = new DirectoryInfo(targetRuntimeBinPath);
-            if (targetRuntimeBinDir == null || !targetRuntimeBinDir.Exists)
-            {
-                throw new Exception($"Requested runtime at location '{targetRuntimeBinPath}' does not exist.Please make sure it is installed before running test.");
-            }
+                var targetRuntimeName = new StringBuilder()
+                    .Append("dnx")
+                    .Append((DeploymentParameters.RuntimeFlavor == RuntimeFlavor.CoreClr) ? "-coreclr" : "-clr")
+                    .Append($"-{OSPrefix}")
+                    .Append((DeploymentParameters.RuntimeArchitecture == RuntimeArchitecture.x86) ? "-x86" : "-x64")
+                    .ToString();
 
-            ChosenRuntimePath = targetRuntimeBinDir.FullName;
-            ChosenRuntimeName = targetRuntimeBinDir.Parent.Name;
-            DeploymentParameters.DnxRuntime = ChosenRuntimeName;
+                string targetRuntimeBinPath;
+                // Ex: When current runtime is Mono and the tests are being run for CoreClr
+                if (currentRuntimeBinPath.Contains("dnx-mono"))
+                {
+                    targetRuntimeBinPath = currentRuntimeBinPath.Replace("dnx-mono", targetRuntimeName);
+                }
+                else
+                {
+                    targetRuntimeBinPath = Regex.Replace(
+                        currentRuntimeBinPath,
+                        "dnx-(clr|coreclr)-(win|linux|darwin)-(x86|x64)",
+                        targetRuntimeName,
+                        RegexOptions.IgnoreCase);
+                }
+
+                var targetRuntimeBinDir = new DirectoryInfo(targetRuntimeBinPath);
+                if (targetRuntimeBinDir == null || !targetRuntimeBinDir.Exists)
+                {
+                    throw new Exception($"Requested runtime at location '{targetRuntimeBinPath}' does not exist.Please make sure it is installed before running test.");
+                }
+
+                ChosenRuntimePath = targetRuntimeBinDir.FullName;
+                ChosenRuntimeName = targetRuntimeBinDir.Parent.Name;
+                DeploymentParameters.DnxRuntime = ChosenRuntimeName;
+            }
 
             Logger.LogInformation($"Chosen runtime path is {ChosenRuntimePath}");
 
