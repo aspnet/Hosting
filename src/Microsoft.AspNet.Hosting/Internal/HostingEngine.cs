@@ -278,18 +278,6 @@ namespace Microsoft.AspNet.Hosting.Internal
             }
         }
 
-        private string GetRequestIdentifier(HttpContext httpContext)
-        {
-            var requestIdentifierFeature = httpContext.Features.Get<IHttpRequestIdentifierFeature>();
-            if (requestIdentifierFeature == null)
-            {
-                requestIdentifierFeature = new FastHttpRequestIdentifierFeature();
-                httpContext.Features.Set(requestIdentifierFeature);
-            }
-
-            return requestIdentifierFeature.TraceIdentifier;
-        }
-
         private class Disposable : IDisposable
         {
             private Action _dispose;
