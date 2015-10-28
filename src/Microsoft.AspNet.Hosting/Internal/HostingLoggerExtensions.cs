@@ -172,7 +172,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                         new KeyValuePair<string, object>("Path", _request.Path.ToString()),
                         new KeyValuePair<string, object>("QueryString", _request.QueryString.ToString()),
                     };
-                };
+                }
 
                 return _cachedGetValues;
             }
