@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-*",
+  "version": "1.0.0-rc1-final",
   "compilationOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk"
@@ -10,9 +10,9 @@
     "url": "git://github.com/aspnet/hosting"
   },
   "dependencies": {
-    "Microsoft.AspNet.Testing": "1.0.0-*",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-*"
+    "Microsoft.AspNet.Testing": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Logging.Abstractions": "1.0.0-rc1-final",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final"
   },
   "frameworks": {
     "dnx451": {
@@ -26,14 +26,14 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Diagnostics.Process": "4.0.0-beta-*",
-        "System.IO.FileSystem": "4.0.1-beta-*",
-        "System.Net.Http": "4.0.1-beta-*",
-        "System.Net.Primitives": "4.0.11-beta-*",
-        "System.Runtime.Extensions": "4.0.11-beta-*",
-        "System.Text.RegularExpressions": "4.0.11-beta-*",
-        "System.Threading": "4.0.11-beta-*",
-        "System.Threading.Thread": "4.0.0-*"
+        "System.Diagnostics.Process": "4.1.0-beta-23516",
+        "System.IO.FileSystem": "4.0.1-beta-23516",
+        "System.Net.Http": "4.0.1-beta-23516",
+        "System.Net.Primitives": "4.0.11-beta-23516",
+        "System.Runtime.Extensions": "4.0.11-beta-23516",
+        "System.Text.RegularExpressions": "4.0.11-beta-23516",
+        "System.Threading": "4.0.11-beta-23516",
+        "System.Threading.Thread": "4.0.0-beta-23516"
       }
     }
   }

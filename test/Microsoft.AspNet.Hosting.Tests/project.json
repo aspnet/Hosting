@@ -1,21 +1,21 @@
 {
-    "compilationOptions": {
-        "warningsAsErrors": true,
-        "keyFile": "../../tools/Key.snk"
-    },
-    "dependencies": {
-        "Microsoft.AspNet.Hosting": "1.0.0-*",
-        "Microsoft.AspNet.Owin": "1.0.0-*",
-        "Microsoft.AspNet.Testing": "1.0.0-*",
-        "Microsoft.Extensions.OptionsModel": "1.0.0-*",
-        "Microsoft.Extensions.PlatformAbstractions": "1.0.0-*",
-        "Moq": "4.2.1312.1622",
-        "xunit.runner.aspnet": "2.0.0-aspnet-*"
-    },
-    "frameworks": {
-        "dnx451": {}
-    },
-    "commands": {
-        "test": "xunit.runner.aspnet"
-    }
+  "compilationOptions": {
+    "warningsAsErrors": true,
+    "keyFile": "../../tools/Key.snk"
+  },
+  "dependencies": {
+    "Microsoft.AspNet.Hosting": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Owin": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Testing": "1.0.0-rc1-final",
+    "Microsoft.Extensions.OptionsModel": "1.0.0-rc1-final",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
+    "Moq": "4.2.1312.1622",
+    "xunit.runner.aspnet": "2.0.0-aspnet-rc1-final"
+  },
+  "frameworks": {
+    "dnx451": {}
+  },
+  "commands": {
+    "test": "xunit.runner.aspnet"
+  }
 }

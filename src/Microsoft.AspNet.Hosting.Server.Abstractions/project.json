@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-*",
+  "version": "1.0.0-rc1-final",
   "compilationOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk"
@@ -10,8 +10,8 @@
     "url": "git://github.com/aspnet/hosting"
   },
   "dependencies": {
-    "Microsoft.AspNet.Http.Features": "1.0.0-*",
-    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0-*"
+    "Microsoft.AspNet.Http.Features": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0-rc1-final"
   },
   "frameworks": {
     "net451": {},
