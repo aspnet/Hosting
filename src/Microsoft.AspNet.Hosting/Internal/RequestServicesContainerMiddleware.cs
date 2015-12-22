@@ -31,7 +31,7 @@ namespace Microsoft.AspNet.Hosting.Internal
             _next = next;
         }
 
-        public async Task Invoke(HttpContext httpContext)
+        public Task Invoke(HttpContext httpContext)
         {
             if (httpContext == null)
             {
@@ -43,10 +43,14 @@ namespace Microsoft.AspNet.Hosting.Internal
             // All done if request services is set
             if (existingFeature?.RequestServices != null)
             {
-                await _next.Invoke(httpContext);
-                return;
+                return _next.Invoke(httpContext);
             }
 
+            return InvokeAwaited(httpContext, existingFeature);
+        }
+
+        private async Task InvokeAwaited(HttpContext httpContext, IServiceProvidersFeature existingFeature)
+        {
             using (var feature = new RequestServicesFeature(_services))
             {
                 try
@@ -60,5 +64,7 @@ namespace Microsoft.AspNet.Hosting.Internal
                 }
             }
         }
+
+
     }
 }
