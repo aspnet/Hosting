@@ -6,7 +6,6 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNet.Hosting
 {
