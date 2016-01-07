@@ -19,10 +19,6 @@ namespace SampleStartups
                 .UseUrls("http://*:1000", "https://*:902")
                 .UseEnvironment("Development")
                 .UseWebRoot("public")
-                .ConfigureLogging(loggerFactory =>
-                {
-                    loggerFactory.AddProvider(new MyHostLoggerProvider());
-                })
                 .ConfigureServices(services =>
                 {
                     // Configure services that the application can see

@@ -2,13 +2,17 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Server.Features;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNet.Hosting
 {
     public static class WebApplicationBuilderExtensions
     {
+        private static readonly string ServerUrlsSeparator = ";";
+
         public static IWebApplicationBuilder UseStartup<TStartup>(this IWebApplicationBuilder applicationBuilder) where TStartup : class
         {
             return applicationBuilder.UseStartup(typeof(TStartup));
@@ -22,6 +26,16 @@ namespace Microsoft.AspNet.Hosting
             }
 
             return applicationBuilder.UseSetting(WebApplicationConfiguration.ServerKey, assemblyName);
+        }
+
+        public static IWebApplicationBuilder UseServer(this IWebApplicationBuilder applicationBuilder, IServer server)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            return applicationBuilder.UseServer(new ServerFactory(server));
         }
 
         public static IWebApplicationBuilder UseApplicationBasePath(this IWebApplicationBuilder applicationBuilder, string applicationBasePath)
@@ -61,7 +75,7 @@ namespace Microsoft.AspNet.Hosting
                 throw new ArgumentNullException(nameof(urls));
             }
 
-            return applicationBuilder.UseSetting(WebApplicationConfiguration.ServerUrlsKey, string.Join(";", urls));
+            return applicationBuilder.UseSetting(WebApplicationConfiguration.ServerUrlsKey, string.Join(ServerUrlsSeparator, urls));
         }
 
         public static IWebApplicationBuilder UseStartup(this IWebApplicationBuilder applicationBuilder, string startupAssemblyName)
@@ -117,6 +131,18 @@ namespace Microsoft.AspNet.Hosting
 
                 applicationLifetime.ApplicationStopping.WaitHandle.WaitOne();
             }
+        }
+
+        private class ServerFactory : IServerFactory
+        {
+            private readonly IServer _server;
+
+            public ServerFactory(IServer server)
+            {
+                _server = server;
+            }
+
+            public IServer CreateServer(IConfiguration configuration) => _server;
         }
     }
 }

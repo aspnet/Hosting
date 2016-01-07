@@ -58,18 +58,6 @@ namespace Microsoft.AspNet.Hosting
             return this;
         }
 
-        
-        public IWebApplicationBuilder UseServer(IServer server)
-        {
-            if (server == null)
-            {
-                throw new ArgumentNullException(nameof(server));
-            }
-
-            _serverFactory = new ServerFactory(server);
-            return this;
-        }
-
         public IWebApplicationBuilder UseServer(IServerFactory factory)
         {
             if (factory == null)
@@ -221,21 +209,6 @@ namespace Microsoft.AspNet.Hosting
             public string ApplicationVersion { get; }
 
             public FrameworkName RuntimeFramework { get; }
-        }
-
-        private class ServerFactory : IServerFactory
-        {
-            private readonly IServer _server;
-
-            public ServerFactory(IServer server)
-            {
-                _server = server;
-            }
-
-            public IServer CreateServer(IConfiguration configuration)
-            {
-                return _server;
-            }
         }
     }
 }

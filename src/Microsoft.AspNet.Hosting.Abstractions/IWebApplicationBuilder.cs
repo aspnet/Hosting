@@ -16,17 +16,13 @@ namespace Microsoft.AspNet.Hosting
 
         IWebApplicationBuilder UseConfiguration(IConfiguration configuration);
 
-        IWebApplicationBuilder UseServer(IServer server);
-
         IWebApplicationBuilder UseServer(IServerFactory factory);
 
         IWebApplicationBuilder UseStartup(Type startupType);
 
         IWebApplicationBuilder ConfigureServices(Action<IServiceCollection> configureServices);
 
-        IWebApplicationBuilder Configure(Action<IApplicationBuilder> configureApp);
-
-        IWebApplicationBuilder ConfigureLogging(Action<ILoggerFactory> configureLogging);
+        IWebApplicationBuilder Configure(Action<IApplicationBuilder> configureApplication);
 
         IWebApplicationBuilder UseSetting(string key, string value);
     }
