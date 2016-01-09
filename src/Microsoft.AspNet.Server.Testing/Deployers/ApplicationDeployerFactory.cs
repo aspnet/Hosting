@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+    // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -33,7 +33,7 @@ namespace Microsoft.AspNet.Server.Testing
             {
                 case ServerType.IISExpress:
                     return new IISExpressDeployer(deploymentParameters, logger);
-#if NET451
+#if DNX451
                 case ServerType.IIS:
                     return new IISDeployer(deploymentParameters, logger);
 #endif

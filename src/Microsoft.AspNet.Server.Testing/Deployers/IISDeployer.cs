@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-#if NET451
+#if DNX451
 using System;
 using System.IO;
 using System.Linq;
@@ -42,7 +42,7 @@ namespace Microsoft.AspNet.Server.Testing
             DnuPublish(publishRoot: _application.WebSiteRootFolder);
 
             // Drop a json file instead of setting environment variable.
-            SetAspEnvironmentWithJson();
+           // SetAspEnvironmentWithJson();
 
             lock (_syncObject)
             {
@@ -151,8 +151,7 @@ namespace Microsoft.AspNet.Server.Testing
             {
                 var applicationPool = _serverManager.ApplicationPools.Add(appPoolName);
                 applicationPool.ManagedRuntimeVersion = string.Empty;
-
-                applicationPool.Enable32BitAppOnWin64 = (_deploymentParameters.RuntimeArchitecture == RuntimeArchitecture.x86);
+                
                 _logger.LogInformation("Created {bit} application pool '{name}' with runtime version {runtime}.",
                     _deploymentParameters.RuntimeArchitecture, applicationPool.Name,
                     string.IsNullOrEmpty(applicationPool.ManagedRuntimeVersion) ? "that is default" : applicationPool.ManagedRuntimeVersion);
