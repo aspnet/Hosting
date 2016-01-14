@@ -11,6 +11,10 @@ namespace Microsoft.AspNet.Server.Testing.Common
     {
         public static Uri FindFreeUrl(string urlHint)
         {
+            if (string.IsNullOrEmpty(urlHint))
+            {
+                urlHint = "http://localhost:5000/";
+            }
             var uriHint = new Uri(urlHint);
             var builder = new UriBuilder(uriHint)
             {
