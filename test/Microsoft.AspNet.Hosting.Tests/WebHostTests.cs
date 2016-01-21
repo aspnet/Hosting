@@ -677,7 +677,10 @@ namespace Microsoft.AspNet.Hosting
 
             public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex) { }
 
-            public IEnumerator<KeyValuePair<string, StringValues>> GetEnumerator() => null;
+            public IEnumerator<KeyValuePair<string, StringValues>> GetEnumerator()
+            {
+                yield break;
+            }
 
             public void OnCompleted(Func<object, Task> callback, object state) { }
 

@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.AspNet.Http;
 using Microsoft.Extensions.Logging;
 
@@ -20,12 +21,21 @@ namespace Microsoft.AspNet.Hosting.Internal
 
         public static void RequestStarting(this ILogger logger, HttpContext httpContext)
         {
-            if (logger.IsEnabled(LogLevel.Information))
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.Log(
+                    logLevel: LogLevel.Debug,
+                    eventId: LoggerEventIds.RequestStarting,
+                    state: new HostingRequestStarting(httpContext, LogLevel.Debug),
+                    exception: null,
+                    formatter: HostingRequestStarting.Callback);
+            }
+            else if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.Log(
                     logLevel: LogLevel.Information,
                     eventId: LoggerEventIds.RequestStarting,
-                    state: new HostingRequestStarting(httpContext),
+                    state: new HostingRequestStarting(httpContext, LogLevel.Information),
                     exception: null,
                     formatter: HostingRequestStarting.Callback);
             }
@@ -38,12 +48,24 @@ namespace Microsoft.AspNet.Hosting.Internal
             {
                 var elapsed = new TimeSpan((long)(TimestampToTicks * (currentTimestamp - startTimestamp)));
 
-                logger.Log(
-                    logLevel: LogLevel.Information,
-                    eventId: LoggerEventIds.RequestFinished,
-                    state: new HostingRequestFinished(httpContext, elapsed),
-                    exception: null,
-                    formatter: HostingRequestFinished.Callback);
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.Log(
+                        logLevel: LogLevel.Debug,
+                        eventId: LoggerEventIds.RequestFinished,
+                        state: new HostingRequestFinished(httpContext, LogLevel.Debug, elapsed),
+                        exception: null,
+                        formatter: HostingRequestFinished.Callback);
+                }
+                else if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.Log(
+                        logLevel: LogLevel.Information,
+                        eventId: LoggerEventIds.RequestFinished,
+                        state: new HostingRequestFinished(httpContext, LogLevel.Information, elapsed),
+                        exception: null,
+                        formatter: HostingRequestFinished.Callback);
+                }
             }
         }
 
@@ -128,20 +150,43 @@ namespace Microsoft.AspNet.Hosting.Internal
             internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestStarting)state).ToString();
 
             private readonly HttpRequest _request;
+            private readonly LogLevel _logLevel;
 
             private string _cachedToString;
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
 
-            public HostingRequestStarting(HttpContext httpContext)
+            public HostingRequestStarting(HttpContext httpContext, LogLevel logLevel)
             {
                 _request = httpContext.Request;
+                _logLevel = logLevel;
             }
 
             public override string ToString()
             {
                 if (_cachedToString == null)
                 {
-                    _cachedToString = $"Request starting {_request.Protocol} {_request.Method} {_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}{_request.QueryString} {_request.ContentType} {_request.ContentLength}";
+                    if (_logLevel <= LogLevel.Debug)
+                    {
+                        var stringBuilder = new StringBuilder($"Request starting {_request.Protocol} {_request.Method} {_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}{_request.QueryString} {_request.ContentType} {_request.ContentLength}");
+
+                        stringBuilder.Append("; Headers: { ");
+                        foreach (var header in _request.Headers)
+                        {
+                            foreach (var value in header.Value)
+                            {
+                                stringBuilder.Append(header.Key);
+                                stringBuilder.Append(": ");
+                                stringBuilder.Append(value);
+                                stringBuilder.Append("; ");
+                            }
+                        }
+                        stringBuilder.Append("}");
+                        _cachedToString = stringBuilder.ToString();
+                    }
+                    else
+                    {
+                        _cachedToString = $"Request starting {_request.Protocol} {_request.Method} {_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}{_request.QueryString} {_request.ContentType} {_request.ContentLength}";
+                    }
                 }
 
                 return _cachedToString;
@@ -173,15 +218,17 @@ namespace Microsoft.AspNet.Hosting.Internal
         {
             internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestFinished)state).ToString();
 
-            private readonly HttpContext _httpContext;
+            private readonly HttpResponse _response;
+            private readonly LogLevel _logLevel;
             private readonly TimeSpan _elapsed;
 
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
             private string _cachedToString;
 
-            public HostingRequestFinished(HttpContext httpContext, TimeSpan elapsed)
+            public HostingRequestFinished(HttpContext httpContext, LogLevel logLevel, TimeSpan elapsed)
             {
-                _httpContext = httpContext;
+                _response = httpContext.Response;
+                _logLevel = logLevel;
                 _elapsed = elapsed;
             }
 
@@ -189,7 +236,28 @@ namespace Microsoft.AspNet.Hosting.Internal
             {
                 if (_cachedToString == null)
                 {
-                    _cachedToString = $"Request finished in {_elapsed.TotalMilliseconds}ms {_httpContext.Response.StatusCode} {_httpContext.Response.ContentType}";
+                    if (_logLevel <= LogLevel.Debug)
+                    {
+                        var stringBuilder = new StringBuilder($"Request finished in {_elapsed.TotalMilliseconds}ms {_response.StatusCode} {_response.ContentType}");
+
+                        stringBuilder.Append("; Headers: { ");
+                        foreach (var header in _response.Headers)
+                        {
+                            foreach (var value in header.Value)
+                            {
+                                stringBuilder.Append(header.Key);
+                                stringBuilder.Append(": ");
+                                stringBuilder.Append(value);
+                                stringBuilder.Append("; ");
+                            }
+                        }
+                        stringBuilder.Append("}");
+                        _cachedToString = stringBuilder.ToString();
+                    }
+                    else
+                    {
+                        _cachedToString = $"Request finished in {_elapsed.TotalMilliseconds}ms {_response.StatusCode} {_response.ContentType}";
+                    }
                 }
 
                 return _cachedToString;
@@ -202,8 +270,8 @@ namespace Microsoft.AspNet.Hosting.Internal
                     _cachedGetValues = new[]
                     {
                         new KeyValuePair<string, object>("ElapsedMilliseconds", _elapsed.TotalMilliseconds),
-                        new KeyValuePair<string, object>("StatusCode", _httpContext.Response.StatusCode),
-                        new KeyValuePair<string, object>("ContentType", _httpContext.Response.ContentType),
+                        new KeyValuePair<string, object>("StatusCode", _response.StatusCode),
+                        new KeyValuePair<string, object>("ContentType", _response.ContentType),
                     };
                 }
 
