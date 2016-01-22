@@ -251,10 +251,10 @@ namespace Microsoft.AspNet.Hosting.Internal
                     {
                         foreach (var value in header.Value)
                         {
-                            stringBuilder.Append($"    {header.Key}: {value};");
+                            stringBuilder.AppendLine($"    {header.Key}: {value};");
                         }
                     }
-                    stringBuilder.Append("}");
+                    stringBuilder.AppendLine("}");
                     _cachedHeaderString = stringBuilder.ToString();
                 }
                 return _cachedHeaderString;
