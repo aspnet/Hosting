@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.AspNet.Http;
 using Microsoft.Extensions.Logging;
 
@@ -20,14 +21,24 @@ namespace Microsoft.AspNet.Hosting.Internal
 
         public static void RequestStarting(this ILogger logger, HttpContext httpContext)
         {
+            var requestStarting = new HostingRequestStarting(httpContext);
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.Log(
                     logLevel: LogLevel.Information,
                     eventId: LoggerEventIds.RequestStarting,
-                    state: new HostingRequestStarting(httpContext),
+                    state: requestStarting,
                     exception: null,
-                    formatter: HostingRequestStarting.Callback);
+                    formatter: HostingRequestStarting.MessageFormatter);
+            }
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.Log(
+                    logLevel: LogLevel.Debug,
+                    eventId: LoggerEventIds.RequestStarting,
+                    state: requestStarting,
+                    exception: null,
+                    formatter: HostingRequestStarting.HeaderFormatter);
             }
         }
 
@@ -37,13 +48,26 @@ namespace Microsoft.AspNet.Hosting.Internal
             if (startTimestamp != 0)
             {
                 var elapsed = new TimeSpan((long)(TimestampToTicks * (currentTimestamp - startTimestamp)));
+                var requestFinished = new HostingRequestFinished(httpContext, elapsed);
 
-                logger.Log(
-                    logLevel: LogLevel.Information,
-                    eventId: LoggerEventIds.RequestFinished,
-                    state: new HostingRequestFinished(httpContext, elapsed),
-                    exception: null,
-                    formatter: HostingRequestFinished.Callback);
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.Log(
+                        logLevel: LogLevel.Information,
+                        eventId: LoggerEventIds.RequestFinished,
+                        state: requestFinished,
+                        exception: null,
+                        formatter: HostingRequestFinished.MessageFormatter);
+                }
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.Log(
+                        logLevel: LogLevel.Debug,
+                        eventId: LoggerEventIds.RequestFinished,
+                        state: requestFinished,
+                        exception: null,
+                        formatter: HostingRequestFinished.HeaderFormatter);
+                }
             }
         }
 
@@ -125,11 +149,13 @@ namespace Microsoft.AspNet.Hosting.Internal
 
         private class HostingRequestStarting : ILogValues
         {
-            internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestStarting)state).ToString();
+            internal static readonly Func<object, Exception, string> MessageFormatter = (state, exception) => ((HostingRequestStarting)state).ToString();
+            internal static readonly Func<object, Exception, string> HeaderFormatter = (state, exception) => ((HostingRequestStarting)state).GetHeaderString();
 
             private readonly HttpRequest _request;
 
-            private string _cachedToString;
+            private string _cachedMessageString;
+            private string _cachedHeaderString;
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
 
             public HostingRequestStarting(HttpContext httpContext)
@@ -139,12 +165,30 @@ namespace Microsoft.AspNet.Hosting.Internal
 
             public override string ToString()
             {
-                if (_cachedToString == null)
+                if (_cachedMessageString == null)
                 {
-                    _cachedToString = $"Request starting {_request.Protocol} {_request.Method} {_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}{_request.QueryString} {_request.ContentType} {_request.ContentLength}";
+                    _cachedMessageString = $"Request starting {_request.Protocol} {_request.Method} {_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}{_request.QueryString} {_request.ContentType} {_request.ContentLength}";
                 }
+                return _cachedMessageString;
+            }
 
-                return _cachedToString;
+            public string GetHeaderString()
+            {
+                if (_cachedHeaderString == null)
+                {
+                    var stringBuilder = new StringBuilder($"Request Headers:{Environment.NewLine}");
+                    stringBuilder.AppendLine("{");
+                    foreach (var header in _request.Headers)
+                    {
+                        foreach (var value in header.Value)
+                        {
+                            stringBuilder.AppendLine($"    {header.Key}: {value}; ");
+                        }
+                    }
+                    stringBuilder.AppendLine("}");
+                    _cachedHeaderString = stringBuilder.ToString();
+                }
+                return _cachedHeaderString;
             }
 
             public IEnumerable<KeyValuePair<string, object>> GetValues()
@@ -171,28 +215,49 @@ namespace Microsoft.AspNet.Hosting.Internal
 
         private class HostingRequestFinished
         {
-            internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestFinished)state).ToString();
+            internal static readonly Func<object, Exception, string> MessageFormatter = (state, exception) => ((HostingRequestFinished)state).ToString();
+            internal static readonly Func<object, Exception, string> HeaderFormatter = (state, exception) => ((HostingRequestFinished)state).GetHeaderString();
 
-            private readonly HttpContext _httpContext;
+            private readonly HttpResponse _response;
             private readonly TimeSpan _elapsed;
 
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
-            private string _cachedToString;
+            private string _cachedMessageString;
+            private string _cachedHeaderString;
 
             public HostingRequestFinished(HttpContext httpContext, TimeSpan elapsed)
             {
-                _httpContext = httpContext;
+                _response = httpContext.Response;
                 _elapsed = elapsed;
             }
 
             public override string ToString()
             {
-                if (_cachedToString == null)
+                if (_cachedMessageString == null)
                 {
-                    _cachedToString = $"Request finished in {_elapsed.TotalMilliseconds}ms {_httpContext.Response.StatusCode} {_httpContext.Response.ContentType}";
+                    _cachedMessageString = $"Request finished in {_elapsed.TotalMilliseconds}ms {_response.StatusCode} {_response.ContentType}";
                 }
+                return _cachedMessageString;
+            }
 
-                return _cachedToString;
+            public string GetHeaderString()
+            {
+                if (_cachedHeaderString == null)
+                {
+                    var stringBuilder = new StringBuilder($"Response Headers:{Environment.NewLine}");
+
+                    stringBuilder.AppendLine("{");
+                    foreach (var header in _response.Headers)
+                    {
+                        foreach (var value in header.Value)
+                        {
+                            stringBuilder.AppendLine($"    {header.Key}: {value};");
+                        }
+                    }
+                    stringBuilder.AppendLine("}");
+                    _cachedHeaderString = stringBuilder.ToString();
+                }
+                return _cachedHeaderString;
             }
 
             public IEnumerable<KeyValuePair<string, object>> GetValues()
@@ -202,8 +267,8 @@ namespace Microsoft.AspNet.Hosting.Internal
                     _cachedGetValues = new[]
                     {
                         new KeyValuePair<string, object>("ElapsedMilliseconds", _elapsed.TotalMilliseconds),
-                        new KeyValuePair<string, object>("StatusCode", _httpContext.Response.StatusCode),
-                        new KeyValuePair<string, object>("ContentType", _httpContext.Response.ContentType),
+                        new KeyValuePair<string, object>("StatusCode", _response.StatusCode),
+                        new KeyValuePair<string, object>("ContentType", _response.ContentType),
                     };
                 }
 
