@@ -144,6 +144,28 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         /// <summary>
+        /// Specify the startup method to be used to configure the web application and the delegate that is used to configure the services of the web application. 
+        /// </summary>
+        /// <param name="configureApplication">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
+        /// <param name="configureServices">The delegate that configures the <see cref="IServiceCollection"/>.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public IWebHostBuilder Configure(Action<IApplicationBuilder> configureApp, Func<IServiceCollection, IServiceProvider> configureServices)
+        {
+            if (configureApp == null)
+            {
+                throw new ArgumentNullException(nameof(configureApp));
+            }
+
+            if (configureServices == null)
+            {
+                throw new ArgumentNullException(nameof(configureServices));
+            }
+
+            _startup = new StartupMethods(configureApp, configureServices);
+            return this;
+        }
+
+        /// <summary>
         /// Configure the provided <see cref="ILoggerFactory"/> which will be available as a hosting service. 
         /// </summary>
         /// <param name="configureLogging">The delegate that configures the <see cref="ILoggerFactory"/>.</param>
