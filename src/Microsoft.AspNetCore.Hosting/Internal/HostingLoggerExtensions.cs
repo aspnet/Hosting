@@ -169,7 +169,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
         }
 
-        private class HostingRequestFinished
+        private class HostingRequestFinished : ILogValues
         {
             internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestFinished)state).ToString();
 
