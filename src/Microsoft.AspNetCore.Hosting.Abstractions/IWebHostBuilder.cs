@@ -63,6 +63,14 @@ namespace Microsoft.AspNetCore.Hosting
         IWebHostBuilder Configure(Action<IApplicationBuilder> configureApplication);
 
         /// <summary>
+        /// Specify the startup method to be used to configure the web application and the delegate that is used to configure the services of the web application. 
+        /// </summary>
+        /// <param name="configureApplication">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
+        /// <param name="configureServices">The delegate that configures the <see cref="IServiceCollection"/>.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        IWebHostBuilder Configure(Action<IApplicationBuilder> configureApp, Func<IServiceCollection, IServiceProvider> configureServices);
+
+        /// <summary>
         /// Add or replace a setting in <see cref="Settings"/>.
         /// </summary>
         /// <param name="key">The key of the setting to add or replace.</param>
