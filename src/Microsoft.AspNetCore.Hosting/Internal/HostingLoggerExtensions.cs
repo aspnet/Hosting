@@ -14,10 +14,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
     internal static class HostingLoggerExtensions
     {
         private static readonly double TimestampToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
+        private static readonly object _nullScope = new HostingNullLogScope();
 
         public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext)
         {
-            return logger.BeginScopeImpl(new HostingLogScope(httpContext));
+            return logger.BeginScopeImpl(!logger.IsEnabled(LogLevel.Critical) ? _nullScope : new HostingLogScope(httpContext));
         }
 
         public static void RequestStarting(this ILogger logger, HttpContext httpContext)
@@ -304,6 +305,78 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return GetEnumerator();
+            }
+        }
+
+        private class HostingNullLogScope : IReadOnlyList<KeyValuePair<string, object>>
+        {
+            private readonly static IEnumerator<KeyValuePair<string, object>> _nullEnumerator = new NullEnumerator();
+
+            public int Count
+            {
+                get
+                {
+                    return 0;
+                }
+            }
+
+            public KeyValuePair<string, object> this[int index]
+            {
+                get
+                {
+                    throw new IndexOutOfRangeException(nameof(index));
+                }
+            }
+
+            public HostingNullLogScope()
+            {
+            }
+
+            public override string ToString()
+            {
+                return string.Empty;
+            }
+
+            public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+            {
+                return _nullEnumerator;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return _nullEnumerator;
+            }
+
+            private class NullEnumerator : IEnumerator<KeyValuePair<string, object>>
+            {
+                public KeyValuePair<string, object> Current
+                {
+                    get
+                    {
+                        return new KeyValuePair<string, object>(null, null);
+                    }
+                }
+
+                object IEnumerator.Current
+                {
+                    get
+                    {
+                        return null;
+                    }
+                }
+
+                public void Dispose()
+                {
+                }
+
+                public bool MoveNext()
+                {
+                    return false;
+                }
+
+                public void Reset()
+                {
+                }
             }
         }
     }
