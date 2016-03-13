@@ -1,13 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
 {
     public class Network
     {
+        /// <summary>
+        /// Check whether selected port is free
+        /// </summary>
+        /// <param name="port">Port</param>
+        /// <returns></returns>
         private static bool IsPortInUse(int port)
         {
             #region WithWebRequest Method
@@ -68,19 +69,24 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 #endif
         }
 
+        /// <summary>
+        /// Search for free port in private ports range 49152–65535.
+        /// </summary>
+        /// <returns>Free Port</returns>
         public static int FindFreePort()
         {
             //The range 49152–65535 (215+214 to 216−1) contains dynamic or private ports that cannot be registered with IANA
-            for (int port = 49151; port < 65534; port++)
+            for (int port = 49152; port < 65535; port++)
             {
-                //if current port (5000) was in use. then get other port
+                //if current port was in use. then get other port
                 if (IsPortInUse(port))
                 {
                     return port;
                 }
             }
 
-            return 0;
+            //All private ports are in use.
+            throw new System.Exception("All private ports are in use");
         }
 
     }
