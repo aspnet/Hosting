@@ -223,7 +223,22 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 if (addresses != null && !addresses.IsReadOnly && addresses.Count == 0)
                 {
                     // Provide a default address if there aren't any configured.
-                    addresses.Add("http://localhost:5000");
+                    int port = 5000;
+
+                    //The range 49152–65535 (215+214 to 216?1) contains dynamic or private ports that cannot be registered with IANA
+                    for (int i = 49151; i < 65534; i++)
+                    {
+                        //if current port (5000) was in use. then get other port
+                        if (Helper.Network.PortValidity(port))
+                        {
+                            addresses.Add("http://localhost:" + port.ToString());
+                            break;
+                        }
+                        else
+                        {
+                            port = i;
+                        }
+                    }
                 }
             }
         }
