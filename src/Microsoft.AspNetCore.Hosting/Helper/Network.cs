@@ -86,7 +86,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
 
             //All private ports are in use.
-            throw new System.Exception("All private ports are in use.");
+            return 0;
+           // throw new System.Exception("All private ports are in use.");
         }
 
     }
