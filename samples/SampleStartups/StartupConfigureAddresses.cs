@@ -30,7 +30,7 @@ namespace SampleStartups
             var host = new WebHostBuilder()
                 .UseDefaultConfiguration(args)
                 .UseStartup<StartupConfigureAddresses>()
-                .UseUrls("http://localhost:49151", "http://localhost:49152")
+                .UseUrls("http://localhost:49152", "http://localhost:49153")
                 .Build();
 
             host.Run();

@@ -43,7 +43,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 {
                     socket.Connect(ep);
                     if (socket.Connected)
-                        return false;
+                        return true;
                 }
                 catch
                 {
@@ -51,7 +51,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
             }
 
-            return true;
+            return false;
 #else
             //netstandard1.3 doesn't support System.Net.DNS. What can we do?!
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
@@ -79,14 +79,14 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             for (int port = 49152; port < 65535; port++)
             {
                 //if current port was in use. then get other port
-                if (IsPortInUse(port))
+                if (!IsPortInUse(port))
                 {
                     return port;
                 }
             }
 
             //All private ports are in use.
-            throw new System.Exception("All private ports are in use");
+            throw new System.Exception("All private ports are in use.");
         }
 
     }

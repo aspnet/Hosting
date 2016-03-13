@@ -122,7 +122,7 @@ namespace Microsoft.AspNetCore.Hosting
             var host = CreateBuilder(config).Build();
             host.Start();
             Assert.NotNull(host.Services.GetService<IHostingEnvironment>());
-            Assert.Equal("http://localhost:49151", host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
+            Assert.Equal("http://localhost:49152", host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
         }
 
         [Fact]
