@@ -222,7 +222,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var addresses = Server.Features?.Get<IServerAddressesFeature>()?.Addresses;
                 if (addresses != null && !addresses.IsReadOnly && addresses.Count == 0)
                 {
-                // Find Free Port.
+                    // Find Free Port.
                     int port = Network.FindFreePort();
                     addresses.Add("http://localhost:" + port.ToString());
                 }
