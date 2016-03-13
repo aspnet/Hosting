@@ -4,11 +4,26 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace Microsoft.AspNetCore.Hosting.Helper
+namespace Microsoft.AspNetCore.Hosting.Internal
 {
     public class Network
     {
-        public static bool PortValidity(int port)
+                public static int FindFreePort()
+        {
+            //The range 49152–65535 (215+214 to 216−1) contains dynamic or private ports that cannot be registered with IANA
+            for (int port = 49151; port < 65534; port++)
+            {
+                //if current port (5000) was in use. then get other port
+                if (IsPortInUse(port))
+                {
+                    return port;
+                }
+            }
+
+            return 0;
+        }
+        
+        public static bool IsPortInUse(int port)
         {
             #region WithWebRequest Method
             ////.................................With WebRequest..................................
