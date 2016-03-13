@@ -45,7 +45,8 @@
       "dependencies": {
         "System.Console": "4.0.0-*",
         "System.Diagnostics.StackTrace": "4.0.1-*",
-        "System.Reflection.Extensions": "4.0.1-*"
+        "System.Reflection.Extensions": "4.0.1-*",
+        "System.Net.Sockets": "4.1.0-rc2-23818"
       },
       "imports": [
         "dotnet5.4",

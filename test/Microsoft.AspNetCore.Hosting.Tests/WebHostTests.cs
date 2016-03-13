@@ -122,7 +122,11 @@ namespace Microsoft.AspNetCore.Hosting
             var host = CreateBuilder(config).Build();
             host.Start();
             Assert.NotNull(host.Services.GetService<IHostingEnvironment>());
-            Assert.Equal("http://localhost:5000", host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
+
+            string port = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().Split(':').Last();
+
+            Assert.Contains("http://localhost", host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
+            Assert.InRange<int>(int.Parse(port), 49150, 65536);
         }
 
         [Fact]

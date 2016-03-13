@@ -222,8 +222,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var addresses = Server.Features?.Get<IServerAddressesFeature>()?.Addresses;
                 if (addresses != null && !addresses.IsReadOnly && addresses.Count == 0)
                 {
-                    // Provide a default address if there aren't any configured.
-                    addresses.Add("http://localhost:5000");
+                    // Find Free Port.
+                    int port = Network.FindFreePort();
+                    addresses.Add("http://localhost:" + port.ToString());
                 }
             }
         }
