@@ -76,7 +76,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public static int FindFreePort()
         {
             //The range 49152–65535 (215+214 to 216−1) contains dynamic or private ports that cannot be registered with IANA
-            for (int port = 49152; port < 65535; port++)
+            for (int port = 49151; port < 65535; port++)
             {
                 //if current port was in use. then get other port
                 if (!IsPortInUse(port))
