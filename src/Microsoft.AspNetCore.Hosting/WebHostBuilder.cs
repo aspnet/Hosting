@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Builder;
 using Microsoft.AspNetCore.Hosting.Internal;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Microsoft.AspNetCore.Hosting
@@ -26,6 +28,11 @@ namespace Microsoft.AspNetCore.Hosting
     /// </summary>
     public class WebHostBuilder : IWebHostBuilder
     {
+        // StringBuilderPooledObjectPolicy.MaximumRetainedCapacity's default is too small for general use and will
+        // cause useful StringBuilders to be thrown away in common scenarios e.g. serializing an antiforgery cookie.
+        // Instead of that value (4 kB), allow the few StringBuilders to grow to 1 MB.
+        private const int MaximumBuilderSize = 0x100000;
+
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILoggerFactory _loggerFactory;
         private readonly List<Action<IServiceCollection>> _configureServicesDelegates;
@@ -135,7 +142,7 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         /// <summary>
-        /// Configure the provided <see cref="ILoggerFactory"/> which will be available as a hosting service. 
+        /// Configure the provided <see cref="ILoggerFactory"/> which will be available as a hosting service.
         /// </summary>
         /// <param name="configureLogging">The delegate that configures the <see cref="ILoggerFactory"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
@@ -155,7 +162,7 @@ namespace Microsoft.AspNetCore.Hosting
 
             var appEnvironment = hostingContainer.GetRequiredService<IApplicationEnvironment>();
             var startupLoader = hostingContainer.GetRequiredService<IStartupLoader>();
-            
+
             var contentRootPath = ResolveContentRootPath(_options.ContentRootPath, appEnvironment.ApplicationBasePath);
             var applicationName = ResolveApplicationName() ?? appEnvironment.ApplicationName;
 
@@ -197,6 +204,17 @@ namespace Microsoft.AspNetCore.Hosting
             var diagnosticSource = new DiagnosticListener("Microsoft.AspNetCore");
             services.AddSingleton<DiagnosticSource>(diagnosticSource);
             services.AddSingleton<DiagnosticListener>(diagnosticSource);
+
+            services.AddSingleton<ObjectPool<StringBuilder>>(serviceProvider =>
+            {
+                var provider = new DefaultObjectPoolProvider();
+                var policy = new StringBuilderPooledObjectPolicy
+                {
+                    MaximumRetainedCapacity = MaximumBuilderSize,
+                };
+
+                return provider.Create(policy);
+            });
 
             // Conjure up a RequestServices
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();

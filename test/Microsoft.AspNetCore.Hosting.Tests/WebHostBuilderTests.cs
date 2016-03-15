@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Fakes;
 using Microsoft.AspNetCore.Hosting.Internal;
@@ -13,8 +14,8 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
-using System.Reflection;
 using Xunit;
 
 namespace Microsoft.AspNetCore.Hosting
@@ -92,8 +93,27 @@ namespace Microsoft.AspNetCore.Hosting
             using (host)
             {
                 host.Start();
-                var service = host.Services.GetServices<IApplicationLifetime>();
-                Assert.NotNull(service);
+                var services = host.Services.GetServices<IApplicationLifetime>();
+                Assert.NotNull(services);
+                Assert.NotEmpty(services);
+
+                await AssertResponseContains(server.RequestDelegate, "Exception from constructor");
+            }
+        }
+
+        [Fact]
+        public async Task ObjectPoolOfStringBuilderRegistered_EvenWhenStartupCtorThrows()
+        {
+            var builder = CreateWebHostBuilder();
+            var server = new TestServer();
+            var host = builder.UseServer(server).UseStartup<StartupCtorThrows>().Build();
+            using (host)
+            {
+                host.Start();
+                var services = host.Services.GetServices<ObjectPool<StringBuilder>>();
+                Assert.NotNull(services);
+                Assert.NotEmpty(services);
+
                 await AssertResponseContains(server.RequestDelegate, "Exception from constructor");
             }
         }
