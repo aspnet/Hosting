@@ -102,19 +102,19 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
-        public async Task ObjectPoolOfStringBuilderRegistered_EvenWhenStartupCtorThrows()
+        public void ObjectPoolOfStringBuilderRegistered()
         {
-            var builder = CreateWebHostBuilder();
             var server = new TestServer();
-            var host = builder.UseServer(server).UseStartup<StartupCtorThrows>().Build();
+            var host = CreateWebHostBuilder()
+                .UseServer(server)
+                .Configure(app => { })
+                .Build();
             using (host)
             {
                 host.Start();
                 var services = host.Services.GetServices<ObjectPool<StringBuilder>>();
                 Assert.NotNull(services);
                 Assert.NotEmpty(services);
-
-                await AssertResponseContains(server.RequestDelegate, "Exception from constructor");
             }
         }
 
