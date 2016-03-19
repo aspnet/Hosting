@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using System.Reflection;
 using Xunit;
@@ -21,6 +22,32 @@ namespace Microsoft.AspNetCore.Hosting
 {
     public class WebHostBuilderTests
     {
+        [Fact]
+        public void CtorCreatesLoggerFactory()
+        {
+            var hostBuilder = new WebHostBuilder()
+                .UseServer(new TestServer())
+                .UseStartup<StartupNoServices>();
+
+            var host = (WebHost)hostBuilder.Build();
+
+            Assert.NotNull(host.Services.GetService<ILoggerFactory>());
+        }
+
+        [Fact]
+        public void CtorAcceptsLoggerFactory()
+        {
+            var loggerFactory = new LoggerFactory();
+
+            var hostBuilder = new WebHostBuilder(loggerFactory)
+                .UseServer(new TestServer())
+                .UseStartup<StartupNoServices>();
+
+            var host = (WebHost)hostBuilder.Build();
+
+            Assert.Same(loggerFactory, host.Services.GetService<ILoggerFactory>());
+        }
+
         [Fact]
         public void Build_honors_UseStartup_with_string()
         {
