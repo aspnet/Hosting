@@ -40,10 +40,14 @@ namespace Microsoft.AspNetCore.Hosting
         // Only one of these should be set
         private IServerFactory _serverFactory;
 
-        public WebHostBuilder()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WebHostBuilder"/> class.
+        /// </summary>
+        /// <param name="loggerFactory">An existing <see cref="ILoggerFactory"/>. It will be available as a hosting service.</param>
+        public WebHostBuilder(ILoggerFactory loggerFactory = null)
         {
             _hostingEnvironment = new HostingEnvironment();
-            _loggerFactory = new LoggerFactory();
+            _loggerFactory = loggerFactory ?? new LoggerFactory();
             _configureServicesDelegates = new List<Action<IServiceCollection>>();
         }
 
