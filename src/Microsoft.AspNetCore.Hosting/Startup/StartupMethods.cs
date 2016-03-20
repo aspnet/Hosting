@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Hosting.Startup
@@ -11,19 +10,19 @@ namespace Microsoft.AspNetCore.Hosting.Startup
     {
         internal static Func<IServiceCollection, IServiceProvider> DefaultBuildServiceProvider = s => s.BuildServiceProvider();
 
-        public StartupMethods(Action<IApplicationBuilder> configure)
+        public StartupMethods(ConfigureDelegate configure)
             : this(configure, configureServices: null)
         {
         }
 
-        public StartupMethods(Action<IApplicationBuilder> configure, Func<IServiceCollection, IServiceProvider> configureServices)
+        public StartupMethods(ConfigureDelegate configure, Func<IServiceCollection, IServiceProvider> configureServices)
         {
             ConfigureDelegate = configure;
             ConfigureServicesDelegate = configureServices ?? DefaultBuildServiceProvider;
         }
 
         public Func<IServiceCollection, IServiceProvider> ConfigureServicesDelegate { get; }
-        public Action<IApplicationBuilder> ConfigureDelegate { get; }
+        public ConfigureDelegate ConfigureDelegate { get; }
 
     }
 }

@@ -8,9 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Hosting.Startup
 {
-    // TODO: replace all Action<IApplicationBuilder> eventually with this
-    public delegate void ConfigureDelegate(IApplicationBuilder builder);
-
     public class ConfigureBuilder
     {
         public ConfigureBuilder(MethodInfo configure)
@@ -20,7 +17,7 @@ namespace Microsoft.AspNetCore.Hosting.Startup
 
         public MethodInfo MethodInfo { get; }
 
-        public Action<IApplicationBuilder> Build(object instance) => builder => Invoke(instance, builder);
+        public ConfigureDelegate Build(object instance) => builder => Invoke(instance, builder);
 
         private void Invoke(object instance, IApplicationBuilder builder)
         {

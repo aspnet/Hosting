@@ -143,7 +143,7 @@ namespace Microsoft.AspNetCore.TestHost
 
         public class RequestServicesFilter : IStartupFilter
         {
-            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            public ConfigureDelegate Configure(ConfigureDelegate next)
             {
                 return builder =>
                 {
@@ -210,7 +210,7 @@ namespace Microsoft.AspNetCore.TestHost
 
             public IServiceProvider RequestServices { get; set; }
 
-            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            public ConfigureDelegate Configure(ConfigureDelegate next)
             {
                 return app =>
                 {
@@ -253,7 +253,7 @@ namespace Microsoft.AspNetCore.TestHost
 
             public IServiceProvider RequestServices { get; set; }
 
-            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            public ConfigureDelegate Configure(ConfigureDelegate next)
             {
                 return app =>
                 {
