@@ -44,7 +44,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// </summary>
         /// <param name="configureApplication">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
-        IWebHostBuilder Configure(Action<IApplicationBuilder> configureApplication);
+        IWebHostBuilder Configure(ConfigureDelegate configureApplication);
 
         /// <summary>
         /// Add or replace a setting in the configuration.

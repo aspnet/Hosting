@@ -123,7 +123,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// </summary>
         /// <param name="configureApp">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
-        public IWebHostBuilder Configure(Action<IApplicationBuilder> configureApp)
+        public IWebHostBuilder Configure(ConfigureDelegate configureApp)
         {
             if (configureApp == null)
             {
