@@ -23,32 +23,6 @@ namespace Microsoft.AspNetCore.Hosting
     public class WebHostBuilderTests
     {
         [Fact]
-        public void CtorCreatesLoggerFactory()
-        {
-            var hostBuilder = new WebHostBuilder()
-                .UseServer(new TestServer())
-                .UseStartup<StartupNoServices>();
-
-            var host = (WebHost)hostBuilder.Build();
-
-            Assert.NotNull(host.Services.GetService<ILoggerFactory>());
-        }
-
-        [Fact]
-        public void CtorAcceptsLoggerFactory()
-        {
-            var loggerFactory = new LoggerFactory();
-
-            var hostBuilder = new WebHostBuilder(loggerFactory)
-                .UseServer(new TestServer())
-                .UseStartup<StartupNoServices>();
-
-            var host = (WebHost)hostBuilder.Build();
-
-            Assert.Same(loggerFactory, host.Services.GetService<ILoggerFactory>());
-        }
-
-        [Fact]
         public void Build_honors_UseStartup_with_string()
         {
             var builder = CreateWebHostBuilder().UseServer(new TestServer());
@@ -149,6 +123,33 @@ namespace Microsoft.AspNetCore.Hosting
                 host.Start();
                 await AssertResponseContains(server.RequestDelegate, "Exception from Configure");
             }
+        }
+
+        [Fact]
+        public void DefaultCreatesLoggerFactory()
+        {
+            var hostBuilder = new WebHostBuilder()
+                .UseServer(new TestServer())
+                .UseStartup<StartupNoServices>();
+
+            var host = (WebHost)hostBuilder.Build();
+
+            Assert.NotNull(host.Services.GetService<ILoggerFactory>());
+        }
+
+        [Fact]
+        public void UseLoggerFactoryHonored()
+        {
+            var loggerFactory = new LoggerFactory();
+
+            var hostBuilder = new WebHostBuilder()
+                .UseLoggerFactory(loggerFactory)
+                .UseServer(new TestServer())
+                .UseStartup<StartupNoServices>();
+
+            var host = (WebHost)hostBuilder.Build();
+
+            Assert.Same(loggerFactory, host.Services.GetService<ILoggerFactory>());
         }
 
         [Fact]
