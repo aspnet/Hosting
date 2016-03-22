@@ -2,11 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using Microsoft.AspNetCore.Testing;
+using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 
@@ -104,7 +103,7 @@ namespace Microsoft.AspNetCore.Server.Testing
             if (hostProcess != null && !hostProcess.HasExited)
             {
                 // Shutdown the host process.
-                KillProcess(hostProcess.Id);
+                hostProcess.KillTree();
                 if (!hostProcess.HasExited)
                 {
                     Logger.LogWarning("Unable to terminate the host process with process Id '{processId}", hostProcess.Id);
@@ -120,44 +119,12 @@ namespace Microsoft.AspNetCore.Server.Testing
             }
         }
 
-        private void KillProcess(int processId)
-        {
-            if (IsWindows)
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "taskkill",
-                    Arguments = $"/T /F /PID {processId}",
-                };
-                var killProcess = Process.Start(startInfo);
-                killProcess.WaitForExit();
-            }
-            else
-            {
-                var killSubProcessStartInfo = new ProcessStartInfo
-                {
-                    FileName = "pkill",
-                    Arguments = $"-TERM -P {processId}",
-                };
-                var killSubProcess = Process.Start(killSubProcessStartInfo);
-                killSubProcess.WaitForExit();
-                
-                var killProcessStartInfo = new ProcessStartInfo
-                {
-                    FileName = "kill",
-                    Arguments = $"-TERM {processId}",
-                };
-                var killProcess = Process.Start(killProcessStartInfo);
-                killProcess.WaitForExit();
-            }
-        }
-
         protected void AddEnvironmentVariablesToProcess(ProcessStartInfo startInfo)
         {
             var environment =
 #if NET451
                 startInfo.EnvironmentVariables;
-#elif NETSTANDARDAPP1_5
+#else
                 startInfo.Environment;
 #endif
 
@@ -172,7 +139,7 @@ namespace Microsoft.AspNetCore.Server.Testing
 #if NET451
         protected void SetEnvironmentVariable(System.Collections.Specialized.StringDictionary environment, string name, string value)
         {
-#elif NETSTANDARDAPP1_5
+#else
         protected void SetEnvironmentVariable(System.Collections.Generic.IDictionary<string, string> environment, string name, string value)
         {
 #endif
