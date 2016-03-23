@@ -13,10 +13,9 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.PlatformAbstractions;
-using System.Reflection;
-using Xunit;
 using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.PlatformAbstractions;
+using Xunit;
 
 namespace Microsoft.AspNetCore.Hosting
 {
