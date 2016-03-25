@@ -40,7 +40,13 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             _logger.RequestStarting(httpContext);
             if (diagnoticsEnabled)
             {
-                _diagnosticSource.Write("Microsoft.AspNetCore.Hosting.BeginRequest", new { httpContext = httpContext, timestamp = startTimestamp });
+                _diagnosticSource.Write(
+                    "Microsoft.AspNetCore.Hosting.BeginRequest", 
+                    new
+                    {
+                        httpContext = httpContext,
+                        timestamp = startTimestamp
+                    });
             }
 
             return new Context
@@ -58,25 +64,52 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             if (exception == null)
             {
                 var diagnoticsEnabled = _diagnosticSource.IsEnabled("Microsoft.AspNetCore.Hosting.EndRequest");
-                var currentTimestamp = (diagnoticsEnabled || context.StartTimestamp != 0) ? Stopwatch.GetTimestamp() : 0;
+                var currentTimestamp = 0L;
+                var duration = 0L;
+                if (diagnoticsEnabled || context.StartTimestamp != 0)
+                {
+                    currentTimestamp = Stopwatch.GetTimestamp();
+                    duration = context.StartTimestamp - currentTimestamp;
+                }
 
                 _logger.RequestFinished(httpContext, context.StartTimestamp, currentTimestamp);
 
                 if (diagnoticsEnabled)
                 {
-                    _diagnosticSource.Write("Microsoft.AspNetCore.Hosting.EndRequest", new { httpContext = httpContext, timestamp = currentTimestamp });
+                    _diagnosticSource.Write(
+                        "Microsoft.AspNetCore.Hosting.EndRequest", 
+                        new
+                        {
+                            httpContext = httpContext,
+                            timestamp = currentTimestamp,
+                            duration = duration
+                        });
                 }
             }
             else
             {
                 var diagnoticsEnabled = _diagnosticSource.IsEnabled("Microsoft.AspNetCore.Hosting.UnhandledException");
-                var currentTimestamp = (diagnoticsEnabled || context.StartTimestamp != 0) ? Stopwatch.GetTimestamp() : 0;
+                var currentTimestamp = 0L;
+                var duration = 0L;
+                if (diagnoticsEnabled || context.StartTimestamp != 0)
+                {
+                    currentTimestamp = Stopwatch.GetTimestamp();
+                    duration = context.StartTimestamp - currentTimestamp;
+                }
 
                 _logger.RequestFinished(httpContext, context.StartTimestamp, currentTimestamp);
 
                 if (diagnoticsEnabled)
                 {
-                    _diagnosticSource.Write("Microsoft.AspNetCore.Hosting.UnhandledException", new { httpContext = httpContext, timestamp = currentTimestamp, exception = exception });
+                    _diagnosticSource.Write(
+                        "Microsoft.AspNetCore.Hosting.UnhandledException", 
+                        new
+                        {
+                            httpContext = httpContext,
+                            timestamp = currentTimestamp,
+                            duration = duration,
+                            exception = exception
+                        });
                 }
             }
 
