@@ -28,10 +28,7 @@ namespace Microsoft.AspNetCore.Server.Testing
             // Start timer
             StartTimer();
 
-            if (DeploymentParameters.PublishApplicationBeforeDeployment)
-            {
-                DotnetPublish();
-            }
+            DotnetPublish();
 
             var uri = TestUriHelper.BuildTestUri(DeploymentParameters.ApplicationBaseUriHint);
             // Launch the host process.
@@ -50,25 +47,17 @@ namespace Microsoft.AspNetCore.Server.Testing
         {
             string executableName;
             string executableArgs = string.Empty;
-            if (DeploymentParameters.PublishApplicationBeforeDeployment)
+            var executableExtension = DeploymentParameters.RuntimeFlavor == RuntimeFlavor.Clr ? ".exe" : "";
+            var executable = Path.Combine(DeploymentParameters.PublishedApplicationRootPath, new DirectoryInfo(DeploymentParameters.ApplicationPath).Name + executableExtension);
+
+            if (DeploymentParameters.RuntimeFlavor == RuntimeFlavor.Clr && PlatformServices.Default.Runtime.OperatingSystemPlatform != Platform.Windows)
             {
-                var executableExtension = DeploymentParameters.RuntimeFlavor == RuntimeFlavor.Clr ? ".exe" : "";
-                var executable = Path.Combine(DeploymentParameters.PublishedApplicationRootPath, new DirectoryInfo(DeploymentParameters.ApplicationPath).Name + executableExtension);
-                
-                if (DeploymentParameters.RuntimeFlavor == RuntimeFlavor.Clr && PlatformServices.Default.Runtime.OperatingSystemPlatform != Platform.Windows)
-                {
-                    executableName = "mono";
-                    executableArgs = executable;
-                }
-                else
-                {
-                    executableName = executable;
-                }
+                executableName = "mono";
+                executableArgs = executable;
             }
             else
             {
-                executableName = DotnetCommandName;
-                executableArgs = $"run -p \"{DeploymentParameters.ApplicationPath}\" {DotnetArgumentSeparator}";
+                executableName = executable;
             }
 
             executableArgs += $" --server.urls {uri} "
@@ -117,10 +106,7 @@ namespace Microsoft.AspNetCore.Server.Testing
         {
             ShutDownIfAnyHostProcess(_hostProcess);
 
-            if (DeploymentParameters.PublishApplicationBeforeDeployment)
-            {
-                CleanPublishedOutput();
-            }
+            CleanPublishedOutput();
 
             InvokeUserApplicationCleanup();
 

@@ -27,12 +27,7 @@ namespace Microsoft.AspNetCore.Server.Testing
             // Start timer
             StartTimer();
 
-            // For now we always auto-publish. Otherwise we'll have to write our own local web.config for the HttpPlatformHandler
-            DeploymentParameters.PublishApplicationBeforeDeployment = true;
-            if (DeploymentParameters.PublishApplicationBeforeDeployment)
-            {
-                DotnetPublish();
-            }
+            DotnetPublish();
 
             var uri = TestUriHelper.BuildTestUri(DeploymentParameters.ApplicationBaseUriHint);
             // Launch the host process.
@@ -155,10 +150,7 @@ namespace Microsoft.AspNetCore.Server.Testing
                 }
             }
 
-            if (DeploymentParameters.PublishApplicationBeforeDeployment)
-            {
-                CleanPublishedOutput();
-            }
+            CleanPublishedOutput();
 
             InvokeUserApplicationCleanup();
 
