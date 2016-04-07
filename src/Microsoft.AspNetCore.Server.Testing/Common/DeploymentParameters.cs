@@ -69,11 +69,6 @@ namespace Microsoft.AspNetCore.Server.Testing
 
         public string ApplicationPath { get; set; }
 
-        /// <summary>
-        /// To publish the application before deployment.
-        /// </summary>
-        public bool PublishApplicationBeforeDeployment { get; set; }
-
         public string PublishTargetFramework { get; set; }
 
         public string PublishedApplicationRootPath { get; set; }
@@ -92,12 +87,11 @@ namespace Microsoft.AspNetCore.Server.Testing
         public override string ToString()
         {
             return string.Format(
-                    "[Variation] :: ServerType={0}, Runtime={1}, Arch={2}, BaseUrlHint={3}, Publish={4}",
+                    "[Variation] :: ServerType={0}, Runtime={1}, Arch={2}, BaseUrlHint={3}",
                     ServerType, 
                     RuntimeFlavor, 
                     RuntimeArchitecture, 
-                    ApplicationBaseUriHint,
-                    PublishApplicationBeforeDeployment);
+                    ApplicationBaseUriHint);
         }
     }
 }

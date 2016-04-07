@@ -90,11 +90,11 @@ namespace Microsoft.AspNetCore.Server.Testing
             try
             {
                 // We've originally published the application in a temp folder. We need to delete it.
-                Directory.Delete(DeploymentParameters.PublishedApplicationRootPath, true);
+                Directory.Delete(DeploymentParameters.PublishedApplicationRootPath, recursive: true);
             }
             catch (Exception exception)
             {
-                Logger.LogWarning($"Failed to delete directory : {exception.Message}");
+                Logger.LogWarning(0, exception, $"Failed to delete directory : {DeploymentParameters.PublishedApplicationRootPath}");
             }
         }
 
@@ -166,7 +166,7 @@ namespace Microsoft.AspNetCore.Server.Testing
                 }
                 catch (Exception exception)
                 {
-                    Logger.LogWarning("User cleanup code failed with exception : {exception}", exception.Message);
+                    Logger.LogWarning(0, exception, $"User cleanup code failed.");
                 }
             }
         }
@@ -197,17 +197,5 @@ namespace Microsoft.AspNetCore.Server.Testing
         }
 
         public abstract void Dispose();
-
-        protected static string GetOSPrefix()
-        {
-            switch (PlatformServices.Default.Runtime.OperatingSystemPlatform)
-            {
-                case Platform.Linux: return "linux";
-                case Platform.Darwin: return "darwin";
-                case Platform.Windows: return "win";
-                default:
-                    throw new InvalidOperationException("Unrecognized operating system");
-            }
-        }
     }
 }

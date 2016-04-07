@@ -31,9 +31,6 @@ namespace Microsoft.AspNetCore.Server.Testing
             // Start timer
             StartTimer();
 
-            // Only supports publish and run on IIS.
-            DeploymentParameters.PublishApplicationBeforeDeployment = true;
-
             _application = new IISApplication(DeploymentParameters, Logger);
 
             // Publish to IIS root\application folder.
