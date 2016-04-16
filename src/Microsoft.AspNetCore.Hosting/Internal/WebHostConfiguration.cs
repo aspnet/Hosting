@@ -18,8 +18,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // Setup the default locations for finding hosting configuration options
             // hosting.json, ASPNETCORE_ prefixed env variables and command line arguments
             var configBuilder = new ConfigurationBuilder()
-                .AddJsonFile(WebHostDefaults.HostingJsonFile, optional: true)
-                .AddEnvironmentVariables(prefix: WebHostDefaults.EnvironmentVariablesPrefix);
+                .AddJsonFile(WebHostDefaults.HostingJsonFile, optional: true);
 
             if (args != null)
             {

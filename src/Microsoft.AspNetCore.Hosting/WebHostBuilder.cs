@@ -30,7 +30,11 @@ namespace Microsoft.AspNetCore.Hosting
         private readonly List<Action<IServiceCollection>> _configureServicesDelegates;
         private readonly List<Action<ILoggerFactory>> _configureLoggingDelegates;
 
-        private IConfiguration _config = new ConfigurationBuilder().AddInMemoryCollection().Build();
+        private IConfiguration _config = new ConfigurationBuilder()
+                                            .AddEnvironmentVariables(prefix: WebHostDefaults.EnvironmentVariablesPrefix)
+                                            .AddInMemoryCollection()
+                                            .Build();
+
         private ILoggerFactory _loggerFactory;
         private WebHostOptions _options;
 
