@@ -129,23 +129,17 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             if (StartupType == null)
             {
-                var diagnosticTypeMessages = new List<string>();
-                StartupType = _startupLoader.FindStartupType(StartupAssemblyName, diagnosticTypeMessages);
+                StartupType = _startupLoader.FindStartupType(StartupAssemblyName);
                 if (StartupType == null)
                 {
-                    throw new ArgumentException(
-                        diagnosticTypeMessages.Aggregate("Failed to find a startup type for the web application.", (a, b) => a + "\r\n" + b),
-                        StartupAssemblyName);
+                    throw new ArgumentException("Failed to find a startup type for the web application.", StartupAssemblyName);
                 }
             }
 
-            var diagnosticMessages = new List<string>();
-            Startup = _startupLoader.LoadMethods(StartupType, diagnosticMessages);
+            Startup = _startupLoader.LoadMethods(StartupType);
             if (Startup == null)
             {
-                throw new ArgumentException(
-                    diagnosticMessages.Aggregate("Failed to find a startup entry point for the web application.", (a, b) => a + "\r\n" + b),
-                    StartupAssemblyName);
+                throw new ArgumentException("Failed to find a startup entry point for the web application.", StartupAssemblyName);
             }
         }
 
