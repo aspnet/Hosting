@@ -14,9 +14,9 @@
     "url": "git://github.com/aspnet/hosting"
   },
   "resource": [
-    "Deployers/NanoDeployer/RemotePSSessionHelper.ps1",
-    "Deployers/NanoDeployer/StartServer.ps1",
-    "Deployers/NanoDeployer/StopServer.ps1"
+    "Deployers/RemoteDeployer/RemotePSSessionHelper.ps1",
+    "Deployers/RemoteDeployer/StartServer.ps1",
+    "Deployers/RemoteDeployer/StopServer.ps1"
   ],
   "dependencies": {
     "Microsoft.AspNetCore.Testing": "1.0.0-*",

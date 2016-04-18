@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Testing.xunit;
 namespace Microsoft.AspNetCore.Server.Testing
 {
     /// <summary>
-    /// Skip test if a given environment variable is not enabled. To enable set environment variable 
-    /// to true for the test process.
+    /// Skip test if a given environment variable is not enabled. To enable the test, set environment variable 
+    /// to "true" for the test process.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class SkipIfEnvironmentVariableNotEnabledAttribute : Attribute, ITestCondition
@@ -32,8 +32,10 @@ namespace Microsoft.AspNetCore.Server.Testing
         {
             get
             {
-                return $"Skipping test. To run this test, set the environment variable {_environmentVariableName}=true.";
+                return $"To run this test, set the environment variable {_environmentVariableName}=\"true\". {AdditionalInfo}";
             }
         }
+
+        public string AdditionalInfo { get; set; }
     }
 }
