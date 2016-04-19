@@ -43,3 +43,6 @@ else
 {
 	throw [System.InvalidOperationException] "Server type '$serverType' is not supported."
 }
+
+# NOTE: Make sure this is the last statement in this script as its used to get the exit code of this script
+$LASTEXITCODE

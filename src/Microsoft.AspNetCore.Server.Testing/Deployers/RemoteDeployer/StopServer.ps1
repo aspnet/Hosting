@@ -21,3 +21,6 @@ else
 	Write-Host "Stopping the process '$serverProcessName'"
 	Stop-Process -Name "$serverProcessName"
 }
+
+# NOTE: Make sure this is the last statement in this script as its used to get the exit code of this script
+$LASTEXITCODE
