@@ -18,6 +18,9 @@ param(
 	[Parameter(Mandatory=$true)]
 	[string]$serverAction,
 
+	[Parameter(Mandatory=$true)]
+	[string]$applicationBaseUrl,
+
 	[Parameter(Mandatory=$false)]
 	[string]$environmentVariables
 )
@@ -34,7 +37,7 @@ if ($serverAction -eq "StartServer")
 {
 	Write-Host "Starting the application on machine '$serverName'"
 	$startServerScriptPath = "$PSScriptRoot\StartServer.ps1"
-	$remoteResult=Invoke-Command -Session $psSession -FilePath $startServerScriptPath -ArgumentList $executablePath, $serverType, $serverName, $environmentVariables
+	$remoteResult=Invoke-Command -Session $psSession -FilePath $startServerScriptPath -ArgumentList $executablePath, $serverType, $serverName, $applicationBaseUrl, $environmentVariables
 }
 else
 {

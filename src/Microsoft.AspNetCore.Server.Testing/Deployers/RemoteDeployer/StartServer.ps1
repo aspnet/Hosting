@@ -9,6 +9,9 @@ param(
 	[Parameter(Mandatory=$true)]
 	[string]$serverName,
 
+	[Parameter(Mandatory=$true)]
+	[string]$applicationBaseUrl,
+
 	# These are of the format: key1=value1|key2=value2|key3=value3
 	[Parameter(Mandatory=$false)]
 	[string]$environmentVariables
@@ -32,12 +35,12 @@ if ($serverType -eq "IIS")
 elseif ($serverType -eq "Kestrel")
 {
 	Write-Host "Starting the process '$executablePath'"
-	& $executablePath --server.urls http://$($serverName):5000/
+	& $executablePath --server.urls $applicationBaseUrl
 }
 elseif ($serverType -eq "WebListener")
 {
 	Write-Host "Starting the process '$executablePath'"
-	& $executablePath --server.urls http://$($serverName):5000/ --server "Microsoft.AspNetCore.Server.WebListener"
+	& $executablePath --server.urls $applicationBaseUrl --server "Microsoft.AspNetCore.Server.WebListener"
 }
 else
 {

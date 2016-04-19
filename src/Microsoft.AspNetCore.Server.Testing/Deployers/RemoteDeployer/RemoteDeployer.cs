@@ -78,6 +78,11 @@ namespace Microsoft.AspNetCore.Server.Testing
                 throw new ArgumentException($"Invalid value for {nameof(RemoteDeploymentParameters.RemoteServerRelativeExecutablePath)}." +
                     " This is the name of the executable in the published output which needs to be executed on the remote server.");
             }
+
+            if (string.IsNullOrWhiteSpace(_deploymentParameters.ApplicationBaseUriHint))
+            {
+                throw new ArgumentException($"Invalid value for {nameof(RemoteDeploymentParameters.ApplicationBaseUriHint)}.");
+            }
         }
 
         public override DeploymentResult Deploy()
@@ -101,19 +106,9 @@ namespace Microsoft.AspNetCore.Server.Testing
 
             RunScript("StartServer");
 
-            string uri;
-            if (_deploymentParameters.ServerType == ServerType.IIS)
-            {
-                uri = $"http://{_deploymentParameters.ServerName}:80/";
-            }
-            else
-            {
-                uri = $"http://{_deploymentParameters.ServerName}:5000/";
-            }
-
             return new DeploymentResult
             {
-                ApplicationBaseUri = uri,
+                ApplicationBaseUri = DeploymentParameters.ApplicationBaseUriHint,
                 DeploymentParameters = DeploymentParameters
             };
         }
@@ -168,6 +163,7 @@ namespace Microsoft.AspNetCore.Server.Testing
             parameterBuilder.Append($" -executablePath \"{Path.Combine(_deployedFolderPathInFileShare, _deploymentParameters.RemoteServerRelativeExecutablePath)}\"");
             parameterBuilder.Append($" -serverType {_deploymentParameters.ServerType}");
             parameterBuilder.Append($" -serverAction {serverAction}");
+            parameterBuilder.Append($" -applicationBaseUrl {_deploymentParameters.ApplicationBaseUriHint}");
             var environmentVariables = string.Join("`,", _deploymentParameters.EnvironmentVariables.Select(envVariable => $"{envVariable.Key}={envVariable.Value}"));
             parameterBuilder.Append($" -environmentVariables \"{environmentVariables}\"");
 
@@ -211,6 +207,7 @@ namespace Microsoft.AspNetCore.Server.Testing
                 {
                     throw new Exception($"Failed to execute the script on '{_deploymentParameters.ServerName}'.");
                 }
+
             }
         }
 
