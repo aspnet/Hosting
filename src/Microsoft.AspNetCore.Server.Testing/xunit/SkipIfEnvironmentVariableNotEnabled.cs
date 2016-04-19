@@ -10,7 +10,7 @@ namespace Microsoft.AspNetCore.Server.Testing
     /// Skip test if a given environment variable is not enabled. To enable the test, set environment variable 
     /// to "true" for the test process.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class SkipIfEnvironmentVariableNotEnabledAttribute : Attribute, ITestCondition
     {
         private readonly string _environmentVariableName;

@@ -2,42 +2,28 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace Microsoft.AspNetCore.Server.Testing
 {
-    public class RemoteDeployer : ApplicationDeployer
+    public class RemoteWindowsDeployer : ApplicationDeployer
     {
         /// <summary>
         /// Example: If the share path is '\\foo\bar', then this returns the full path to the
         /// deployed folder. Example: '\\foo\bar\048f6c99-de3e-488a-8020-f9eb277818d9'
         /// </summary>
         private string _deployedFolderPathInFileShare;
-        private readonly RemoteDeploymentParameters _deploymentParameters;
-        private static readonly string _remotePSSessionHelperScript;
+        private readonly RemoteWindowsDeploymentParameters _deploymentParameters;
         private bool _isDisposed;
+        private static readonly Lazy<Scripts> _scripts = new Lazy<Scripts>(() => CopyEmbeddedScriptFilesToDisk());
 
-        static RemoteDeployer()
-        {
-            // Copy the scripts from this assembly's embedded resources to the temp path on the machine where these
-            // tests are being run
-            var embeddedFileProvider = new EmbeddedFileProvider(
-                typeof(RemoteDeployer).GetTypeInfo().Assembly,
-                "Microsoft.AspNetCore.Server.Testing.Deployers.RemoteDeployer");
-
-            var filesOnDisk = CopyEmbeddedScriptFilesToDisk(
-                embeddedFileProvider,
-                new[] { "RemotePSSessionHelper.ps1", "StartServer.ps1", "StopServer.ps1" });
-            _remotePSSessionHelperScript = filesOnDisk[0];
-        }
-
-        public RemoteDeployer(RemoteDeploymentParameters deploymentParameters, ILogger logger)
+        public RemoteWindowsDeployer(RemoteWindowsDeploymentParameters deploymentParameters, ILogger logger)
             : base(deploymentParameters, logger)
         {
             _deploymentParameters = deploymentParameters;
@@ -52,36 +38,36 @@ namespace Microsoft.AspNetCore.Server.Testing
 
             if (string.IsNullOrWhiteSpace(_deploymentParameters.ServerName))
             {
-                throw new ArgumentException($"Invalid value '{_deploymentParameters.ServerName}' for {nameof(RemoteDeploymentParameters.ServerName)}");
+                throw new ArgumentException($"Invalid value '{_deploymentParameters.ServerName}' for {nameof(RemoteWindowsDeploymentParameters.ServerName)}");
             }
 
             if (string.IsNullOrWhiteSpace(_deploymentParameters.ServerAccountName))
             {
-                throw new ArgumentException($"Invalid value '{_deploymentParameters.ServerAccountName}' for {nameof(RemoteDeploymentParameters.ServerAccountName)}." +
+                throw new ArgumentException($"Invalid value '{_deploymentParameters.ServerAccountName}' for {nameof(RemoteWindowsDeploymentParameters.ServerAccountName)}." +
                     " Account credentials are required to enable creating a powershell session to the remote server.");
             }
 
             if (string.IsNullOrWhiteSpace(_deploymentParameters.ServerAccountPassword))
             {
-                throw new ArgumentException($"Invalid value '{_deploymentParameters.ServerAccountPassword}' for {nameof(RemoteDeploymentParameters.ServerAccountPassword)}." +
+                throw new ArgumentException($"Invalid value '{_deploymentParameters.ServerAccountPassword}' for {nameof(RemoteWindowsDeploymentParameters.ServerAccountPassword)}." +
                     " Account credentials are required to enable creating a powershell session to the remote server.");
             }
 
-            if (string.IsNullOrWhiteSpace(_deploymentParameters.RemoteServerFileShare))
+            if (string.IsNullOrWhiteSpace(_deploymentParameters.RemoteServerFileSharePath))
             {
-                throw new ArgumentException($"Invalid value for {nameof(RemoteDeploymentParameters.RemoteServerFileShare)}." +
+                throw new ArgumentException($"Invalid value for {nameof(RemoteWindowsDeploymentParameters.RemoteServerFileSharePath)}." +
                     " . A file share is required to copy the application's published output.");
             }
 
             if (string.IsNullOrWhiteSpace(_deploymentParameters.RemoteServerRelativeExecutablePath))
             {
-                throw new ArgumentException($"Invalid value for {nameof(RemoteDeploymentParameters.RemoteServerRelativeExecutablePath)}." +
+                throw new ArgumentException($"Invalid value for {nameof(RemoteWindowsDeploymentParameters.RemoteServerRelativeExecutablePath)}." +
                     " This is the name of the executable in the published output which needs to be executed on the remote server.");
             }
 
             if (string.IsNullOrWhiteSpace(_deploymentParameters.ApplicationBaseUriHint))
             {
-                throw new ArgumentException($"Invalid value for {nameof(RemoteDeploymentParameters.ApplicationBaseUriHint)}.");
+                throw new ArgumentException($"Invalid value for {nameof(RemoteWindowsDeploymentParameters.ApplicationBaseUriHint)}.");
             }
         }
 
@@ -96,7 +82,7 @@ namespace Microsoft.AspNetCore.Server.Testing
             DotnetPublish();
 
             var folderId = Guid.NewGuid().ToString();
-            _deployedFolderPathInFileShare = Path.Combine(_deploymentParameters.RemoteServerFileShare, folderId);
+            _deployedFolderPathInFileShare = Path.Combine(_deploymentParameters.RemoteServerFileSharePath, folderId);
 
             DirectoryCopy(
                 _deploymentParameters.PublishedApplicationRootPath,
@@ -155,8 +141,10 @@ namespace Microsoft.AspNetCore.Server.Testing
 
         private void RunScript(string serverAction)
         {
+            var remotePSSessionHelperScript = _scripts.Value.RemotePSSessionHelper;
+
             var parameterBuilder = new StringBuilder();
-            parameterBuilder.Append($"\"{_remotePSSessionHelperScript}\"");
+            parameterBuilder.Append($"\"{remotePSSessionHelperScript}\"");
             parameterBuilder.Append($" -serverName {_deploymentParameters.ServerName}");
             parameterBuilder.Append($" -accountName {_deploymentParameters.ServerAccountName}");
             parameterBuilder.Append($" -accountPassword {_deploymentParameters.ServerAccountPassword}");
@@ -167,7 +155,6 @@ namespace Microsoft.AspNetCore.Server.Testing
             var environmentVariables = string.Join("`,", _deploymentParameters.EnvironmentVariables.Select(envVariable => $"{envVariable.Key}={envVariable.Value}"));
             parameterBuilder.Append($" -environmentVariables \"{environmentVariables}\"");
 
-            // todo: launch a powershell process to make the website point to the created folder
             var startInfo = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
@@ -207,7 +194,6 @@ namespace Microsoft.AspNetCore.Server.Testing
                 {
                     throw new Exception($"Failed to execute the script on '{_deploymentParameters.ServerName}'.");
                 }
-
             }
         }
 
@@ -229,7 +215,7 @@ namespace Microsoft.AspNetCore.Server.Testing
             }
 
             var files = dir.GetFiles();
-            foreach (FileInfo file in files)
+            foreach (var file in files)
             {
                 var temppath = Path.Combine(destDirName, file.Name);
                 file.CopyTo(temppath, false);
@@ -245,10 +231,16 @@ namespace Microsoft.AspNetCore.Server.Testing
             }
         }
 
-        private static string[] CopyEmbeddedScriptFilesToDisk(
-            IFileProvider embeddedFileProvider,
-            string[] embeddedFileNames)
+        private static Scripts CopyEmbeddedScriptFilesToDisk()
         {
+            var embeddedFileNames = new[] { "RemotePSSessionHelper.ps1", "StartServer.ps1", "StopServer.ps1" };
+
+            // Copy the scripts from this assembly's embedded resources to the temp path on the machine where these
+            // tests are being run
+            var embeddedFileProvider = new EmbeddedFileProvider(
+                typeof(RemoteWindowsDeployer).GetTypeInfo().Assembly,
+                "Microsoft.AspNetCore.Server.Testing.Deployers.RemoteWindowsDeployer");
+
             var filesOnDisk = new string[embeddedFileNames.Length];
             for (var i = 0; i < embeddedFileNames.Length; i++)
             {
@@ -270,7 +262,25 @@ namespace Microsoft.AspNetCore.Server.Testing
                 filesOnDisk[i] = physicalFilePath;
             }
 
-            return filesOnDisk;
+            var scripts = new Scripts(filesOnDisk[0], filesOnDisk[1], filesOnDisk[2]);
+
+            return scripts;
+        }
+
+        private class Scripts
+        {
+            public Scripts(string remotePSSessionHelper, string startServer, string stopServer)
+            {
+                RemotePSSessionHelper = remotePSSessionHelper;
+                StartServer = startServer;
+                StopServer = stopServer;
+            }
+
+            public string RemotePSSessionHelper { get; }
+
+            public string StartServer { get; }
+
+            public string StopServer { get; }
         }
     }
 }

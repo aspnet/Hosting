@@ -3,21 +3,21 @@
 
 namespace Microsoft.AspNetCore.Server.Testing
 {
-    public class RemoteDeploymentParameters : DeploymentParameters
+    public class RemoteWindowsDeploymentParameters : DeploymentParameters
     {
-        public RemoteDeploymentParameters(
+        public RemoteWindowsDeploymentParameters(
             string applicationPath,
             ServerType serverType,
             RuntimeFlavor runtimeFlavor,
             RuntimeArchitecture runtimeArchitecture,
-            string remoteServerFileShare,
+            string remoteServerFileSharePath,
             string remoteServerName,
             string remoteServerAccountName,
             string remoteServerAccountPassword,
             string remoteServerRelativeExecutablePath)
             : base(applicationPath, serverType, runtimeFlavor, runtimeArchitecture)
         {
-            RemoteServerFileShare = remoteServerFileShare;
+            RemoteServerFileSharePath = remoteServerFileSharePath;
             ServerName = remoteServerName;
             ServerAccountName = remoteServerAccountName;
             ServerAccountPassword = remoteServerAccountPassword;
@@ -30,8 +30,14 @@ namespace Microsoft.AspNetCore.Server.Testing
 
         public string ServerAccountPassword { get; }
 
-        public string RemoteServerFileShare { get; }
+        /// <summary>
+        /// The full path to the remote server's file share
+        /// </summary>
+        public string RemoteServerFileSharePath { get; }
 
+        /// <summary>
+        /// The relative path to the executable in the published output
+        /// </summary>
         public string RemoteServerRelativeExecutablePath { get; }
     }
 }

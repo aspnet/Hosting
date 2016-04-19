@@ -12,7 +12,7 @@ param(
 	[Parameter(Mandatory=$true)]
 	[string]$applicationBaseUrl,
 
-	# These are of the format: key1=value1|key2=value2|key3=value3
+	# These are of the format: key1=value1,key2=value2,key3=value3
 	[Parameter(Mandatory=$false)]
 	[string]$environmentVariables
 )
