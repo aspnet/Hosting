@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -21,9 +20,7 @@ namespace Microsoft.AspNetCore.Hosting.Startup
             _hostingEnv = hostingEnv;
         }
 
-        public StartupMethods LoadMethods(
-            Type startupType,
-            IList<string> diagnosticMessages)
+        public StartupMethods LoadMethods(Type startupType)
         {
             var environmentName = _hostingEnv.EnvironmentName;
             var configureMethod = FindConfigureDelegate(startupType, environmentName);
@@ -38,7 +35,7 @@ namespace Microsoft.AspNetCore.Hosting.Startup
             return new StartupMethods(configureMethod.Build(instance), servicesMethod?.Build(instance));
         }
 
-        public Type FindStartupType(string startupAssemblyName, IList<string> diagnosticMessages)
+        public Type FindStartupType(string startupAssemblyName)
         {
             var environmentName = _hostingEnv.EnvironmentName;
             if (string.IsNullOrEmpty(startupAssemblyName))

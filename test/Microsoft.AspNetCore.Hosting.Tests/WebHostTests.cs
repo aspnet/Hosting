@@ -498,12 +498,12 @@ namespace Microsoft.AspNetCore.Hosting
 
         private class TestLoader : IStartupLoader
         {
-            public Type FindStartupType(string startupAssemblyName, IList<string> diagnosticMessages)
+            public Type FindStartupType(string startupAssemblyName)
             {
                 throw new NotImplementedException();
             }
 
-            public StartupMethods LoadMethods(Type startupType, IList<string> diagnosticMessages)
+            public StartupMethods LoadMethods(Type startupType)
             {
                 throw new NotImplementedException();
             }
