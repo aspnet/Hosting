@@ -44,14 +44,14 @@ if ($serverType -eq "IIS")
 }
 elseif ($serverType -eq "Kestrel")
 {
-    $command = $command + " --server Microsoft.AspNetCore.Server.Kestrel"
-    Write-Host "Executing the command '$command'"
+	$command = $command + " --server Microsoft.AspNetCore.Server.Kestrel"
+	Write-Host "Executing the command '$command'"
 	Invoke-Expression $command
 }
 elseif ($serverType -eq "WebListener")
 {
 	$command = $command + " --server Microsoft.AspNetCore.Server.WebListener"
-    Write-Host "Executing the command '$command'"
+	Write-Host "Executing the command '$command'"
 	Invoke-Expression $command
 }
 else
