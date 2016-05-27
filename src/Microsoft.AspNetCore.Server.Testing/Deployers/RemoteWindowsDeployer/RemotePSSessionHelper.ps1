@@ -9,8 +9,8 @@ param(
 	[Parameter(Mandatory=$true)]
 	[string]$accountPassword,
 
-	[Parameter(Mandatory=$true)]
-	[string]$dotnetRuntimePath,
+	[Parameter(Mandatory=$false)]
+	[string]$dotnetRuntimePath = "",
 
 	[Parameter(Mandatory=$true)]
 	[string]$executablePath,

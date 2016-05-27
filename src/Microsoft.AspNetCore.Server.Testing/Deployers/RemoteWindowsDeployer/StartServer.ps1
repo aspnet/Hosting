@@ -1,6 +1,6 @@
 ﻿[CmdletBinding()]
 param(
-	[Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$false)]
 	[string]$dotnetRuntimePath,
 
 	[Parameter(Mandatory=$true)]
@@ -25,9 +25,6 @@ param(
 
 Write-Host "Executing the start server script on machine '$serverName'"
 
-Write-Host "Setting the dotnet runtime path to the PATH environment variable"
-[Environment]::SetEnvironmentVariable("PATH", "$dotnetRuntimePath")
-
 IF (-Not [string]::IsNullOrWhitespace($environmentVariables))
 {
 	Write-Host "Setting up environment variables"
@@ -35,6 +32,12 @@ IF (-Not [string]::IsNullOrWhitespace($environmentVariables))
 		$pair=$envVariablePair.Split("=");
 		[Environment]::SetEnvironmentVariable($pair[0], $pair[1])
 	}
+}
+
+if ($executablePath -eq "dotnet.exe")
+{
+    Write-Host "Setting the dotnet runtime path to the PATH environment variable"
+    [Environment]::SetEnvironmentVariable("PATH", "$dotnetRuntimePath")
 }
 
 Write-Host "Copying shell32.dll as a temporary workaround for issue https://github.com/dotnet/cli/issues/2967"

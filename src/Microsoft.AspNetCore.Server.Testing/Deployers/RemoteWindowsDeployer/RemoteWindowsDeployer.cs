@@ -53,7 +53,8 @@ namespace Microsoft.AspNetCore.Server.Testing
                     " Account credentials are required to enable creating a powershell session to the remote server.");
             }
 
-            if (string.IsNullOrWhiteSpace(_deploymentParameters.DotnetRuntimePath))
+            if (_deploymentParameters.ApplicationType == ApplicationType.Portable
+                && string.IsNullOrWhiteSpace(_deploymentParameters.DotnetRuntimePath))
             {
                 throw new ArgumentException($"Invalid value '{_deploymentParameters.DotnetRuntimePath}' for {nameof(RemoteWindowsDeploymentParameters.DotnetRuntimePath)}. ");
             }
@@ -160,7 +161,12 @@ namespace Microsoft.AspNetCore.Server.Testing
             parameterBuilder.Append($" -serverName {_deploymentParameters.ServerName}");
             parameterBuilder.Append($" -accountName {_deploymentParameters.ServerAccountName}");
             parameterBuilder.Append($" -accountPassword {_deploymentParameters.ServerAccountPassword}");
-            parameterBuilder.Append($" -dotnetRuntimePath \"{_deploymentParameters.DotnetRuntimePath}\"");
+
+            if (!string.IsNullOrEmpty(_deploymentParameters.DotnetRuntimePath))
+            {
+                parameterBuilder.Append($" -dotnetRuntimePath \"{_deploymentParameters.DotnetRuntimePath}\"");
+            }
+
             parameterBuilder.Append($" -executablePath \"{executablePath}\"");
 
             if (!string.IsNullOrEmpty(executableParameters))
