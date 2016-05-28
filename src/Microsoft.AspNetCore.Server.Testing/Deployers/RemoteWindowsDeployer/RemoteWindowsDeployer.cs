@@ -56,7 +56,8 @@ namespace Microsoft.AspNetCore.Server.Testing
             if (_deploymentParameters.ApplicationType == ApplicationType.Portable
                 && string.IsNullOrWhiteSpace(_deploymentParameters.DotnetRuntimePath))
             {
-                throw new ArgumentException($"Invalid value '{_deploymentParameters.DotnetRuntimePath}' for {nameof(RemoteWindowsDeploymentParameters.DotnetRuntimePath)}. ");
+                throw new ArgumentException($"Invalid value '{_deploymentParameters.DotnetRuntimePath}' for {nameof(RemoteWindowsDeploymentParameters.DotnetRuntimePath)}. " +
+                    "It must be non-empty for portable apps.");
             }
 
             if (string.IsNullOrWhiteSpace(_deploymentParameters.RemoteServerFileSharePath))
