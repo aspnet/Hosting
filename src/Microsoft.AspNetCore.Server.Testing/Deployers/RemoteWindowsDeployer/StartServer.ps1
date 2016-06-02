@@ -1,5 +1,8 @@
 ﻿[CmdletBinding()]
 param(
+	[Parameter(Mandatory=$true)]
+	[string]$deployedFolderPath,
+
 	[Parameter(Mandatory=$false)]
 	[string]$dotnetRuntimePath,
 
@@ -47,14 +50,16 @@ if ($executablePath -eq "dotnet.exe")
 }
 else
 {
-    $destinationDir = Split-Path $executablePath
-    Copy-Item C:\Windows\System32\forwarders\shell32.dll $destinationDir
+    Copy-Item C:\Windows\System32\forwarders\shell32.dll $deployedFolderPath
 }
 
 $command = $executablePath + " " + $executableParameters + " --server.urls " + $applicationBaseUrl
 if ($serverType -eq "IIS")
 {
-	throw [System.NotImplementedException] "IIS deployment scenarios not yet implemented."
+	$publishedDirName=Split-Path $deployedFolderPath -Leaf
+	Write-Host "Creating IIS website '$publishedDirName' for path '$deployedFolderPath'"
+	Import-Module IISAdministration
+	New-IISSite -Name $publishedDirName -BindingInformation "*:8080:" -PhysicalPath $deployedFolderPath
 }
 elseif ($serverType -eq "Kestrel")
 {
