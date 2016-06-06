@@ -39,7 +39,7 @@ namespace Microsoft.AspNetCore.Server.Testing
 
             return new DeploymentResult
             {
-                WebRootLocation = DeploymentParameters.PublishApplicationBeforeDeployment ? DeploymentParameters.PublishedApplicationRootPath : DeploymentParameters.ApplicationPath,
+                AppRoot = DeploymentParameters.PublishApplicationBeforeDeployment ? DeploymentParameters.PublishedApplicationRootPath : DeploymentParameters.ApplicationPath,
                 DeploymentParameters = DeploymentParameters,
                 ApplicationBaseUri = uri.ToString(),
                 HostShutdownToken = hostExitToken
