@@ -45,8 +45,7 @@
           "type": "build"
         },
         "System.Xml": "",
-        "System.Xml.Linq": "",
-        "System.Xml.XDocument": ""
+        "System.Xml.Linq": ""
       }
     },
     "netstandard1.3": {

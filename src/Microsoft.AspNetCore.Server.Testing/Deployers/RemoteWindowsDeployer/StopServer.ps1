@@ -57,7 +57,7 @@ if (DoesCommandExist("taskkill"))
 }
 else
 {
-	Stop-Process -Id $serverProcess.Id
+	Stop-Process -Id $serverProcess.Id -Force
 }
 
 # NOTE: Make sure this is the last statement in this script as its used to get the exit code of this script
