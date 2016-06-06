@@ -19,7 +19,7 @@ namespace Microsoft.AspNetCore.Server.Testing
         /// The folder where the application is hosted. This path can be different from the 
         /// original application source location if published before deployment.
         /// </summary>
-        public string AppRoot { get; set; }
+        public string ContentRoot { get; set; }
 
         /// <summary>
         /// Original deployment parameters used for this deployment.
