@@ -45,19 +45,23 @@ if ($serverType -eq "IIS")
 	Import-Module IISAdministration
 	Stop-IISSite -Name $publishedDirName -Confirm:$false
 	Remove-IISSite -Name $publishedDirName -Confirm:$false
-}
-
-Write-Host "Stopping the process '$serverProcessName'"
-$serverProcess=Get-Process -Name "$serverProcessName"
-
-if (DoesCommandExist("taskkill"))
-{
-	# Kill the parent and child processes
-	& taskkill /pid $serverProcess.Id /t /f
+    net stop w3svc
+    net start w3svc
 }
 else
 {
-	Stop-Process -Id $serverProcess.Id -Force
+    Write-Host "Stopping the process '$serverProcessName'"
+    $serverProcess=Get-Process -Name "$serverProcessName"
+
+    if (DoesCommandExist("taskkill"))
+    {
+	    # Kill the parent and child processes
+	    & taskkill /pid $serverProcess.Id /t /f
+    }
+    else
+    {
+	    Stop-Process -Id $serverProcess.Id -Force
+    }
 }
 
 # NOTE: Make sure this is the last statement in this script as its used to get the exit code of this script
