@@ -59,7 +59,9 @@ if ($serverType -eq "IIS")
 	$publishedDirName=Split-Path $deployedFolderPath -Leaf
 	Write-Host "Creating IIS website '$publishedDirName' for path '$deployedFolderPath'"
 	Import-Module IISAdministration
-	New-IISSite -Name $publishedDirName -BindingInformation "*:8080:" -PhysicalPath $deployedFolderPath
+	$port=([System.Uri]$applicationBaseUrl).Port
+	$bindingPort="*:" + $port + ":"
+	New-IISSite -Name $publishedDirName -BindingInformation $bindingPort -PhysicalPath $deployedFolderPath
 }
 elseif ($serverType -eq "Kestrel")
 {
