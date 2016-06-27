@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0-*",
+  "version": "1.0.0-rc2-20896",
   "buildOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk",
@@ -25,13 +25,13 @@
     ]
   },
   "dependencies": {
-    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-*",
-    "Microsoft.AspNetCore.Testing": "1.0.0-*",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.FileProviders.Embedded": "1.0.0-*",
+    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0",
+    "Microsoft.AspNetCore.Testing": "1.0.0-rtm-21431",
+    "Microsoft.Extensions.Logging.Abstractions": "1.0.0",
+    "Microsoft.Extensions.FileProviders.Embedded": "1.0.0",
     "Microsoft.Extensions.Process.Sources": {
       "type": "build",
-      "version": "1.0.0-*"
+      "version": "1.0.0-rtm-21431"
     }
   },
   "frameworks": {
@@ -50,16 +50,16 @@
     },
     "netstandard1.3": {
       "dependencies": {
-        "System.Diagnostics.Process": "4.1.0-*",
-        "System.IO.FileSystem": "4.0.1-*",
-        "System.Net.Http": "4.1.0-*",
-        "System.Net.Primitives": "4.0.11-*",
-        "System.Net.Sockets": "4.1.0-*",
-        "System.Runtime.Extensions": "4.1.0-*",
-        "System.Text.RegularExpressions": "4.1.0-*",
-        "System.Threading": "4.0.11-*",
-        "System.Threading.Thread": "4.0.0-*",
-        "System.Xml.XDocument": "4.0.11-*"
+        "System.Diagnostics.Process": "4.1.0",
+        "System.IO.FileSystem": "4.0.1",
+        "System.Net.Http": "4.1.0",
+        "System.Net.Primitives": "4.0.11",
+        "System.Net.Sockets": "4.1.0",
+        "System.Runtime.Extensions": "4.1.0",
+        "System.Text.RegularExpressions": "4.1.0",
+        "System.Threading": "4.0.11",
+        "System.Threading.Thread": "4.0.0",
+        "System.Xml.XDocument": "4.0.11"
       },
       "imports": [
         "portable-net45+win8"
