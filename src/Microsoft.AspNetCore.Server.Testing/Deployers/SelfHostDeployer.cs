@@ -94,7 +94,8 @@ namespace Microsoft.AspNetCore.Server.Testing
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 // Trying a work around for https://github.com/aspnet/Hosting/issues/140.
-                RedirectStandardInput = true
+                RedirectStandardInput = true,
+                WorkingDirectory = DeploymentParameters.ApplicationPath
             };
 
             AddEnvironmentVariablesToProcess(startInfo);
