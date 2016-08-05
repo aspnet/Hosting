@@ -101,6 +101,11 @@ namespace Microsoft.AspNetCore.Server.Testing
                 WorkingDirectory = workingDirectory
             };
 
+            if (DeploymentParameters.ApplicationPath != null)
+            {
+                startInfo.WorkingDirectory = DeploymentParameters.ApplicationPath;
+            }
+
             AddEnvironmentVariablesToProcess(startInfo);
 
             _hostProcess = new Process() { StartInfo = startInfo };
