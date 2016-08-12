@@ -7,9 +7,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using Microsoft.AspNetCore.Hosting.Builder;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -191,7 +194,7 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddLogging();
 
             services.AddTransient<IApplicationBuilderFactory, ApplicationBuilderFactory>();
-            services.AddTransient<IHttpContextFactory, HttpContextFactory>();
+            services.AddTransient<IHttpContextFactory, PooledHttpContextFactory>();
             services.AddOptions();
 
             var diagnosticSource = new DiagnosticListener("Microsoft.AspNetCore");
@@ -254,6 +257,127 @@ namespace Microsoft.AspNetCore.Hosting
                 return contentRootPath;
             }
             return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
+        }
+    }
+
+    public class PooledHttpContext : DefaultHttpContext
+    {
+        DefaultHttpRequest _pooledHttpRequest;
+        DefaultHttpResponse _pooledHttpResponse;
+
+        public PooledHttpContext(IFeatureCollection featureCollection) :
+            base(featureCollection)
+        {
+        }
+
+        protected override HttpRequest InitializeHttpRequest()
+        {
+            if (_pooledHttpRequest != null)
+            {
+                _pooledHttpRequest.Initialize(this);
+                return _pooledHttpRequest;
+            }
+
+            return new DefaultHttpRequest(this);
+        }
+
+        protected override void UninitializeHttpRequest(HttpRequest instance)
+        {
+            _pooledHttpRequest = instance as DefaultHttpRequest;
+            _pooledHttpRequest?.Uninitialize();
+        }
+
+        protected override HttpResponse InitializeHttpResponse()
+        {
+            if (_pooledHttpResponse != null)
+            {
+                _pooledHttpResponse.Initialize(this);
+                return _pooledHttpResponse;
+            }
+
+            return new DefaultHttpResponse(this);
+        }
+
+        protected override void UninitializeHttpResponse(HttpResponse instance)
+        {
+            _pooledHttpResponse = instance as DefaultHttpResponse;
+            _pooledHttpResponse?.Uninitialize();
+        }
+    }
+
+    public class PooledHttpContextFactory : IHttpContextFactory
+    {
+        private readonly ObjectPool<StringBuilder> _builderPool;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly Stack<PooledHttpContext> _pool = new Stack<PooledHttpContext>();
+
+        public PooledHttpContextFactory(ObjectPoolProvider poolProvider)
+            : this(poolProvider, httpContextAccessor: null)
+        {
+        }
+
+        public PooledHttpContextFactory(ObjectPoolProvider poolProvider, IHttpContextAccessor httpContextAccessor)
+        {
+            if (poolProvider == null)
+            {
+                throw new ArgumentNullException(nameof(poolProvider));
+            }
+
+            _builderPool = poolProvider.CreateStringBuilderPool();
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        public HttpContext Create(IFeatureCollection featureCollection)
+        {
+            if (featureCollection == null)
+            {
+                throw new ArgumentNullException(nameof(featureCollection));
+            }
+
+            var responseCookiesFeature = new ResponseCookiesFeature(featureCollection, _builderPool);
+            featureCollection.Set<IResponseCookiesFeature>(responseCookiesFeature);
+
+            PooledHttpContext httpContext = null;
+            lock (_pool)
+            {
+                if (_pool.Count != 0)
+                {
+                    httpContext = _pool.Pop();
+                }
+            }
+
+            if (httpContext == null)
+            {
+                httpContext = new PooledHttpContext(featureCollection);
+            }
+            else
+            {
+                httpContext.Initialize(featureCollection);
+            }
+
+            if (_httpContextAccessor != null)
+            {
+                _httpContextAccessor.HttpContext = httpContext;
+            }
+            return httpContext;
+        }
+
+        public void Dispose(HttpContext httpContext)
+        {
+            if (_httpContextAccessor != null)
+            {
+                _httpContextAccessor.HttpContext = null;
+            }
+
+            var pooled = httpContext as PooledHttpContext;
+            if (pooled != null)
+            {
+                pooled.Uninitialize();
+                lock (_pool)
+                {
+                    _pool.Push(pooled);
+                }
+            }
         }
     }
 }
