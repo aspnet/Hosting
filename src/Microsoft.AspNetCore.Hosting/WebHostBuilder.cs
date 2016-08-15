@@ -309,7 +309,6 @@ namespace Microsoft.AspNetCore.Hosting
     {
         private readonly ObjectPool<StringBuilder> _builderPool;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly Stack<PooledHttpContext> _pool = new Stack<PooledHttpContext>();
 
         public PooledHttpContextFactory(ObjectPoolProvider poolProvider)
             : this(poolProvider, httpContextAccessor: null)
@@ -337,16 +336,10 @@ namespace Microsoft.AspNetCore.Hosting
             var responseCookiesFeature = new ResponseCookiesFeature(featureCollection, _builderPool);
             featureCollection.Set<IResponseCookiesFeature>(responseCookiesFeature);
 
-            PooledHttpContext httpContext = null;
-            lock (_pool)
-            {
-                if (_pool.Count != 0)
-                {
-                    httpContext = _pool.Pop();
-                }
-            }
+            var dataFeature = featureCollection.Get<IConnectionDataFeature>();
+            var httpContext = dataFeature?.GetData(1) as PooledHttpContext;
 
-            if (httpContext == null)
+            if (httpContext == null) 
             {
                 httpContext = new PooledHttpContext(featureCollection);
             }
@@ -372,11 +365,9 @@ namespace Microsoft.AspNetCore.Hosting
             var pooled = httpContext as PooledHttpContext;
             if (pooled != null)
             {
+                var dataFeature = httpContext.Features.Get<IConnectionDataFeature>();
+                dataFeature?.SetData(1, httpContext);
                 pooled.Uninitialize();
-                lock (_pool)
-                {
-                    _pool.Push(pooled);
-                }
             }
         }
     }
