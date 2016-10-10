@@ -42,6 +42,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 _diagnosticSource.Write("Microsoft.AspNetCore.Hosting.BeginRequest", new { httpContext = httpContext, timestamp = startTimestamp });
             }
+            AspNetCoreHostingEventSource.Log.RequestStart();
 
             return new Context
             {
@@ -66,6 +67,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 {
                     _diagnosticSource.Write("Microsoft.AspNetCore.Hosting.EndRequest", new { httpContext = httpContext, timestamp = currentTimestamp });
                 }
+                AspNetCoreHostingEventSource.Log.RequestEnd();
             }
             else
             {
