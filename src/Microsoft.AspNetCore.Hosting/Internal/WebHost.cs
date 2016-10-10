@@ -114,7 +114,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             if (_applicationServices == null)
             {
                 EnsureStartup();
+
+                AspNetCoreHostingEventSource.Log.StartConfigureApplicationServices();
+
                 _applicationServices = _startup.ConfigureServices(_applicationServiceCollection);
+
+                AspNetCoreHostingEventSource.Log.EndConfigureApplicationServices();
             }
         }
 
@@ -146,7 +151,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     configure = filter.Configure(configure);
                 }
 
+                AspNetCoreHostingEventSource.Log.StartConfigureMiddlewarePipeline();
+
                 configure(builder);
+
+                AspNetCoreHostingEventSource.Log.EndConfigureMiddlewarePipeline();
 
                 return builder.Build();
             }
