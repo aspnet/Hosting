@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
 using Xunit;
@@ -68,6 +69,24 @@ namespace Microsoft.AspNetCore.Hosting
 
             Assert.NotNull(startup.ServiceADescriptor);
             Assert.NotNull(startup.ServiceA);
+        }
+
+        [Fact]
+        public void Build_ConfigureLoggingInHostingStartupWorks()
+        {
+            var builder = CreateWebHostBuilder()
+                .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, typeof(WebHostBuilderTests).GetTypeInfo().Assembly.FullName)
+                .Configure(app =>
+                {
+                    var loggerFactory = app.ApplicationServices.GetService<ILoggerFactory>();
+                    var logger = loggerFactory.CreateLogger(nameof(WebHostBuilderTests));
+                    logger.LogInformation("From startup");
+                })
+                .UseServer(new TestServer());
+
+            var host = (WebHost)builder.Build();
+            var sink = host.Services.GetRequiredService<ITestSink>();
+            Assert.True(sink.Writes.Any(w => w.State.ToString() == "From startup"));
         }
 
         [Fact]
@@ -662,8 +681,26 @@ namespace Microsoft.AspNetCore.Hosting
         {
             public void Configure(IWebHostBuilder builder)
             {
+                var loggerProvider = new TestLoggerProvider();
                 builder.UseSetting("testhostingstartup", "1")
-                       .ConfigureServices(services => services.AddSingleton<ServiceA>());
+                       .ConfigureServices(services => services.AddSingleton<ServiceA>())
+                       .ConfigureServices(services => services.AddSingleton<ITestSink>(loggerProvider.Sink))
+                       .ConfigureLogging(lf => lf.AddProvider(loggerProvider));
+            }
+        }
+
+        public class TestLoggerProvider : ILoggerProvider
+        {
+            public TestSink Sink { get; set; } = new TestSink();
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new TestLogger(categoryName, Sink, enabled: true);
+            }
+
+            public void Dispose()
+            {
+
             }
         }
     }
