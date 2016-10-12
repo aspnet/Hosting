@@ -4,9 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Fakes;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -18,6 +20,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
 using Xunit;
+
+[assembly: HostingStartup(typeof(WebHostBuilderTests.TestHostingStartup))]
 
 namespace Microsoft.AspNetCore.Hosting
 {
@@ -32,6 +36,63 @@ namespace Microsoft.AspNetCore.Hosting
 
             Assert.Equal("MyStartupAssembly", host.Options.ApplicationName);
             Assert.Equal("MyStartupAssembly", host.Options.StartupAssembly);
+        }
+
+
+        [Fact]
+        public void Build_RunsHostingStartupAssembliesIfSpecified()
+        {
+            var builder = CreateWebHostBuilder()
+                .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, typeof(WebHostBuilderTests).GetTypeInfo().Assembly.FullName)
+                .UseServer(new TestServer());
+
+            var host = (WebHost)builder.Build();
+
+            Assert.Equal("1", builder.GetSetting("testhostingstartup"));
+        }
+
+        [Fact]
+        public void Build_DoesNotRunHostingStartupAssembliesDoNotRunIfNotSpecified()
+        {
+            var builder = CreateWebHostBuilder()
+                .UseServer(new TestServer());
+
+            var host = (WebHost)builder.Build();
+
+            Assert.Null(builder.GetSetting("testhostingstartup"));
+        }
+
+        [Fact]
+        public void Build_ThrowsIfUnloadableAssemblyNameInHostingStartupAssemblies()
+        {
+            var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
+                .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "SomeBogusName")
+                .UseServer(new TestServer());
+
+            Assert.Throws<FileNotFoundException>(() => (WebHost)builder.Build());
+        }
+
+        [Fact]
+        public void Build_DoesNotThrowIfUnloadableAssemblyNameInHostingStartupAssembliesAndCaptureStartupErrorsTrue()
+        {
+            var builder = CreateWebHostBuilder()
+                .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "SomeBogusName")
+                .UseServer(new TestServer());
+
+            builder.Build();
+        }
+
+        [Fact]
+        public void HostingStartupTypeCtorThrowsIfNull()
+        {
+            Assert.Throws<ArgumentNullException>(() => new HostingStartupAttribute(null));
+        }
+
+        [Fact]
+        public void HostingStartupTypeCtorThrowsIfNotIHosting()
+        {
+            Assert.Throws<ArgumentException>(() => new HostingStartupAttribute(typeof(WebHostTests)));
         }
 
         [Fact]
@@ -557,6 +618,14 @@ namespace Microsoft.AspNetCore.Hosting
         private class ServiceB
         {
 
+        }
+
+        public class TestHostingStartup : IHostingStartup
+        {
+            public void Configure(IWebHostBuilder builder)
+            {
+                builder.UseSetting("testhostingstartup", "1");
+            }
         }
     }
 }
