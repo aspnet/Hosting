@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -49,6 +50,24 @@ namespace Microsoft.AspNetCore.Hosting
             var host = (WebHost)builder.Build();
 
             Assert.Equal("1", builder.GetSetting("testhostingstartup"));
+        }
+
+        [Fact]
+        public void Build_RunsHostingStartupAssembliesBeforeApplication()
+        {
+            var startup = new StartupVerifyServiceA();
+            var builder = CreateWebHostBuilder()
+                .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, typeof(WebHostBuilderTests).GetTypeInfo().Assembly.FullName)
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IStartup>(startup);
+                })
+                .UseServer(new TestServer());
+
+            var host = (WebHost)builder.Build();
+
+            Assert.NotNull(startup.ServiceADescriptor);
+            Assert.NotNull(startup.ServiceA);
         }
 
         [Fact]
@@ -610,21 +629,41 @@ namespace Microsoft.AspNetCore.Hosting
             }
         }
 
-        private class ServiceA
+        internal class ServiceA
         {
 
         }
 
-        private class ServiceB
+        internal class ServiceB
         {
 
+        }
+
+        internal class StartupVerifyServiceA : IStartup
+        {
+            internal ServiceA ServiceA { get; set; }
+
+            internal ServiceDescriptor ServiceADescriptor { get; set; }
+
+            public IServiceProvider ConfigureServices(IServiceCollection services)
+            {
+                ServiceADescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ServiceA));
+
+                return services.BuildServiceProvider();
+            }
+
+            public void Configure(IApplicationBuilder app)
+            {
+                ServiceA = app.ApplicationServices.GetService<ServiceA>();
+            }
         }
 
         public class TestHostingStartup : IHostingStartup
         {
             public void Configure(IWebHostBuilder builder)
             {
-                builder.UseSetting("testhostingstartup", "1");
+                builder.UseSetting("testhostingstartup", "1")
+                       .ConfigureServices(services => services.AddSingleton<ServiceA>());
             }
         }
     }
