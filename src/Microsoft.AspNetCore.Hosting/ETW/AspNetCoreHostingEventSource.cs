@@ -12,14 +12,14 @@ namespace Microsoft.AspNetCore.Hosting
 
         public static readonly AspNetCoreHostingEventSource Log = new AspNetCoreHostingEventSource();
 
-        public void EnterHostRun()
+        public void HostStartBegin()
         {
-            WriteEvent(1, "Entering host run");
+            WriteEvent(1, "Begin host start");
         }
 
-        public void LeaveHostRun()
+        public void HostStartEnd()
         {
-            WriteEvent(2, "Leaving host run");
+            WriteEvent(2, "End host start");
         }
 
         public void StartConfigureApplicationServices()

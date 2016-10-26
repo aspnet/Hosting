@@ -16,8 +16,6 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="host">The <see cref="IWebHost"/> to run.</param>
         public static void Run(this IWebHost host)
         {
-            AspNetCoreHostingEventSource.Log.EnterHostRun();
-
             using (var cts = new CancellationTokenSource())
             {
                 Console.CancelKeyPress += (sender, eventArgs) =>
@@ -31,8 +29,6 @@ namespace Microsoft.AspNetCore.Hosting
 
                 host.Run(cts.Token, "Application started. Press Ctrl+C to shut down.");
             }
-
-            AspNetCoreHostingEventSource.Log.LeaveHostRun();
         }
 
         /// <summary>
@@ -49,7 +45,11 @@ namespace Microsoft.AspNetCore.Hosting
         {
             using (host)
             {
+                AspNetCoreHostingEventSource.Log.HostStartBegin();
+
                 host.Start();
+
+                AspNetCoreHostingEventSource.Log.HostStartEnd();
 
                 var hostingEnvironment = host.Services.GetService<IHostingEnvironment>();
                 var applicationLifetime = host.Services.GetService<IApplicationLifetime>();
