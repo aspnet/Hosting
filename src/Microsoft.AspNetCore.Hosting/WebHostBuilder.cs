@@ -194,7 +194,7 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddTransient<IApplicationBuilderFactory, ApplicationBuilderFactory>();
             services.AddTransient<IHttpContextFactory, HttpContextFactory>();
             services.AddOptions();
-
+            
             var diagnosticSource = new DiagnosticListener("Microsoft.AspNetCore");
             services.AddSingleton<DiagnosticSource>(diagnosticSource);
             services.AddSingleton<DiagnosticListener>(diagnosticSource);
