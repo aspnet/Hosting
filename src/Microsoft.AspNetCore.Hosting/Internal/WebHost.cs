@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
@@ -33,6 +34,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private readonly ApplicationLifetime _applicationLifetime;
         private readonly WebHostOptions _options;
         private readonly IConfiguration _config;
+        private readonly ExceptionDispatchInfo _startupError;
 
         private IServiceProvider _applicationServices;
         private RequestDelegate _application;
@@ -47,7 +49,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             IServiceCollection appServices,
             IServiceProvider hostingServiceProvider,
             WebHostOptions options,
-            IConfiguration config)
+            IConfiguration config,
+            ExceptionDispatchInfo startupError)
         {
             if (appServices == null)
             {
@@ -65,6 +68,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
 
             _config = config;
+            _startupError = startupError;
             _options = options;
             _applicationServiceCollection = appServices;
             _hostingServiceProvider = hostingServiceProvider;
@@ -136,6 +140,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
+                _startupError?.Throw();
+
                 EnsureApplicationServices();
                 EnsureServer();
 

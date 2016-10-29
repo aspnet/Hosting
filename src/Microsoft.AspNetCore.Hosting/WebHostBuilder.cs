@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -48,7 +47,7 @@ namespace Microsoft.AspNetCore.Hosting
             if (string.IsNullOrEmpty(GetSetting(WebHostDefaults.EnvironmentKey)))
             {
                 // Try adding legacy environment keys, never remove these.
-                UseSetting(WebHostDefaults.EnvironmentKey, Environment.GetEnvironmentVariable("Hosting:Environment") 
+                UseSetting(WebHostDefaults.EnvironmentKey, Environment.GetEnvironmentVariable("Hosting:Environment")
                     ?? Environment.GetEnvironmentVariable("ASPNET_ENV"));
             }
 
@@ -151,18 +150,21 @@ namespace Microsoft.AspNetCore.Hosting
                 Console.WriteLine("The environment variable 'ASPNETCORE_SERVER.URLS' is obsolete and has been replaced with 'ASPNETCORE_URLS'");
             }
 
-            var hostingServices = BuildHostingServices();
+            // This startup error will be null unless captureStartupErrors was set to true
+            ExceptionDispatchInfo startupError;
+            var hostingServices = BuildHostingServices(out startupError);
             var hostingContainer = hostingServices.BuildServiceProvider();
 
-            var host = new WebHost(hostingServices, hostingContainer, _options, _config);
+            var host = new WebHost(hostingServices, hostingContainer, _options, _config, startupError);
 
             host.Initialize();
 
             return host;
         }
 
-        private IServiceCollection BuildHostingServices()
+        private IServiceCollection BuildHostingServices(out ExceptionDispatchInfo startupError)
         {
+            startupError = null;
             _options = new WebHostOptions(_config);
 
             var appEnvironment = PlatformServices.Default.Application;
@@ -178,6 +180,27 @@ namespace Microsoft.AspNetCore.Hosting
             if (_loggerFactory == null)
             {
                 _loggerFactory = new LoggerFactory();
+            }
+
+            try
+            {
+                // Execute the platform light-up assemblies
+                foreach (var assemblyName in _options.PlatformAssemblies)
+                {
+                    var assembly = Assembly.Load(new AssemblyName(assemblyName));
+
+                    foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
+                    {
+                        var hostingStartup = (IHostingStartup)Activator.CreateInstance(attribute.HostingStartupType);
+                        hostingStartup.Configure(this);
+                    }
+                }
+            }
+            catch (Exception ex) when (_options.CaptureStartupErrors)
+            {
+                // If we're capturing startup errors then delay this until the application startup logic so that we can show the user
+                // a nice error page
+                startupError = ExceptionDispatchInfo.Capture(ex);
             }
 
             foreach (var configureLogging in _configureLoggingDelegates)
