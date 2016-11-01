@@ -2,7 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
 {
@@ -14,6 +17,19 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private readonly CancellationTokenSource _startedSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
         private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
+        private readonly IEnumerable<IApplicationLifetimeEvents> _handlers = Enumerable.Empty<IApplicationLifetimeEvents>();
+        private readonly ILogger<ApplicationLifetime> _logger;
+
+        public ApplicationLifetime(ILogger<ApplicationLifetime> logger)
+        {
+            _logger = logger;
+        }
+
+        public ApplicationLifetime(ILogger<ApplicationLifetime> logger, IEnumerable<IApplicationLifetimeEvents> handlers)
+        {
+            _logger = logger;
+            _handlers = handlers;
+        }
 
         /// <summary>
         /// Triggered when the application host has fully started and is about to wait
@@ -44,13 +60,27 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // which will no-op since the first call already requested cancellation, get a chance to execute.
             lock (_stoppingSource)
             {
+                // Noop if this is already cancelled, user code can call this so 
+                // we should guard against multiple calls here
+                if (_stoppingSource.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 try
                 {
+                    foreach (var handler in _handlers)
+                    {
+                        handler.OnApplicationStopping();
+                    }
+
                     _stoppingSource.Cancel(throwOnFirstException: false);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: LOG
+                    _logger.ApplicationError(LoggerEventIds.ApplicationStoppingException,
+                                             "An error occurred stopping the application",
+                                             ex);
                 }
             }
         }
@@ -62,11 +92,18 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
+                foreach (var handler in _handlers)
+                {
+                    handler.OnApplicationStarted();
+                }
+
                 _startedSource.Cancel(throwOnFirstException: false);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: LOG
+                _logger.ApplicationError(LoggerEventIds.ApplicationStartupException,
+                                         "An error occurred starting the application",
+                                         ex);
             }
         }
 
@@ -77,11 +114,18 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
+                foreach (var handler in _handlers)
+                {
+                    handler.OnApplicationStopped();
+                }
+
                 _stoppedSource.Cancel(throwOnFirstException: false);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: LOG
+                _logger.ApplicationError(LoggerEventIds.ApplicationStoppedException,
+                                         "An error occurred stopping the application",
+                                         ex);
             }
         }
     }

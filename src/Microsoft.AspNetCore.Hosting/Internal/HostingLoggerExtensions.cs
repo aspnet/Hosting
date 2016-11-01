@@ -69,6 +69,23 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 exception: exception);
         }
 
+        public static void ApplicationError(this ILogger logger, EventId eventId, string message, Exception exception)
+        {
+            var reflectionTypeLoadException = exception as ReflectionTypeLoadException;
+            if (reflectionTypeLoadException != null)
+            {
+                foreach (var ex in reflectionTypeLoadException.LoaderExceptions)
+                {
+                    message = message + Environment.NewLine + ex.Message;
+                }
+            }
+
+            logger.LogCritical(
+                eventId: eventId,
+                message: message,
+                exception: exception);
+        }
+
         public static void Starting(this ILogger logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
