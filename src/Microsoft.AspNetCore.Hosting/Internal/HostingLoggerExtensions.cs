@@ -52,20 +52,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         public static void ApplicationError(this ILogger logger, Exception exception)
         {
-            var message = "Application startup exception";
-
-            var reflectionTypeLoadException = exception as ReflectionTypeLoadException;
-            if (reflectionTypeLoadException != null)
-            {
-                foreach (var ex in reflectionTypeLoadException.LoaderExceptions)
-                {
-                    message = message + Environment.NewLine + ex.Message;
-                }
-            }
-
-            logger.LogCritical(
+            logger.ApplicationError(
                 eventId: LoggerEventIds.ApplicationStartupException,
-                message: message,
+                message: "Application startup exception",
                 exception: exception);
         }
 

@@ -20,11 +20,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private readonly IEnumerable<IApplicationLifetimeEvents> _handlers = Enumerable.Empty<IApplicationLifetimeEvents>();
         private readonly ILogger<ApplicationLifetime> _logger;
 
-        public ApplicationLifetime(ILogger<ApplicationLifetime> logger)
-        {
-            _logger = logger;
-        }
-
         public ApplicationLifetime(ILogger<ApplicationLifetime> logger, IEnumerable<IApplicationLifetimeEvents> handlers)
         {
             _logger = logger;
@@ -69,12 +64,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
                 try
                 {
+                    _stoppingSource.Cancel(throwOnFirstException: false);
+
                     foreach (var handler in _handlers)
                     {
                         handler.OnApplicationStopping();
                     }
-
-                    _stoppingSource.Cancel(throwOnFirstException: false);
                 }
                 catch (Exception ex)
                 {
@@ -92,12 +87,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
+                _startedSource.Cancel(throwOnFirstException: false);
+
                 foreach (var handler in _handlers)
                 {
                     handler.OnApplicationStarted();
                 }
-
-                _startedSource.Cancel(throwOnFirstException: false);
             }
             catch (Exception ex)
             {
@@ -114,12 +109,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
+                _stoppedSource.Cancel(throwOnFirstException: false);
+
                 foreach (var handler in _handlers)
                 {
                     handler.OnApplicationStopped();
                 }
-
-                _stoppedSource.Cancel(throwOnFirstException: false);
             }
             catch (Exception ex)
             {

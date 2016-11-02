@@ -27,9 +27,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         private readonly IServiceCollection _applicationServiceCollection;
         private IStartup _startup;
+        private ApplicationLifetime _applicationLifetime;
 
         private readonly IServiceProvider _hostingServiceProvider;
-        private ApplicationLifetime _applicationLifetime;
         private readonly WebHostOptions _options;
         private readonly IConfiguration _config;
 
