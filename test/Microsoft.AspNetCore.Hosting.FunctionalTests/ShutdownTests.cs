@@ -19,7 +19,7 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
     {
         [ConditionalFact]
         [OSSkipCondition(OperatingSystems.Windows)]
-        public async Task ShutdownTest()
+        public void ShutdownTest()
         {
             var logger = new LoggerFactory()
                 .AddConsole()
@@ -43,30 +43,10 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
             using (var deployer = new SelfHostDeployer(deploymentParameters, logger))
             {
                 var deploymentResult = deployer.Deploy();
-                var httpClientHandler = new HttpClientHandler();
-                var httpClient = new HttpClient(httpClientHandler)
-                {
-                    BaseAddress = new Uri(deploymentResult.ApplicationBaseUri)
-                };
-
-                var response = await RetryHelper.RetryRequest(
-                    () => httpClient.GetAsync(string.Empty),
-                    logger,
-                    deploymentResult.HostShutdownToken);
-
-                var responseText = await response.Content.ReadAsStringAsync();
-                try
-                {
-                    Assert.Equal("Hello World", responseText);
-                }
-                catch (XunitException)
-                {
-                    logger.LogWarning(response.ToString());
-                    logger.LogWarning(responseText);
-                    throw;
-                }
-
                 string output = string.Empty;
+                
+                System.Threading.Thread.Sleep(1000);
+
                 deployer.HostProcess.OutputDataReceived += (sender, args) => output += args.Data + '\n';
 
                 SendSIGINT(deployer.HostProcess.Id);
