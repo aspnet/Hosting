@@ -66,10 +66,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 {
                     _stoppingSource.Cancel(throwOnFirstException: false);
 
-                    foreach (var handler in _handlers)
-                    {
-                        handler.OnApplicationStopping();
-                    }
+                    ExecuteHandlers(handler => handler.OnApplicationStopping());
                 }
                 catch (Exception ex)
                 {
@@ -89,10 +86,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 _startedSource.Cancel(throwOnFirstException: false);
 
-                foreach (var handler in _handlers)
-                {
-                    handler.OnApplicationStarted();
-                }
+                ExecuteHandlers(handler => handler.OnApplicationStarted());
             }
             catch (Exception ex)
             {
@@ -111,16 +105,39 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 _stoppedSource.Cancel(throwOnFirstException: false);
 
-                foreach (var handler in _handlers)
-                {
-                    handler.OnApplicationStopped();
-                }
+                ExecuteHandlers(handler => handler.OnApplicationStopped());
             }
             catch (Exception ex)
             {
                 _logger.ApplicationError(LoggerEventIds.ApplicationStoppedException,
                                          "An error occurred stopping the application",
                                          ex);
+            }
+        }
+
+        private void ExecuteHandlers(Action<IApplicationLifetimeEvents> callback)
+        {
+            List<Exception> exceptions = null;
+            foreach (var handler in _handlers)
+            {
+                try
+                {
+                    callback(handler);
+                }
+                catch (Exception ex)
+                {
+                    if (exceptions == null)
+                    {
+                        exceptions = new List<Exception>();
+                    }
+
+                    exceptions.Add(ex);
+                }
+            }
+
+            if (exceptions != null)
+            {
+                throw new AggregateException(exceptions);
             }
         }
     }
