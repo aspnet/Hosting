@@ -4,15 +4,10 @@
     "Microsoft.AspNetCore.Hosting": "1.1.0-*",
     "Microsoft.Extensions.Configuration": "1.1.0-*",
     "Microsoft.Extensions.Configuration.CommandLine": "1.1.0-*",
-    "Microsoft.Extensions.Logging.Console": "1.1.0-*",
+    "Microsoft.Extensions.Logging.Console": "1.1.0-*"
   },
   "buildOptions": {
     "emitEntryPoint": true
-  },
-  "publishOptions": {
-    "include": [
-      "web.config"
-    ]
   },
   "frameworks": {
     "net451": {},
@@ -24,11 +19,5 @@
         }
       }
     }
-  },
-  "tools": {
-    "Microsoft.AspNetCore.Server.IISIntegration.Tools": "1.0.0-preview2-final"
-  },
-  "scripts": {
-    "postpublish": "dotnet publish-iis --publish-folder %publish:OutputPath% --framework %publish:FullTargetFramework%"
   }
 }
