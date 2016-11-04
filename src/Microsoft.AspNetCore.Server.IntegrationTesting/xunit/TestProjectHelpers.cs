@@ -28,6 +28,5 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
 
                 throw new Exception($"Project root could not be found using {applicationBasePath}");
             }
-
         }
     }

@@ -19,6 +19,7 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
     {
         [ConditionalFact]
         [OSSkipCondition(OperatingSystems.Windows)]
+        [OSSkipCondition(OperatingSystems.MacOSX)]
         public void ShutdownTest()
         {
             var logger = new LoggerFactory()
