@@ -15,13 +15,13 @@ namespace Microsoft.AspNetCore.Hosting.TestSites
             lifetime.ApplicationStopping.Register(() =>
             {
                 Console.WriteLine("Stopping firing");
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(200);
                 Console.WriteLine("Stopping end");
             });
             lifetime.ApplicationStopped.Register(() =>
             {
                 Console.WriteLine("Stopped firing");
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(200);
                 Console.WriteLine("Stopped end");
             });
 

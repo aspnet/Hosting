@@ -42,11 +42,12 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
 
             using (var deployer = new SelfHostDeployer(deploymentParameters, logger))
             {
-                var deploymentResult = deployer.Deploy();
-                string output = string.Empty;
-                
+                deployer.Deploy();
+
+                // Wait for application to start
                 System.Threading.Thread.Sleep(1000);
 
+                string output = string.Empty;
                 deployer.HostProcess.OutputDataReceived += (sender, args) => output += args.Data + '\n';
 
                 SendSIGINT(deployer.HostProcess.Id);
