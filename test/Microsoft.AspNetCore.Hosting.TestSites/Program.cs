@@ -30,18 +30,14 @@ namespace ServerComparison.TestSites
 
     public class NoopServer : IServer
     {
-        private readonly ManualResetEventSlim _serverEvent = new ManualResetEventSlim(false);
-
         public void Dispose()
         {
-            _serverEvent.Wait();
         }
 
         public IFeatureCollection Features { get; } = new FeatureCollection();
 
         public void Start<TContext>(IHttpApplication<TContext> application)
         {
-            _serverEvent.Set();
         }
     }
 }
