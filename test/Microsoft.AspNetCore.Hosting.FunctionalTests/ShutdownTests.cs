@@ -53,7 +53,8 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
 
                 SendSIGINT(deployer.HostProcess.Id);
 
-                deployer.HostProcess.WaitForExit();
+                WaitForExitOrKill(deployer.HostProcess);
+
                 output = output.Trim('\n');
 
                 Assert.Equal(output, "Application is shutting down...\n" +
@@ -76,6 +77,11 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
             };
 
             var process = Process.Start(startInfo);
+            WaitForExitOrKill(process);
+        }
+
+        private static void WaitForExitOrKill(Process process)
+        {
             process.WaitForExit(1000);
             if (!process.HasExited)
             {
