@@ -22,25 +22,25 @@
   "dependencies": {
     "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.1",
     "Microsoft.AspNetCore.Hosting.Server.Abstractions": "1.0.1",
-    "Microsoft.AspNetCore.Http": "1.0.0",
-    "Microsoft.AspNetCore.Http.Extensions": "1.0.0",
-    "Microsoft.Extensions.FileProviders.Physical": "1.0.0",
-    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.AspNetCore.Http": "1.0.1",
+    "Microsoft.AspNetCore.Http.Extensions": "1.0.1",
+    "Microsoft.Extensions.FileProviders.Physical": "1.0.1",
+    "Microsoft.Extensions.Options": "1.0.1",
     "Microsoft.Extensions.Configuration": "1.0.1",
     "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.1",
-    "Microsoft.Extensions.DependencyInjection": "1.0.0",
-    "Microsoft.Extensions.Logging": "1.0.0",
+    "Microsoft.Extensions.DependencyInjection": "1.0.1",
+    "Microsoft.Extensions.Logging": "1.0.1",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
     "Microsoft.Extensions.RuntimeEnvironment.Sources": {
       "type": "build",
-      "version": "1.0.0-rtm-21431"
+      "version": "1.0.1"
     },
     "Microsoft.Extensions.StackTrace.Sources": {
       "type": "build",
-      "version": "1.0.0-rtm-21431"
+      "version": "1.0.1"
     },
     "Microsoft.Extensions.TypeNameHelper.Sources": {
-      "version": "1.0.0-rtm-21431",
+      "version": "1.0.1",
       "type": "build"
     },
     "System.Diagnostics.DiagnosticSource": "4.0.0",

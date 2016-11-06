@@ -17,9 +17,9 @@
     "System.Runtime.InteropServices.RuntimeInformation": "4.0.0",
     "dotnet-test-xunit": "1.0.0-rc3-000000-01",
     "Microsoft.AspNetCore.Hosting": "1.0.1",
-    "Microsoft.AspNetCore.Owin": "1.0.0",
-    "Microsoft.AspNetCore.Testing": "1.0.0-rtm-21431",
-    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.AspNetCore.Owin": "1.0.1",
+    "Microsoft.AspNetCore.Testing": "1.0.1",
+    "Microsoft.Extensions.Options": "1.0.1",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
     "xunit": "2.1.0"
   },

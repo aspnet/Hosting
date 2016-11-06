@@ -26,12 +26,12 @@
   },
   "dependencies": {
     "System.Runtime.InteropServices.RuntimeInformation": "4.0.0",
-    "Microsoft.AspNetCore.Testing": "1.0.0-rtm-21431",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.0",
-    "Microsoft.Extensions.FileProviders.Embedded": "1.0.0",
+    "Microsoft.AspNetCore.Testing": "1.0.1",
+    "Microsoft.Extensions.Logging.Abstractions": "1.0.1",
+    "Microsoft.Extensions.FileProviders.Embedded": "1.0.1",
     "Microsoft.Extensions.Process.Sources": {
       "type": "build",
-      "version": "1.0.0-rtm-21431"
+      "version": "1.0.1"
     }
   },
   "frameworks": {
