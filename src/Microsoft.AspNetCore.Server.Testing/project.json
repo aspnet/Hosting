@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0-rtm-21431",
+  "version": "0.1.1",
   "buildOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk",
