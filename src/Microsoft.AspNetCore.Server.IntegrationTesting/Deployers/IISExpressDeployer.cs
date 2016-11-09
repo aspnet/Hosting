@@ -69,8 +69,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 // We take a copy of the original specified applicationHost.Config to prevent modifying the one in the repo.
 
                 // The nupkg build of ANCM does not support Win7. https://github.com/aspnet/AspNetCoreModule/issues/40.
-                // If Win7 were supported we could just hardcode "aspnetcore.dll" in the config files.
-                var ancmPath = IsWin8orLater ? "aspnetcore.dll" : @"%ProgramFiles%\IIS Express\aspnetcore.dll";
+                var ancmPath = IsWin8orLater ?
+                    Path.Combine(contentRoot, "aspnetcore.dll") // Bin deployed by the Microsoft.AspNetCore.AspNetCoreModule.nupkg
+                    : @"%ProgramFiles%\IIS Express\aspnetcore.dll";
 
                 DeploymentParameters.ServerConfigTemplateContent =
                     DeploymentParameters.ServerConfigTemplateContent
