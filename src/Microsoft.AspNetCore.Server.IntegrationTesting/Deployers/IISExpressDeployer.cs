@@ -68,14 +68,35 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 // Pass on the applicationhost.config to iis express. With this don't need to pass in the /path /port switches as they are in the applicationHost.config
                 // We take a copy of the original specified applicationHost.Config to prevent modifying the one in the repo.
 
-                // The nupkg build of ANCM does not support Win7. https://github.com/aspnet/AspNetCoreModule/issues/40.
-                var ancmPath = IsWin8orLater ?
-                    Path.Combine(contentRoot, "aspnetcore.dll") // Bin deployed by the Microsoft.AspNetCore.AspNetCoreModule.nupkg
-                    : @"%ProgramFiles%\IIS Express\aspnetcore.dll";
+                if (DeploymentParameters.ServerConfigTemplateContent.Contains("[ANCMPath]"))
+                {
+                    string ancmPath;
+                    if (!IsWin8orLater)
+                    {
+                        // The nupkg build of ANCM does not support Win7. https://github.com/aspnet/AspNetCoreModule/issues/40.
+                        ancmPath = @"%ProgramFiles%\IIS Express\aspnetcore.dll";
+                    }
+                    // Bin deployed by Microsoft.AspNetCore.AspNetCoreModule.nupkg
+                    else if (DeploymentParameters.ApplicationType == ApplicationType.Portable)
+                    {
+                        ancmPath = Path.Combine(contentRoot, @"runtimes\win7-x64\native\aspnetcore.dll");
+                    }
+                    else
+                    {
+                        ancmPath = Path.Combine(contentRoot, "aspnetcore.dll");
+                    }
+
+                    if (!File.Exists(ancmPath))
+                    {
+                        throw new FileNotFoundException("AspNetCoreModule could not be found.", ancmPath);
+                    }
+
+                    DeploymentParameters.ServerConfigTemplateContent =
+                        DeploymentParameters.ServerConfigTemplateContent.Replace("[ANCMPath]", ancmPath);
+                }
 
                 DeploymentParameters.ServerConfigTemplateContent =
                     DeploymentParameters.ServerConfigTemplateContent
-                        .Replace("[ANCMPath]", ancmPath)
                         .Replace("[ApplicationPhysicalPath]", contentRoot)
                         .Replace("[PORT]", uri.Port.ToString());
 
