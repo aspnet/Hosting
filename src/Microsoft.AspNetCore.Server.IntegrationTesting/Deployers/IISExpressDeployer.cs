@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Server.IntegrationTesting.Common;
+using Microsoft.DotNet.PlatformAbstractions;
 
 namespace Microsoft.AspNetCore.Server.IntegrationTesting
 {
@@ -20,6 +21,16 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         public IISExpressDeployer(DeploymentParameters deploymentParameters, ILogger logger)
             : base(deploymentParameters, logger)
         {
+        }
+
+        public bool IsWin8orLater
+        {
+            get
+            {
+                var win8Version = new Version(6, 2);
+
+                return (new Version(RuntimeEnvironment.OperatingSystemVersion) >= win8Version);
+            }
         }
 
         public override DeploymentResult Deploy()
@@ -57,8 +68,14 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 // Pass on the applicationhost.config to iis express. With this don't need to pass in the /path /port switches as they are in the applicationHost.config
                 // We take a copy of the original specified applicationHost.Config to prevent modifying the one in the repo.
 
+                // The nupkg build of ANCM does not support Win7. https://github.com/aspnet/AspNetCoreModule/issues/40.
+                var ancmPath = IsWin8orLater ?
+                    Path.Combine(contentRoot, "aspnetcore.dll") // Bin deployed by the Microsoft.AspNetCore.AspNetCoreModule.nupkg
+                    : @"%ProgramFiles%\IIS Express\aspnetcore.dll";
+
                 DeploymentParameters.ServerConfigTemplateContent =
                     DeploymentParameters.ServerConfigTemplateContent
+                        .Replace("[ANCMPath]", ancmPath)
                         .Replace("[ApplicationPhysicalPath]", contentRoot)
                         .Replace("[PORT]", uri.Port.ToString());
 

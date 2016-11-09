@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "Microsoft.AspNetCore.Testing": "1.1.0-*",
+    "Microsoft.DotNet.PlatformAbstractions": "1.1.0-*",
     "Microsoft.Extensions.FileProviders.Embedded": "1.1.0-*",
     "Microsoft.Extensions.Logging.Abstractions": "1.1.0-*",
     "Microsoft.Extensions.Process.Sources": {
