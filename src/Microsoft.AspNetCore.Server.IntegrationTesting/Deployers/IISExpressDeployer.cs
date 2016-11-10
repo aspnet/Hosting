@@ -77,7 +77,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                         ancmPath = @"%ProgramFiles%\IIS Express\aspnetcore.dll";
                     }
                     // Bin deployed by Microsoft.AspNetCore.AspNetCoreModule.nupkg
-                    else if (DeploymentParameters.ApplicationType == ApplicationType.Portable)
+                    else if (DeploymentParameters.RuntimeFlavor == RuntimeFlavor.CoreClr
+                        && DeploymentParameters.ApplicationType == ApplicationType.Portable)
                     {
                         ancmPath = Path.Combine(contentRoot, @"runtimes\win7-x64\native\aspnetcore.dll");
                     }
