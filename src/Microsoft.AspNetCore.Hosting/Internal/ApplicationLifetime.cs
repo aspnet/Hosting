@@ -55,18 +55,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // which will no-op since the first call already requested cancellation, get a chance to execute.
             lock (_stoppingSource)
             {
-                // Noop if this is already cancelled, user code can call this so 
-                // we should guard against multiple calls here
-                if (_stoppingSource.IsCancellationRequested)
-                {
-                    return;
-                }
-
                 try
                 {
-                    _stoppingSource.Cancel(throwOnFirstException: false);
-
-                    ExecuteHandlers(handler => handler.OnApplicationStopping());
+                    ExecuteHandlers(_stoppingSource, handler => handler.OnApplicationStopping());
                 }
                 catch (Exception ex)
                 {
@@ -84,9 +75,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
-                _startedSource.Cancel(throwOnFirstException: false);
-
-                ExecuteHandlers(handler => handler.OnApplicationStarted());
+                ExecuteHandlers(_startedSource, handler => handler.OnApplicationStarted());
             }
             catch (Exception ex)
             {
@@ -103,9 +92,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             try
             {
-                _stoppedSource.Cancel(throwOnFirstException: false);
-
-                ExecuteHandlers(handler => handler.OnApplicationStopped());
+                ExecuteHandlers(_stoppedSource, handler => handler.OnApplicationStopped());
             }
             catch (Exception ex)
             {
@@ -115,9 +102,32 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
         }
 
-        private void ExecuteHandlers(Action<IApplicationLifetimeEvents> callback)
+        private void ExecuteHandlers(CancellationTokenSource cancel, Action<IApplicationLifetimeEvents> callback)
         {
+            // Noop if this is already cancelled
+            if (cancel.IsCancellationRequested)
+            {
+                return;
+            }
+
             List<Exception> exceptions = null;
+
+            try
+            {
+                // Run the cancellation token callbacks
+                cancel.Cancel(throwOnFirstException: false);
+            }
+            catch (Exception ex)
+            {
+                if (exceptions == null)
+                {
+                    exceptions = new List<Exception>();
+                }
+
+                exceptions.Add(ex);
+            }
+
+            // Run the handlers
             foreach (var handler in _handlers)
             {
                 try
@@ -135,6 +145,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
             }
 
+            // Throw an aggregate exception if there were any exceptions
             if (exceptions != null)
             {
                 throw new AggregateException(exceptions);
