@@ -151,7 +151,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             eventListener.EnableEvents(hostingEventSource, EventLevel.Informational);
 
             // Act
-            hostingEventSource.RequestStop();
+            hostingEventSource.RequestStop(startTimestamp: 0, endTimestamp: 0);
 
             // Assert
             var eventData = eventListener.EventData;

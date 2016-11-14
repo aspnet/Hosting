@@ -70,6 +70,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             _hostingServiceProvider = hostingServiceProvider;
             _applicationServiceCollection.AddSingleton<IApplicationLifetime, ApplicationLifetime>();
             _applicationServiceCollection.AddSingleton<HostedServiceExecutor>();
+
+            // This is here for the sole reason to load it as fast as possible in the application domain and be found
+            // by the EventSource.GetSources() api.
+            var eventSource = HostingEventSource.Log;
         }
 
         public IServiceProvider Services

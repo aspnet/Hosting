@@ -42,18 +42,20 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             var httpContext = _httpContextFactory.Create(contextFeatures);
 
+            var eventLogEnabled = HostingEventSource.Log.IsEnabled();
+
             // These enabled checks are virtual dispatch and used twice and so cache to locals
             var diagnoticsEnabled = _diagnosticSource.IsEnabled(DiagnosticsBeginRequestKey);
             var loggingEnabled = _logger.IsEnabled(LogLevel.Information);
 
-            if (HostingEventSource.Log.IsEnabled())
+            if (eventLogEnabled)
             {
                 // To keep the hot path short we defer logging in this function to non-inlines
                 RecordRequestStartEventLog(httpContext);
             }
 
             // Only make call GetTimestamp if its value will be used, i.e. of the listenters is enabled
-            var startTimestamp = (diagnoticsEnabled || loggingEnabled) ? Stopwatch.GetTimestamp() : 0;
+            var startTimestamp = (diagnoticsEnabled || loggingEnabled || eventLogEnabled) ? Stopwatch.GetTimestamp() : 0;
 
             // Scope may be relevant for a different level of logging, so we always create it
             // see: https://github.com/aspnet/Hosting/pull/944
@@ -107,7 +109,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     // Diagnostics is enabled for EndRequest, but it may not be for BeginRequest
                     // so call GetTimestamp if currentTimestamp is zero (from above)
                     RecordEndRequestDiagnostics(
-                        httpContext, 
+                        httpContext,
                         (currentTimestamp != 0) ? currentTimestamp : Stopwatch.GetTimestamp());
                 }
             }
@@ -119,8 +121,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     // Diagnostics is enabled for UnhandledException, but it may not be for BeginRequest 
                     // so call GetTimestamp if currentTimestamp is zero (from above)
                     RecordUnhandledExceptionDiagnostics(
-                        httpContext, 
-                        (currentTimestamp != 0) ? currentTimestamp : Stopwatch.GetTimestamp(), 
+                        httpContext,
+                        (currentTimestamp != 0) ? currentTimestamp : Stopwatch.GetTimestamp(),
                         exception);
                 }
 
@@ -146,7 +148,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             if (eventLogEnabled)
             {
                 // Non-inline
-                hostingEventLog.RequestStop();
+                hostingEventLog.RequestStop(startTimestamp, currentTimestamp);
             }
         }
 
