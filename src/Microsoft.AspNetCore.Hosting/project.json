@@ -20,6 +20,9 @@
     "xmlDoc": true
   },
   "dependencies": {
+    "Microsoft.Extensions.Hosting": {
+      "target": "project"
+    },
     "Microsoft.AspNetCore.Hosting.Abstractions": {
       "target": "project"
     },

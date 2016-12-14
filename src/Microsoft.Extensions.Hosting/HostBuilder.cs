@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Extensions.Hosting
 {
-
     /// <summary>
     /// A builder for <see cref="HostBuilder"/>
     /// </summary>
