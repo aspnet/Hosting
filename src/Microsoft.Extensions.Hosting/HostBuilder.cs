@@ -30,6 +30,7 @@ namespace Microsoft.Extensions.Hosting
             _configureLoggingDelegates = new List<Action<ILoggerFactory>>();
 
             _config = new ConfigurationBuilder()
+                .AddInMemoryCollection()
                 .Build();
         }
 

@@ -3,6 +3,7 @@
 
 using System;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
 {
@@ -28,6 +29,17 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             ContentRootPath = configuration[WebHostDefaults.ContentRootKey];
         }
 
+        public WebHostOptions(HostBuilder builder)
+        {
+            ApplicationName = builder.GetSetting(WebHostDefaults.ApplicationKey);
+            StartupAssembly = builder.GetSetting(WebHostDefaults.StartupAssemblyKey);
+            DetailedErrors = ParseBool(builder, WebHostDefaults.DetailedErrorsKey);
+            CaptureStartupErrors = ParseBool(builder, WebHostDefaults.CaptureStartupErrorsKey);
+            Environment = builder.GetSetting(WebHostDefaults.EnvironmentKey);
+            WebRoot = builder.GetSetting(WebHostDefaults.WebRootKey);
+            ContentRootPath = builder.GetSetting(WebHostDefaults.ContentRootKey);
+        }
+
         public string ApplicationName { get; set; }
 
         public bool DetailedErrors { get; set; }
@@ -35,7 +47,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public bool CaptureStartupErrors { get; set; }
 
         public string Environment { get; set; }
-        
+
         public string StartupAssembly { get; set; }
 
         public string WebRoot { get; set; }
@@ -46,6 +58,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             return string.Equals("true", configuration[key], StringComparison.OrdinalIgnoreCase)
                 || string.Equals("1", configuration[key], StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool ParseBool(HostBuilder configuration, string key)
+        {
+            return string.Equals("true", configuration.GetSetting(key), StringComparison.OrdinalIgnoreCase)
+                || string.Equals("1", configuration.GetSetting(key), StringComparison.OrdinalIgnoreCase);
         }
     }
 }
