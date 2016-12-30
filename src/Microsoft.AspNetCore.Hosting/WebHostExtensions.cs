@@ -45,7 +45,7 @@ namespace Microsoft.AspNetCore.Hosting
                     eventArgs.Cancel = true;
                 };
 
-                host.Run(cts.Token, "Application started. Press Ctrl+C to shut down.");
+                host.RunAsync(cts.Token, "Application started. Press Ctrl+C to shut down.").Wait();
                 done.Set();
             }
         }
