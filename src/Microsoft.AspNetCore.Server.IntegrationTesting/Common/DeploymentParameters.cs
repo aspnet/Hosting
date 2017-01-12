@@ -79,7 +79,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         /// <summary>
         /// Space separated command line arguments to be passed to dotnet-publish
         /// </summary>
-        /// <returns></returns>
         public string AdditionalPublishParameters { get; set; }
 
         /// <summary>
