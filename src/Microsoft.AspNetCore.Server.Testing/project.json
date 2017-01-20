@@ -1,69 +1,68 @@
 {
-  "version": "0.1.1",
-  "buildOptions": {
-    "warningsAsErrors": true,
-    "keyFile": "../../tools/Key.snk",
-    "nowarn": [
-      "CS1591"
-    ],
-    "xmlDoc": true,
-    "embed": [
-      "Deployers/RemoteWindowsDeployer/RemotePSSessionHelper.ps1",
-      "Deployers/RemoteWindowsDeployer/StartServer.ps1",
-      "Deployers/RemoteWindowsDeployer/StopServer.ps1"
-    ]
-  },
-  "description": "ASP.NET Core helpers to deploy applications to IIS Express, IIS, WebListener and Kestrel for testing.",
-  "packOptions": {
-    "repository": {
-      "type": "git",
-      "url": "git://github.com/aspnet/hosting"
+    "version": "0.1.1",
+    "buildOptions": {
+        "warningsAsErrors": true,
+        "keyFile": "../../tools/Key.snk",
+        "nowarn": [
+            "CS1591"
+        ],
+        "xmlDoc": true,
+        "embed": [
+            "Deployers/RemoteWindowsDeployer/RemotePSSessionHelper.ps1",
+            "Deployers/RemoteWindowsDeployer/StartServer.ps1",
+            "Deployers/RemoteWindowsDeployer/StopServer.ps1"
+        ]
     },
-    "tags": [
-      "aspnetcore",
-      "testing"
-    ]
-  },
-  "dependencies": {
-    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0",
-    "Microsoft.AspNetCore.Testing": "1.0.1",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.1",
-    "Microsoft.Extensions.FileProviders.Embedded": "1.0.1",
-    "Microsoft.Extensions.Process.Sources": {
-      "type": "build",
-      "version": "1.0.1"
-    }
-  },
-  "frameworks": {
-    "net451": {
-      "dependencies": {
-        "Microsoft.Web.Administration": "7.0.0"
-      },
-      "frameworkAssemblies": {
-        "System.Net.Http": "",
-        "System.Runtime": {
-          "type": "build"
+    "description": "ASP.NET Core helpers to deploy applications to IIS Express, IIS, WebListener and Kestrel for testing.",
+    "packOptions": {
+        "repository": {
+            "type": "git",
+            "url": "git://github.com/aspnet/hosting"
         },
-        "System.Xml": "",
-        "System.Xml.Linq": ""
-      }
+        "tags": [
+            "aspnetcore",
+            "testing"
+        ]
     },
-    "netstandard1.3": {
-      "dependencies": {
-        "System.Diagnostics.Process": "4.1.0",
-        "System.IO.FileSystem": "4.0.1",
+    "dependencies": {
         "System.Net.Http": "4.1.1",
-        "System.Net.Primitives": "4.0.11",
-        "System.Net.Sockets": "4.1.0",
-        "System.Runtime.Extensions": "4.1.0",
-        "System.Text.RegularExpressions": "4.1.0",
-        "System.Threading": "4.0.11",
-        "System.Threading.Thread": "4.0.0",
-        "System.Xml.XDocument": "4.0.11"
-      },
-      "imports": [
-        "portable-net45+win8"
-      ]
+        "System.Runtime.InteropServices.RuntimeInformation": "4.0.0",
+        "Microsoft.AspNetCore.Testing": "1.0.1",
+        "Microsoft.Extensions.Logging.Abstractions": "1.0.1",
+        "Microsoft.Extensions.FileProviders.Embedded": "1.0.1",
+        "Microsoft.Extensions.Process.Sources": {
+            "type": "build",
+            "version": "1.0.1"
+        }
+    },
+    "frameworks": {
+        "net451": {
+            "dependencies": {
+                "Microsoft.Web.Administration": "7.0.0"
+            },
+            "frameworkAssemblies": {
+                "System.Runtime": {
+                    "type": "build"
+                },
+                "System.Xml": "",
+                "System.Xml.Linq": ""
+            }
+        },
+        "netstandard1.3": {
+            "dependencies": {
+                "System.Diagnostics.Process": "4.1.0",
+                "System.IO.FileSystem": "4.0.1",
+                "System.Net.Primitives": "4.0.11",
+                "System.Net.Sockets": "4.1.0",
+                "System.Runtime.Extensions": "4.1.0",
+                "System.Text.RegularExpressions": "4.1.0",
+                "System.Threading": "4.0.11",
+                "System.Threading.Thread": "4.0.0",
+                "System.Xml.XDocument": "4.0.11"
+            },
+            "imports": [
+                "portable-net45+win8"
+            ]
+        }
     }
-  }
 }

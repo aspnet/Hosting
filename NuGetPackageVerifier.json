@@ -4,12 +4,25 @@
             "AdxVerificationCompositeRule"
         ],
         "packages": {
-            "Microsoft.AspNetCore.Hosting": { },
-            "Microsoft.AspNetCore.Hosting.Abstractions": { },
-            "Microsoft.AspNetCore.Hosting.Server.Abstractions": { },
-            "Microsoft.AspNetCore.Hosting.WindowsServices": { },
-            "Microsoft.AspNetCore.Server.Testing": { },
-            "Microsoft.AspNetCore.TestHost": { }
+            "Microsoft.AspNetCore.Hosting": {},
+            "Microsoft.AspNetCore.Hosting.Abstractions": {},
+            "Microsoft.AspNetCore.Hosting.Server.Abstractions": {},
+            "Microsoft.AspNetCore.Hosting.WindowsServices": {
+                "Exclusions": {
+                    "PACKAGE_REFERENCES_FRAMEWORK_ASSEMBLY": {
+                        "System.ServiceProcess": "There is no package for this framework assembly"
+                    }
+                }
+            },
+            "Microsoft.AspNetCore.Server.Testing": {
+                "Exclusions": {
+                    "PACKAGE_REFERENCES_FRAMEWORK_ASSEMBLY": {
+                        "System.Xml": "System.Xml can't be replaced by a package due to conflicts between the package defining it and another reference assembly",
+                        "System.Xml.Linq": "System.Xml.Linq can't be replaced by a package due to conflicts between the package defining it and another reference assembly"
+                    }
+                }
+            },
+            "Microsoft.AspNetCore.TestHost": {}
         }
     },
     "Default": { // Rules to run for packages not listed in any other set.
