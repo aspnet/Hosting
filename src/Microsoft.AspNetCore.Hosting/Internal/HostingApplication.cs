@@ -45,7 +45,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             var hostingLog = HostingEventSource.Log;
             if (hostingLog.IsEnabled())
+            {
                 hostingLog.RequestStart(httpContext.Request.Method, httpContext.Request.Path);
+            }
 
             return new Context
             {
@@ -84,11 +86,15 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
 
                 if (hostingLog.IsEnabled())
+                {
                     hostingLog.UnhandledException();
+                }
             }
 
             if (hostingLog.IsEnabled())
+            {
                 hostingLog.RequestStop();
+            }
 
             context.Scope?.Dispose();
 
