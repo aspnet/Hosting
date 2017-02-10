@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "buildOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk",
@@ -27,7 +27,7 @@
   "dependencies": {
     "System.Runtime.InteropServices.RuntimeInformation": "4.0.0",
     "Microsoft.AspNetCore.Testing": "1.0.1",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.1",
+    "Microsoft.Extensions.Logging.Abstractions": "1.0.2",
     "Microsoft.Extensions.FileProviders.Embedded": "1.0.1",
     "Microsoft.Extensions.Process.Sources": {
       "type": "build",
