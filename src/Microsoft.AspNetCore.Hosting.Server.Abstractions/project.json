@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "buildOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk",
@@ -20,8 +20,8 @@
     ]
   },
   "dependencies": {
-    "Microsoft.AspNetCore.Http.Features": "1.0.1",
-    "Microsoft.Extensions.Configuration.Abstractions": "1.0.1"
+    "Microsoft.AspNetCore.Http.Features": "1.0.2",
+    "Microsoft.Extensions.Configuration.Abstractions": "1.0.2"
   },
   "frameworks": {
     "net451": {},
