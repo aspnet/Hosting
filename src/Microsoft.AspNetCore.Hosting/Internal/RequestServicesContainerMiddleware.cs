@@ -45,7 +45,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 return;
             }
 
-            // _scopeFactory is pre-validated so use inlinable .ctor and property
             var replacementFeature = new RequestServicesFeature(_scopeFactory);
 
             try
