@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -31,11 +32,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         public async Task Invoke(HttpContext httpContext)
         {
-            if (httpContext == null)
-            {
-                // Defer Exception creation and throw to non-returning throw helper
-                ThrowArgumentNullExceptionHttpContext();
-            }
+            Debug.Assert(httpContext != null);
 
             // local cache for virtual disptach result
             var features = httpContext.Features;
@@ -49,7 +46,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
 
             // _scopeFactory is pre-validated so use inlinable .ctor and property
-            var replacementFeature = new RequestServicesFeature() { ServiceScopeFactory = _scopeFactory };
+            var replacementFeature = new RequestServicesFeature(_scopeFactory);
 
             try
             {
@@ -62,11 +59,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 // Restore previous feature state
                 features.Set(existingFeature);
             }
-        }
-
-        private static void ThrowArgumentNullExceptionHttpContext()
-        {
-            throw new ArgumentNullException("httpContext");
         }
     }
 }
