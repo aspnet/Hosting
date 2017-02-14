@@ -24,6 +24,20 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             _scopeFactory = scopeFactory;
         }
 
+        internal RequestServicesFeature()
+        {
+            // For use with pre-validated IServiceScopeFactory
+        }
+
+        internal IServiceScopeFactory ServiceScopeFactory
+        {
+            set
+            {
+                // Setting pre-validated IServiceScopeFactory
+                _scopeFactory = value; 
+            }
+        }
+
         public IServiceProvider RequestServices
         {
             get

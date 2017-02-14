@@ -12,7 +12,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
     public class RequestServicesContainerMiddleware
     {
         private readonly RequestDelegate _next;
-        private IServiceScopeFactory _scopeFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public RequestServicesContainerMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
         {
@@ -25,38 +25,48 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 throw new ArgumentNullException(nameof(scopeFactory));
             }
 
-            _scopeFactory = scopeFactory;
             _next = next;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task Invoke(HttpContext httpContext)
         {
             if (httpContext == null)
             {
-                throw new ArgumentNullException(nameof(httpContext));
+                // Defer Exception creation and throw to non-returning throw helper
+                ThrowArgumentNullExceptionHttpContext();
             }
 
-            var existingFeature = httpContext.Features.Get<IServiceProvidersFeature>();
+            // local cache for virtual disptach result
+            var features = httpContext.Features;
+            var existingFeature = features.Get<IServiceProvidersFeature>();
 
-            // All done if request services is set
+            // All done if RequestServices is set
             if (existingFeature?.RequestServices != null)
             {
                 await _next.Invoke(httpContext);
                 return;
             }
 
-            using (var feature = new RequestServicesFeature(_scopeFactory))
+            // _scopeFactory is pre-validated so use inlinable .ctor and property
+            var replacementFeature = new RequestServicesFeature() { ServiceScopeFactory = _scopeFactory };
+
+            try
             {
-                try
-                {
-                    httpContext.Features.Set<IServiceProvidersFeature>(feature);
-                    await _next.Invoke(httpContext);
-                }
-                finally
-                {
-                    httpContext.Features.Set(existingFeature);
-                }
+                features.Set<IServiceProvidersFeature>(replacementFeature);
+                await _next.Invoke(httpContext);
             }
+            finally
+            {
+                replacementFeature.Dispose();
+                // Restore previous feature state
+                features.Set(existingFeature);
+            }
+        }
+
+        private static void ThrowArgumentNullExceptionHttpContext()
+        {
+            throw new ArgumentNullException("httpContext");
         }
     }
 }
