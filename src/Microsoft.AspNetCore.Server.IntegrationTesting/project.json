@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-rtm-22752",
+  "version": "0.2.1",
   "buildOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk",
@@ -27,7 +27,7 @@
   "dependencies": {
     "Microsoft.AspNetCore.Testing": "1.1.0-rtm-22752",
     "Microsoft.Extensions.FileProviders.Embedded": "1.1.0",
-    "Microsoft.Extensions.Logging.Abstractions": "1.1.0",
+    "Microsoft.Extensions.Logging.Abstractions": "1.1.1",
     "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
     "Microsoft.Extensions.Process.Sources": {
       "type": "build",
