@@ -23,7 +23,7 @@
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.2",
     "Microsoft.AspNetCore.Hosting.Server.Abstractions": "1.0.2",
     "Microsoft.Extensions.Configuration.Abstractions": "1.0.2",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.1",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.2",
     "Microsoft.Extensions.FileProviders.Abstractions": "1.0.1",
     "Microsoft.Extensions.Logging.Abstractions": "1.0.2"
   },
