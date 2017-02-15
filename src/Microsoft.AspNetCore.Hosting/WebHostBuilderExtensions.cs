@@ -6,6 +6,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.AspNetCore.Hosting
 {
@@ -88,7 +89,7 @@ namespace Microsoft.AspNetCore.Hosting
             {
                 var options = new ServiceProviderOptions();
                 configure(options);
-                services.AddSingleton<IServiceProviderFactory<IServiceCollection>>(new DefaultServiceProviderFactory(options));
+                services.Replace(ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(new DefaultServiceProviderFactory(options)));
             });
         }
     }
