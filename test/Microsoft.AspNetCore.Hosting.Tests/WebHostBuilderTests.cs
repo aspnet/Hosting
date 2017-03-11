@@ -596,7 +596,9 @@ namespace Microsoft.AspNetCore.Hosting
         public void Build_RunsHostingStartupAssembliesIfSpecified()
         {
             var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
                 .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, typeof(WebHostBuilderTests).GetTypeInfo().Assembly.FullName)
+                .Configure(app => { })
                 .UseServer(new TestServer());
 
             var host = (WebHost)builder.Build();
@@ -608,8 +610,12 @@ namespace Microsoft.AspNetCore.Hosting
         public void Build_RunsHostingStartupAssembliesBeforeApplication()
         {
             var startup = new StartupVerifyServiceA();
+            var startupAssemblyName = typeof(WebHostBuilderTests).GetTypeInfo().Assembly.GetName().Name;
+
             var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
                 .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, typeof(WebHostBuilderTests).GetTypeInfo().Assembly.FullName)
+                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IStartup>(startup);
@@ -626,6 +632,7 @@ namespace Microsoft.AspNetCore.Hosting
         public void Build_ConfigureLoggingInHostingStartupWorks()
         {
             var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
                 .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, typeof(WebHostBuilderTests).GetTypeInfo().Assembly.FullName)
                 .Configure(app =>
                 {
@@ -644,6 +651,7 @@ namespace Microsoft.AspNetCore.Hosting
         public void Build_DoesNotRunHostingStartupAssembliesDoNotRunIfNotSpecified()
         {
             var builder = CreateWebHostBuilder()
+                .Configure(app => { })
                 .UseServer(new TestServer());
 
             var host = (WebHost)builder.Build();
@@ -657,6 +665,7 @@ namespace Microsoft.AspNetCore.Hosting
             var builder = CreateWebHostBuilder()
                 .CaptureStartupErrors(false)
                 .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "SomeBogusName")
+                .Configure(app => { })
                 .UseServer(new TestServer());
 
             Assert.Throws<FileNotFoundException>(() => (WebHost)builder.Build());
@@ -666,7 +675,9 @@ namespace Microsoft.AspNetCore.Hosting
         public void Build_DoesNotThrowIfUnloadableAssemblyNameInHostingStartupAssembliesAndCaptureStartupErrorsTrue()
         {
             var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(true)
                 .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "SomeBogusName")
+                .Configure(app => { })
                 .UseServer(new TestServer());
 
             builder.Build();
