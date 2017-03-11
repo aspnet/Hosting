@@ -158,7 +158,7 @@ namespace Microsoft.AspNetCore.Hosting
                 Console.WriteLine("The environment variable 'ASPNETCORE_SERVER.URLS' is obsolete and has been replaced with 'ASPNETCORE_URLS'");
             }
 
-            var hostingServices = BuildCommonServices();
+            var hostingServices = BuildCommonServices(out var startupError);
             var applicationServices = hostingServices.Clone();
             var hostingServiceProvider = hostingServices.BuildServiceProvider();
 
@@ -168,15 +168,18 @@ namespace Microsoft.AspNetCore.Hosting
                 applicationServices,
                 hostingServiceProvider,
                 _options,
-                _config);
+                _config,
+                startupError);
 
             host.Initialize();
 
             return host;
         }
 
-        private IServiceCollection BuildCommonServices()
+        private IServiceCollection BuildCommonServices(out ExceptionDispatchInfo startupError)
         {
+            startupError = null;
+
             _options = new WebHostOptions(_config);
 
             var appEnvironment = PlatformServices.Default.Application;
@@ -198,6 +201,25 @@ namespace Microsoft.AspNetCore.Hosting
             else
             {
                 services.AddSingleton(_loggerFactory);
+            }
+
+            try
+            {
+                // Execute the platform light-up assemblies
+                foreach (var assemblyName in _options.PlatformAssemblies)
+                {
+                    var assembly = Assembly.Load(new AssemblyName(assemblyName));
+
+                    foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
+                    {
+                        var hostingStartup = (IHostingStartup)Activator.CreateInstance(attribute.HostingStartupType);
+                        hostingStartup.Configure(this);
+                    }
+                }
+            }
+            catch (Exception ex) when (_options.CaptureStartupErrors)
+            {
+                startupError = ExceptionDispatchInfo.Capture(ex);
             }
 
             foreach (var configureLogging in _configureLoggingDelegates)
