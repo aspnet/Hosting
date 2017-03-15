@@ -3,8 +3,9 @@
     <AspNetCoreVersion>1.2.0-*</AspNetCoreVersion>
     <CoreFxVersion>4.3.0</CoreFxVersion>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
-    <RuntimeFrameworkVersion>2.0.0-*</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion>2.0.0-beta-001828-00</RuntimeFrameworkVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
+    <SystemDiagnosticsDiagnosticSourceVersion>4.4.0-*</SystemDiagnosticsDiagnosticSourceVersion>
     <TestSdkVersion>15.0.0</TestSdkVersion>
     <WebAdministrationVersion>7.0.0</WebAdministrationVersion>
     <WindowsApiSetsVersion>1.0.1</WindowsApiSetsVersion>
