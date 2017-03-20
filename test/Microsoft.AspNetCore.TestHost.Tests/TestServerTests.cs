@@ -138,10 +138,24 @@ namespace Microsoft.AspNetCore.TestHost
             featureCollection.Set<IServerAddressesFeature>(new ServerAddressesFeature());
 
             // Act
-            var testServer = new TestServer(builder, featureCollection);
+            new TestServer(builder, featureCollection);
 
             // Assert
             // Is inside configure callback
+        }
+
+        [Fact]
+        public void TestServerConstructorWithNullFeatureCollectionDoesNotThrow()
+        {
+            // Arrange
+            var builder = new WebHostBuilder()
+                .Configure(b => { });
+
+            // Act
+            new TestServer(builder, null);
+
+            // Assert
+            // Does not throw
         }
 
         public class TestService { }

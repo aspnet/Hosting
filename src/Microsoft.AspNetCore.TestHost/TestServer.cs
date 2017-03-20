@@ -29,11 +29,7 @@ namespace Microsoft.AspNetCore.TestHost
 
         public TestServer(IWebHostBuilder builder, IFeatureCollection featureCollection)
         {
-            var server = this as IServer;
-            foreach (var feature in featureCollection)
-            {
-                server.Features[feature.Key] = feature.Value;
-            }
+            Features = featureCollection;
 
             var host = builder.UseServer(this).Build();
             host.Start();
@@ -50,7 +46,7 @@ namespace Microsoft.AspNetCore.TestHost
             }
         }
 
-        IFeatureCollection IServer.Features { get; } = new FeatureCollection();
+        public IFeatureCollection Features { get; }
 
         public HttpMessageHandler CreateHandler()
         {
