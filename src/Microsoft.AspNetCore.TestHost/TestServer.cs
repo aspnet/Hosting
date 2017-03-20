@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Context = Microsoft.AspNetCore.Hosting.Internal.HostingApplication.Context;
@@ -27,9 +28,14 @@ namespace Microsoft.AspNetCore.TestHost
             _hostInstance = host;
         }
 
-        public TestServer(IWebHostBuilder builder, Action<TestServer> configureServer)
+        public TestServer(IWebHostBuilder builder, IFeatureCollection featureCollection)
         {
-            configureServer(this);
+            var server = this as IServer;
+            foreach (var feature in featureCollection)
+            {
+                server.Features[feature.Key] = feature.Value;
+            }
+
             var host = builder.UseServer(this).Build();
             host.Start();
             _hostInstance = host;

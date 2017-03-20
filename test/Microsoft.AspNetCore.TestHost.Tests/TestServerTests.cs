@@ -134,12 +134,12 @@ namespace Microsoft.AspNetCore.TestHost
                     Assert.Contains(serverAddressesFeature.Addresses, s => string.Compare(s,url, true) == 0);
                 });
 
+
+            var featureCollection = new FeatureCollection();
+            featureCollection.Set<IServerAddressesFeature>(new ServerAddressesFeature());
+
             // Act
-            var testServer = new TestServer(builder, server =>
-            {
-                var iserver = server as IServer;
-                iserver.Features.Set<IServerAddressesFeature>(new ServerAddressesFeature());
-            });
+            var testServer = new TestServer(builder, featureCollection);
 
             // Assert
             // Is inside configure callback
