@@ -130,7 +130,7 @@ namespace Microsoft.AspNetCore.TestHost
                 .Configure(applicationBuilder =>
                 {
                     var serverAddressesFeature = applicationBuilder.ServerFeatures.Get<IServerAddressesFeature>();
-                    Assert.Contains(serverAddressesFeature.Addresses, s => string.Compare(s, url, true) == 0);
+                    Assert.Contains(serverAddressesFeature.Addresses, s => string.Equals(s, url, StringComparison.Ordinal));
                 });
 
 
