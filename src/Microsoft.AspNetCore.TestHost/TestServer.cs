@@ -27,6 +27,14 @@ namespace Microsoft.AspNetCore.TestHost
             _hostInstance = host;
         }
 
+        public TestServer(IWebHostBuilder builder, Action<TestServer> configureServer)
+        {
+            configureServer(this);
+            var host = builder.UseServer(this).Build();
+            host.Start();
+            _hostInstance = host;
+        }
+
         public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
 
         public IWebHost Host
@@ -37,7 +45,7 @@ namespace Microsoft.AspNetCore.TestHost
             }
         }
 
-        IFeatureCollection IServer.Features { get; }
+        IFeatureCollection IServer.Features { get; } = new FeatureCollection();
 
         public HttpMessageHandler CreateHandler()
         {

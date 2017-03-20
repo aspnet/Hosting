@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
 using Xunit;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 
 namespace Microsoft.AspNetCore.TestHost
 {
@@ -117,6 +119,30 @@ namespace Microsoft.AspNetCore.TestHost
             var server = new TestServer(builder);
             string result = await server.CreateClient().GetStringAsync("/path");
             Assert.Equal("ApplicationServicesEqual:True", result);
+        }
+
+        [Fact]
+        public void TestServerConstructorWithConfigureServerAllowsInitializingServerFeatures()
+        {
+            // Arrange
+            var url = "http://localhost:8000/appName/serviceName";
+            var builder = new WebHostBuilder()
+                .UseUrls(url)
+                .Configure(applicationBuilder =>
+                {
+                    var serverAddressesFeature = applicationBuilder.ServerFeatures.Get<IServerAddressesFeature>();
+                    Assert.Contains(serverAddressesFeature.Addresses, s => string.Compare(s,url, true) == 0);
+                });
+
+            // Act
+            var testServer = new TestServer(builder, server =>
+            {
+                var iserver = server as IServer;
+                iserver.Features.Set<IServerAddressesFeature>(new ServerAddressesFeature());
+            });
+
+            // Assert
+            // Is inside configure callback
         }
 
         public class TestService { }
