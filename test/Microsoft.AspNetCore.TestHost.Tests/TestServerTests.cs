@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Testing.xunit;
@@ -16,8 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
 using Xunit;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 
 namespace Microsoft.AspNetCore.TestHost
 {
@@ -122,7 +121,7 @@ namespace Microsoft.AspNetCore.TestHost
         }
 
         [Fact]
-        public void TestServerConstructorWithConfigureServerAllowsInitializingServerFeatures()
+        public void TestServerConstructorWithFeatureCollectionAllowsInitializingServerFeatures()
         {
             // Arrange
             var url = "http://localhost:8000/appName/serviceName";
@@ -131,7 +130,7 @@ namespace Microsoft.AspNetCore.TestHost
                 .Configure(applicationBuilder =>
                 {
                     var serverAddressesFeature = applicationBuilder.ServerFeatures.Get<IServerAddressesFeature>();
-                    Assert.Contains(serverAddressesFeature.Addresses, s => string.Compare(s,url, true) == 0);
+                    Assert.Contains(serverAddressesFeature.Addresses, s => string.Compare(s, url, true) == 0);
                 });
 
 
