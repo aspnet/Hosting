@@ -145,17 +145,12 @@ namespace Microsoft.AspNetCore.TestHost
         }
 
         [Fact]
-        public void TestServerConstructorWithNullFeatureCollectionDoesNotThrow()
+        public void TestServerConstructorWithNullFeatureCollectionThrows()
         {
-            // Arrange
             var builder = new WebHostBuilder()
                 .Configure(b => { });
 
-            // Act
-            new TestServer(builder, null);
-
-            // Assert
-            // Does not throw
+            Assert.Throws<ArgumentNullException>(() => new TestServer(builder, null));
         }
 
         public class TestService { }
