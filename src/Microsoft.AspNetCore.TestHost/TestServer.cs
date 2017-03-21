@@ -21,10 +21,8 @@ namespace Microsoft.AspNetCore.TestHost
         private IHttpApplication<Context> _application;
 
         public TestServer(IWebHostBuilder builder)
+            : this(builder, null)
         {
-            var host = builder.UseServer(this).Build();
-            host.Start();
-            _hostInstance = host;
         }
 
         public TestServer(IWebHostBuilder builder, IFeatureCollection featureCollection)
