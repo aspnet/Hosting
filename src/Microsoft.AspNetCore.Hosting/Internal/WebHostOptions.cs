@@ -27,12 +27,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             Environment = configuration[WebHostDefaults.EnvironmentKey];
             WebRoot = configuration[WebHostDefaults.WebRootKey];
             ContentRootPath = configuration[WebHostDefaults.ContentRootKey];
-            PlatformAssemblies = configuration[WebHostDefaults.HostingStartupAssembliesKey]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
+            HostingStartupAssemblies = configuration[WebHostDefaults.HostingStartupAssembliesKey]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
         }
 
         public string ApplicationName { get; set; }
 
-        public IReadOnlyList<string> PlatformAssemblies { get; set; }
+        public IReadOnlyList<string> HostingStartupAssemblies { get; set; }
 
         public bool DetailedErrors { get; set; }
 

@@ -6,7 +6,7 @@ using System;
 namespace Microsoft.AspNetCore.Hosting
 {
     /// <summary>
-    /// Represents platform specific configuration that will be applied to a <see cref="IWebHostBuilder"/> when building an <see cref="IWebHost"/>
+    /// Represents platform specific configuration that will be applied to a <see cref="IWebHostBuilder"/> when building an <see cref="IWebHost"/>.
     /// </summary>
     public interface IHostingStartup
     {

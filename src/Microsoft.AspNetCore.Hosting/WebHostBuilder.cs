@@ -158,7 +158,7 @@ namespace Microsoft.AspNetCore.Hosting
                 Console.WriteLine("The environment variable 'ASPNETCORE_SERVER.URLS' is obsolete and has been replaced with 'ASPNETCORE_URLS'");
             }
 
-            var hostingServices = BuildCommonServices(out var startupError);
+            var hostingServices = BuildCommonServices(out var hostingStartupErrors);
             var applicationServices = hostingServices.Clone();
             var hostingServiceProvider = hostingServices.BuildServiceProvider();
 
@@ -169,16 +169,16 @@ namespace Microsoft.AspNetCore.Hosting
                 hostingServiceProvider,
                 _options,
                 _config,
-                startupError);
+                hostingStartupErrors);
 
             host.Initialize();
 
             return host;
         }
 
-        private IServiceCollection BuildCommonServices(out ExceptionDispatchInfo startupError)
+        private IServiceCollection BuildCommonServices(out AggregateException hostingStartupErrors)
         {
-            startupError = null;
+            hostingStartupErrors = null;
 
             _options = new WebHostOptions(_config);
 
@@ -203,10 +203,12 @@ namespace Microsoft.AspNetCore.Hosting
                 services.AddSingleton(_loggerFactory);
             }
 
-            try
+            var exceptions = new List<Exception>();
+
+            // Execute the hosting startup assemblies
+            foreach (var assemblyName in _options.HostingStartupAssemblies)
             {
-                // Execute the platform light-up assemblies
-                foreach (var assemblyName in _options.PlatformAssemblies)
+                try
                 {
                     var assembly = Assembly.Load(new AssemblyName(assemblyName));
 
@@ -216,10 +218,22 @@ namespace Microsoft.AspNetCore.Hosting
                         hostingStartup.Configure(this);
                     }
                 }
+                catch (Exception ex)
+                {
+                    // Capture any errors that happen during startup
+                    exceptions.Add(new InvalidOperationException($"Startup assembly {assemblyName} failed to execute. See the inner exception for more details.", ex));
+                }
             }
-            catch (Exception ex) when (_options.CaptureStartupErrors)
+
+            if (exceptions.Count > 0)
             {
-                startupError = ExceptionDispatchInfo.Capture(ex);
+                hostingStartupErrors = new AggregateException(exceptions);
+
+                // Throw directly if we're not capturing startup errors
+                if (!_options.CaptureStartupErrors)
+                {
+                    throw hostingStartupErrors;
+                }
             }
 
             foreach (var configureLogging in _configureLoggingDelegates)

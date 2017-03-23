@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -668,19 +669,31 @@ namespace Microsoft.AspNetCore.Hosting
                 .Configure(app => { })
                 .UseServer(new TestServer());
 
-            Assert.Throws<FileNotFoundException>(() => (WebHost)builder.Build());
+            var ex = Assert.Throws<AggregateException>(() => (WebHost)builder.Build());
+            Assert.IsType<InvalidOperationException>(ex.InnerExceptions[0]);
+            Assert.IsType<FileNotFoundException>(ex.InnerExceptions[0].InnerException);
         }
 
         [Fact]
         public void Build_DoesNotThrowIfUnloadableAssemblyNameInHostingStartupAssembliesAndCaptureStartupErrorsTrue()
         {
+            var provider = new TestLoggerProvider();
             var builder = CreateWebHostBuilder()
+                .ConfigureLogging(factory =>
+                {
+                    factory.AddProvider(provider);
+                })
                 .CaptureStartupErrors(true)
                 .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "SomeBogusName")
                 .Configure(app => { })
                 .UseServer(new TestServer());
 
-            builder.Build();
+            using (var host = builder.Build())
+            {
+                host.Start();
+                var context = provider.Sink.Writes.FirstOrDefault(s => s.EventId.Id == LoggerEventIds.HostingStartupAssemblyException);
+                Assert.NotNull(context);
+            }
         }
 
         [Fact]
@@ -830,28 +843,11 @@ namespace Microsoft.AspNetCore.Hosting
 
             public ILogger CreateLogger(string categoryName)
             {
-                return new NoopLogger();
+                return NullLogger.Instance;
             }
 
             public void AddProvider(ILoggerProvider provider)
             {
-            }
-
-            private class NoopLogger : ILogger
-            {
-                public IDisposable BeginScope<TState>(TState state)
-                {
-                    return null;
-                }
-
-                public bool IsEnabled(LogLevel logLevel)
-                {
-                    return false;
-                }
-
-                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-                {
-                }
             }
         }
     }
