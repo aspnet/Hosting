@@ -22,7 +22,7 @@ namespace SampleStartups
         public static void MainWithPort()
         {
             var host = new WebHostBuilder()
-                .Run(8080, async context =>
+                .Run("localhost", 8080, async context =>
                 {
                     await context.Response.WriteAsync("Hello World");
                 });
@@ -33,13 +33,13 @@ namespace SampleStartups
         public static void MainWithMiddlewareWithPort()
         {
             var host = new WebHostBuilder()
-                .RunApplication(8080, app =>
+                .RunApplication("localhost", 8080, app =>
                 {
                     // You can add middleware here
                     app.Run(async context =>
-                        {
-                            await context.Response.WriteAsync("Hello World");
-                        });
+                    {
+                        await context.Response.WriteAsync("Hello World");
+                    });
                 });
 
             host.WaitForShutdown();

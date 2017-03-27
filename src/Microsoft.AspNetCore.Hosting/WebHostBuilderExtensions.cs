@@ -110,11 +110,12 @@ namespace Microsoft.AspNetCore.Hosting
         /// Runs a web application with the specified handler
         /// </summary>
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to run.</param>
+        /// <param name="hostname">The host name to bind to.</param>
         /// <param name="port">The port to bind to.</param>
         /// <param name="handler">A delegate that handles the request.</param>
-        public static IWebHost Run(this IWebHostBuilder hostBuilder, int port, RequestDelegate handler)
+        public static IWebHost Run(this IWebHostBuilder hostBuilder, string hostname, int port, RequestDelegate handler)
         {
-            var host = hostBuilder.UseUrls($"http://*:{port}/")
+            var host = hostBuilder.UseUrls($"http://{hostname}:{port}/")
                                   .Configure(app => app.Run(handler))
                                   .Build();
             host.Start();
@@ -137,11 +138,12 @@ namespace Microsoft.AspNetCore.Hosting
         /// Runs a web application with the specified handler
         /// </summary>
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to run.</param>
+        /// <param name="hostname">The host name to bind to.</param>
         /// <param name="port">The port to bind to.</param>
         /// <param name="configure">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
-        public static IWebHost RunApplication(this IWebHostBuilder hostBuilder, int port, Action<IApplicationBuilder> configure)
+        public static IWebHost RunApplication(this IWebHostBuilder hostBuilder, string hostname, int port, Action<IApplicationBuilder> configure)
         {
-            var host = hostBuilder.UseUrls($"http://*:{port}/")
+            var host = hostBuilder.UseUrls($"http://{hostname}:{port}/")
                                   .Configure(configure)
                                   .Build();
             host.Start();
