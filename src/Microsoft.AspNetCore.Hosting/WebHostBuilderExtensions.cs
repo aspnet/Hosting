@@ -5,6 +5,7 @@ using System;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Internal;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -91,6 +92,30 @@ namespace Microsoft.AspNetCore.Hosting
                 configure(options);
                 services.Replace(ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(new DefaultServiceProviderFactory(options)));
             });
+        }
+
+        /// <summary>
+        /// Runs a web application with the specified handler
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to run.</param>
+        /// <param name="handler">A delegate that handles the request.</param>
+        public static IWebHost Run(this IWebHostBuilder hostBuilder, RequestDelegate handler)
+        {
+            var host = hostBuilder.Configure(app => app.Run(handler)).Build();
+            host.Start();
+            return host;
+        }
+
+        /// <summary>
+        /// Runs a web application with the specified handler
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to run.</param>
+        /// <param name="configure">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
+        public static IWebHost RunWith(this IWebHostBuilder hostBuilder, Action<IApplicationBuilder> configure)
+        {
+            var host = hostBuilder.Configure(configure).Build();
+            host.Start();
+            return host;
         }
     }
 }

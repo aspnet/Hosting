@@ -40,7 +40,8 @@ namespace SampleStartups
             using (host)
             {
                 host.Start();
-                Console.ReadLine();
+
+                host.WaitForShutdown();
             }
         }
     }
