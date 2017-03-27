@@ -111,7 +111,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// </summary>
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to run.</param>
         /// <param name="configure">The delegate that configures the <see cref="IApplicationBuilder"/>.</param>
-        public static IWebHost RunWith(this IWebHostBuilder hostBuilder, Action<IApplicationBuilder> configure)
+        public static IWebHost RunApplication(this IWebHostBuilder hostBuilder, Action<IApplicationBuilder> configure)
         {
             var host = hostBuilder.Configure(configure).Build();
             host.Start();

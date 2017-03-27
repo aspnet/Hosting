@@ -22,7 +22,7 @@ namespace SampleStartups
         public static void MainWithMiddleware()
         {
             var host = new WebHostBuilder()
-                .RunWith(app =>
+                .RunApplication(app =>
                 {
                     // You can add middleware here
                     app.Run(async context =>
