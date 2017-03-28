@@ -3,9 +3,7 @@
 
 using System;
 using System.Diagnostics;
-#if NETSTANDARD1_3
 using System.Runtime.InteropServices;
-#endif
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.Server.IntegrationTesting
@@ -22,7 +20,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 RedirectStandardError = true,
             };
 
-            if (UseNetstat())
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 psi.FileName = "cmd";
                 psi.Arguments = $"/C netstat -nq | find \"{port}\"";
@@ -43,14 +41,25 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
             process.OutputDataReceived += (sender, data) =>
             {
-                linesLogged = linesLogged || !string.IsNullOrWhiteSpace(data.Data);
-                logger.LogInformation("portstatus: {0}", data.Data ?? string.Empty);
+                if (!string.IsNullOrWhiteSpace(data.Data))
+                {
+                    linesLogged = true;
+                    logger.LogInformation("portstatus: {0}", data.Data);
+                }
             };
-            process.ErrorDataReceived += (sender, data) => logger.LogWarning("portstatus: {0}", data.Data ?? string.Empty);
+            process.ErrorDataReceived += (sender, data) =>
+            {
+                if (!string.IsNullOrWhiteSpace(data.Data))
+                {
+                    logger.LogWarning("portstatus: {0}", data.Data);
+                }
+            };
 
             try
             {
                 process.Start();
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
                 process.WaitForExit();
 
                 if (!linesLogged)
@@ -63,17 +72,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 logger.LogWarning("Failed to check port status. Executed: {0} {1}\nError: {2}", psi.FileName, psi.Arguments, ex.ToString());
             }
             return;
-        }
-
-        private static bool UseNetstat()
-        {
-#if NET46
-            return true;
-#elif NETSTANDARD1_3
-            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#else
-#error Target frameworks need to be updated
-#endif
         }
     }
 }
