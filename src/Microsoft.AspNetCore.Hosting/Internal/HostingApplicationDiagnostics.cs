@@ -37,18 +37,15 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void BeginRequest(HttpContext httpContext, ref HostingApplication.Context context)
         {
-            // These enabled checks are virtual dispatch and used twice and so cache to locals
-            var loggingEnabled = _logger.IsEnabled(LogLevel.Information);
-            var eventLogEnabled = HostingEventSource.Log.IsEnabled();
+            long startTimestamp;
 
-            if (eventLogEnabled)
+            if (HostingEventSource.Log.IsEnabled())
             {
                 context.EventLogEnabled = true;
                 // To keep the hot path short we defer logging in this function to non-inlines
                 RecordRequestStartEventLog(httpContext);
             }
 
-            long startTimestamp;
 
             if (_diagnosticListener.IsEnabled())
             {
@@ -68,7 +65,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // Scope can be null if logging is not on.
             context.Scope = HostingLoggerExtensions.RequestScope(_logger, httpContext);
 
-            if (loggingEnabled)
+            if (_logger.IsEnabled(LogLevel.Information))
             {
                 if (startTimestamp == 0)
                 {
@@ -87,12 +84,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             // Local cache items resolved multiple items, in order of use so they are primed in cpu pipeline when used
             var startTimestamp = context.StartTimestamp;
-            var diagnosticsEnabled = _diagnosticListener.IsEnabled();
-
-            // If startTimestamp is 0, don't call GetTimestamp, likely don't need the value
             long currentTimestamp;
 
-            if (diagnosticsEnabled)
+            if (_diagnosticListener.IsEnabled())
             {
                 currentTimestamp = Stopwatch.GetTimestamp();
 
