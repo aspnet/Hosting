@@ -18,9 +18,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private const string ActivityName = "Microsoft.AspNetCore.Hosting.HttpRequestIn";
         private const string ActivityStartKey = "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start";
 
-        private const string DiagnosticsBeginRequestKey = "Microsoft.AspNetCore.Hosting.BeginRequest";
-        private const string DiagnosticsEndRequestKey = "Microsoft.AspNetCore.Hosting.EndRequest";
-        private const string DiagnosticsUnhandledExceptionKey = "Microsoft.AspNetCore.Hosting.UnhandledException";
+        private const string DeprecatedDiagnosticsBeginRequestKey = "Microsoft.AspNetCore.Hosting.BeginRequest";
+        private const string DeprecatedDiagnosticsEndRequestKey = "Microsoft.AspNetCore.Hosting.EndRequest";
+        private const string DeprecatedDiagnosticsUnhandledExceptionKey = "Microsoft.AspNetCore.Hosting.UnhandledException";
 
         private const string RequestIdHeaderName = "Request-Id";
         private const string CorrelationContextHeaderName = "Correlation-Context";
@@ -38,8 +38,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public void BeginRequest(HttpContext httpContext, ref HostingApplication.Context context)
         {
             // These enabled checks are virtual dispatch and used twice and so cache to locals
-            var diagnosticsEnabled = _diagnosticListener.IsEnabled();
-            var legacyDiagnosticsEnabled = diagnosticsEnabled && _diagnosticListener.IsEnabled(DiagnosticsBeginRequestKey);
             var loggingEnabled = _logger.IsEnabled(LogLevel.Information);
             var eventLogEnabled = HostingEventSource.Log.IsEnabled();
 
@@ -50,27 +48,37 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 RecordRequestStartEventLog(httpContext);
             }
 
-            // Only make call GetTimestamp if its value will be used, i.e. of the listenters is enabled
-            var startTimestamp = (legacyDiagnosticsEnabled || loggingEnabled) ? Stopwatch.GetTimestamp() : 0;
+            long startTimestamp;
+
+            if (_diagnosticListener.IsEnabled())
+            {
+                if (_diagnosticListener.IsEnabled(ActivityName, httpContext))
+                {
+                    context.Activity = StartActivity(httpContext);
+                }
+                if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsBeginRequestKey))
+                {
+                    startTimestamp = Stopwatch.GetTimestamp();
+                    RecordBeginRequestDiagnostics(httpContext, startTimestamp);
+                }
+            }
 
             // Scope may be relevant for a different level of logging, so we always create it
             // see: https://github.com/aspnet/Hosting/pull/944
             context.Scope = HostingLoggerExtensions.RequestScope(_logger, httpContext);
 
-            if (diagnosticsEnabled && _diagnosticListener.IsEnabled(ActivityName, httpContext))
-            {
-                context.Activity = StartActivity(httpContext);
-            }
             if (loggingEnabled)
             {
+                if (startTimestamp == 0)
+                {
+                    startTimestamp = Stopwatch.GetTimestamp();
+                }
+
                 // Non-inline
                 LogRequestStarting(httpContext);
             }
-            if (legacyDiagnosticsEnabled)
-            {
-                // Non-inline
-                RecordBeginRequestDiagnostics(httpContext, startTimestamp);
-            }
+
+            context.StartTimestamp = startTimestamp;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,54 +89,58 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             var diagnosticsEnabled = _diagnosticListener.IsEnabled();
 
             // If startTimestamp is 0, don't call GetTimestamp, likely don't need the value
-            var currentTimestamp = (startTimestamp != 0) ? Stopwatch.GetTimestamp() : 0;
+            long currentTimestamp;
 
-            // To keep the hot path short we defer logging to non-inlines
-            if (exception == null)
+            if (diagnosticsEnabled)
             {
-                // No exception was thrown, request was sucessful
-                if (diagnosticsEnabled && _diagnosticListener.IsEnabled(DiagnosticsEndRequestKey))
+                currentTimestamp = Stopwatch.GetTimestamp();
+
+                if (exception == null)
                 {
-                    // Diagnostics is enabled for EndRequest, but it may not be for BeginRequest
-                    // so call GetTimestamp if currentTimestamp is zero (from above)
-                    RecordEndRequestDiagnostics(
-                        httpContext,
-                        (currentTimestamp != 0) ? currentTimestamp : Stopwatch.GetTimestamp());
+                    // No exception was thrown, request was sucessful
+                    if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsEndRequestKey))
+                    {
+                        // Diagnostics is enabled for EndRequest, but it may not be for BeginRequest
+                        // so call GetTimestamp if currentTimestamp is zero (from above)
+                        RecordEndRequestDiagnostics(httpContext, currentTimestamp);
+                    }
+                }
+                else
+                {
+                    // Exception was thrown from request
+                    if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsUnhandledExceptionKey))
+                    {
+                        // Diagnostics is enabled for UnhandledException, but it may not be for BeginRequest
+                        // so call GetTimestamp if currentTimestamp is zero (from above)
+                        RecordUnhandledExceptionDiagnostics(httpContext, currentTimestamp, exception);
+                    }
+
+                }
+
+                var activity = context.Activity;
+                // Always stop activity if it was started
+                if (activity != null)
+                {
+                    StopActivity(httpContext, activity);
                 }
             }
-            else
-            {
-                // Exception was thrown from request
-                if (diagnosticsEnabled && _diagnosticListener.IsEnabled(DiagnosticsUnhandledExceptionKey))
-                {
-                    // Diagnostics is enabled for UnhandledException, but it may not be for BeginRequest
-                    // so call GetTimestamp if currentTimestamp is zero (from above)
-                    RecordUnhandledExceptionDiagnostics(
-                        httpContext,
-                        (currentTimestamp != 0) ? currentTimestamp : Stopwatch.GetTimestamp(),
-                        exception);
-                }
 
-                if (context.EventLogEnabled)
-                {
-                    // Non-inline
-                    HostingEventSource.Log.UnhandledException();
-                }
+            if (context.EventLogEnabled && exception != null)
+            {
+                // Non-inline
+                HostingEventSource.Log.UnhandledException();
             }
 
             // If startTimestamp was 0, then Information logging wasn't enabled at for this request (and calcuated time will be wildly wrong)
             // Is used as proxy to reduce calls to virtual: _logger.IsEnabled(LogLevel.Information)
             if (startTimestamp != 0)
             {
+                if (currentTimestamp == 0)
+                {
+                    currentTimestamp = Stopwatch.GetTimestamp();
+                }
                 // Non-inline
                 LogRequestFinished(httpContext, startTimestamp, currentTimestamp);
-            }
-
-            var activity = context.Activity;
-            // Always stop activity if it was started
-            if (activity != null)
-            {
-                StopActivity(httpContext, activity);
             }
 
             // Logging Scope is finshed with
@@ -179,7 +191,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private void RecordBeginRequestDiagnostics(HttpContext httpContext, long startTimestamp)
         {
             _diagnosticListener.Write(
-                DiagnosticsBeginRequestKey,
+                DeprecatedDiagnosticsBeginRequestKey,
                 new
                 {
                     httpContext = httpContext,
@@ -191,7 +203,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private void RecordEndRequestDiagnostics(HttpContext httpContext, long currentTimestamp)
         {
             _diagnosticListener.Write(
-                DiagnosticsEndRequestKey,
+                DeprecatedDiagnosticsEndRequestKey,
                 new
                 {
                     httpContext = httpContext,
@@ -203,7 +215,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private void RecordUnhandledExceptionDiagnostics(HttpContext httpContext, long currentTimestamp, Exception exception)
         {
             _diagnosticListener.Write(
-                DiagnosticsUnhandledExceptionKey,
+                DeprecatedDiagnosticsUnhandledExceptionKey,
                 new
                 {
                     httpContext = httpContext,
