@@ -179,7 +179,18 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         [Fact]
         public void ActivityIsAvailibleDuringRequest()
         {
-            var hostingApplication = CreateApplication(out var features);
+            var diagnosticSource = new DiagnosticListener("DummySource");
+            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+
+            diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair => { }),
+                s =>
+                {
+                    if (s.StartsWith("Microsoft.AspNetCore.Hosting.HttpRequestIn"))
+                    {
+                        return true;
+                    }
+                    return false;
+                });
 
             hostingApplication.CreateContext(features);
 
@@ -190,7 +201,18 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         [Fact]
         public void ActivityParentIdAndBaggeReadFromHeaders()
         {
-            var hostingApplication = CreateApplication(out var features);
+            var diagnosticSource = new DiagnosticListener("DummySource");
+            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+
+            diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair => { }),
+                s =>
+                {
+                    if (s.StartsWith("Microsoft.AspNetCore.Hosting.HttpRequestIn"))
+                    {
+                        return true;
+                    }
+                    return false;
+                });
 
             features.Set<IHttpRequestFeature>(new HttpRequestFeature()
             {
