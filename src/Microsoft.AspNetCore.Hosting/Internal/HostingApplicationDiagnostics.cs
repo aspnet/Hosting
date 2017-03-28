@@ -151,7 +151,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ContextDisposed(HostingApplication.Context context)
         {
-            if (HostingEventSource.Log.IsEnabled())
+            if (context.EventLogEnabled)
             {
                 // Non-inline
                 HostingEventSource.Log.RequestStop();
