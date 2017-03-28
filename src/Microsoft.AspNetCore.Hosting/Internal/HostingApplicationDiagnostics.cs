@@ -65,6 +65,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             // Scope may be relevant for a different level of logging, so we always create it
             // see: https://github.com/aspnet/Hosting/pull/944
+            // Scope can be null if logging is not on.
             context.Scope = HostingLoggerExtensions.RequestScope(_logger, httpContext);
 
             if (loggingEnabled)
