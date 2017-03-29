@@ -87,8 +87,6 @@ namespace Microsoft.AspNetCore.Hosting.Tests
 
                 if (s == "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start")
                 {
-                    Assert.IsAssignableFrom<HttpContext>(arg3);
-                    Assert.IsAssignableFrom<Activity>(o);
                     isEnabledStartFired = true;
                     return false;
                 }
@@ -172,7 +170,29 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             }));
 
             var context = hostingApplication.CreateContext(features);
-            hostingApplication.DisposeContext(context, null);
+            hostingApplication.DisposeContext(context, new Exception());
+            Assert.True(endCalled);
+        }
+
+        [Fact]
+        public void ActivityIsAvailableDuringUnhandledExceptionCall()
+        {
+            var diagnosticSource = new DiagnosticListener("DummySource");
+            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+
+            bool endCalled = false;
+            diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair =>
+            {
+                if (pair.Key == "Microsoft.AspNetCore.Hosting.UnhandledException")
+                {
+                    endCalled = true;
+                    Assert.NotNull(Activity.Current);
+                    Assert.Equal("Microsoft.AspNetCore.Hosting.HttpRequestIn", Activity.Current.OperationName);
+                }
+            }));
+
+            var context = hostingApplication.CreateContext(features);
+            hostingApplication.DisposeContext(context, new Exception());
             Assert.True(endCalled);
         }
 
