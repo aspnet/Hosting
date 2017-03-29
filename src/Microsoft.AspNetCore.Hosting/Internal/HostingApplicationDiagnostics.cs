@@ -231,14 +231,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             var activity = new Activity(ActivityName);
             if (httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out var requestId))
             {
-                try
-                {
-                    activity.SetParentId(requestId);
-                }
-                catch (ArgumentException ex)
-                {
-                    _logger.LogWarning(LoggerEventIds.InvalidRequestIdHeader, ex, "Request ID received in '{RequestIdHeaderName}' header is invalid '{RequestId}'", RequestIdHeaderName, requestId);
-                }
+                activity.SetParentId(requestId);
 
                 // We expect baggage to be empty by default
                 // Only very advanced users will be using it in near future, we encouradge them to keep baggage small (few items)
@@ -249,14 +242,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     {
                         if (NameValueHeaderValue.TryParse(item, out var baggageItem))
                         {
-                            try
-                            {
-                                activity.AddBaggage(baggageItem.Name, baggageItem.Value);
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                _logger.LogWarning(LoggerEventIds.InvalidRequestIdHeader, ex, "Baggage item received in '{BaggageHeaderName}' header is invalid '{ItemName}' with value '{ItemValue}'", CorrelationContextHeaderName, baggageItem.Name, baggageItem.Value);
-                            }
+                            activity.AddBaggage(baggageItem.Name, baggageItem.Value);
                         }
                     }
                 }

@@ -16,7 +16,5 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public const int HostedServiceStartException = 9;
         public const int HostedServiceStopException = 10;
         public const int HostingStartupAssemblyException = 11;
-        public const int InvalidRequestIdHeader = 12;
-        public const int InvalidCorrelationContextHeader = 13;
     }
 }
