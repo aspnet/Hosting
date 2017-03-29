@@ -11,7 +11,22 @@ namespace Microsoft.AspNetCore.Hosting.Internal
     {
         public static readonly HostingEventSource Log = new HostingEventSource();
 
-        private HostingEventSource() { }
+#if NETSTANDARD1_5
+        private EventCounter _requestCounter = null;
+        private EventCounter _successfulRequestCounter = null;
+        private EventCounter _failedRequestCounter = null;
+        private EventCounter _requestExecutionTimeCounter = null;
+#endif
+
+        private HostingEventSource()
+        {
+#if NETSTANDARD1_5
+            _requestCounter = new EventCounter("Request", this);
+            _successfulRequestCounter = new EventCounter("SuccessfulRequest", this);
+            _failedRequestCounter = new EventCounter("FailedRequest", this);
+            _requestExecutionTimeCounter = new EventCounter("RequestExecutionTime", this);
+#endif
+        }
 
         // NOTE
         // - The 'Start' and 'Stop' suffixes on the following event names have special meaning in EventSource. They
@@ -35,12 +50,29 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [Event(3, Level = EventLevel.Informational)]
         public void RequestStart(string method, string path)
         {
+#if NETSTANDARD1_5
+            _requestCounter.WriteMetric(1);
+#endif
             WriteEvent(3, method, path);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        [NonEvent]
+        public void RequestStop(long startTimestamp, long endTimestamp)
+        {
+#if NETSTANDARD1_5
+            _successfulRequestCounter.WriteMetric(1);
+
+            if (endTimestamp != 0)
+            {
+                _requestExecutionTimeCounter.WriteMetric(endTimestamp - startTimestamp);
+            }
+#endif
+            RequestStop();
+        }
+
         [Event(4, Level = EventLevel.Informational)]
-        public void RequestStop()
+        private void RequestStop()
         {
             WriteEvent(4);
         }
@@ -49,7 +81,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [Event(5, Level = EventLevel.Error)]
         public void UnhandledException()
         {
+#if NETSTANDARD1_5
+            _failedRequestCounter.WriteMetric(1);
+#endif
             WriteEvent(5);
         }
+
     }
 }
