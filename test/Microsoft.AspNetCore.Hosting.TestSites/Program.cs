@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using System.Threading;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http.Features;
+using System;
 
 namespace ServerComparison.TestSites
 {
