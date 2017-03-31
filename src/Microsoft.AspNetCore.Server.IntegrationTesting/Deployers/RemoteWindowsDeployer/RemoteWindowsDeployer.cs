@@ -262,7 +262,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                     // Wait a second for the script to run or fail. The StartServer script will only terminate when the Deployer is disposed,
                     // so we don't want to wait for it to terminate here because it would deadlock.
-                    await Task.Delay(1000);
+                    await Task.Delay(TimeSpan.FromMinutes(1));
 
                     if (runScriptsOnRemoteServerProcess.HasExited && runScriptsOnRemoteServerProcess.ExitCode != 0)
                     {
