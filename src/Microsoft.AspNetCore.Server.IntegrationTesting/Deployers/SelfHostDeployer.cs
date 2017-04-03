@@ -160,7 +160,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                 Logger.LogInformation("Started {fileName}. Process Id : {processId}", startInfo.FileName, HostProcess.Id);
 
-                await started.Task;
+                await started.Task.OrTimeout(TimeSpan.FromSeconds(30));
 
                 return (url: actualUrl ?? hintUrl, hostExitToken: hostExitTokenSource.Token);
             }
