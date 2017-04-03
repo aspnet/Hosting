@@ -17,7 +17,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
     public class NginxDeployer : SelfHostDeployer
     {
         private string _configFile;
-        private readonly int _waitTime = (int)TimeSpan.FromSeconds(30).TotalMilliseconds;
+        private readonly TimeSpan _waitTime = TimeSpan.FromSeconds(30);
+        private Process _nginxProcess;
 
         public NginxDeployer(DeploymentParameters deploymentParameters, ILogger logger)
             : base(deploymentParameters, logger)
@@ -110,21 +111,42 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 using (var runNginx = new Process() { StartInfo = startInfo })
                 {
                     runNginx.StartAndCaptureOutAndErrToLogger("nginx start", Logger);
-                    runNginx.WaitForExit(_waitTime);
+                    runNginx.WaitForExit((int)_waitTime.TotalMilliseconds);
                     if (runNginx.ExitCode != 0)
                     {
                         throw new Exception("Failed to start nginx");
                     }
 
                     // Read the PID file
-                    if(!File.Exists(pidFile))
+                    if (!File.Exists(pidFile))
                     {
                         Logger.LogWarning("Unable to find nginx PID file: {pidFile}", pidFile);
                     }
                     else
                     {
-                        var pid = File.ReadAllText(pidFile);
-                        Logger.LogInformation("nginx process ID {pid} started", pid);
+                        var pidStr = File.ReadAllText(pidFile);
+                        int pid;
+                        if (string.IsNullOrEmpty(pidStr))
+                        {
+                            Logger.LogError("Empty PID file: {pidFile}", pidFile);
+                            throw new Exception("Failed to start nginx");
+                        }
+                        else if (!Int32.TryParse(pidStr, out pid))
+                        {
+                            Logger.LogError("Invalid PID: {pid}", pidStr);
+                            throw new Exception("Failed to start nginx");
+                        }
+                        try
+                        {
+                            _nginxProcess = Process.GetProcessById(pid);
+                        }
+                        catch (ArgumentException)
+                        {
+                            Logger.LogError("nginx process not running: {pid}", pid);
+                            throw new Exception("Failed to start nginx");
+                        }
+
+                        Logger.LogInformation("nginx process ID {pid} started", _nginxProcess.Id);
                     }
                 }
             }
@@ -136,27 +158,41 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
             {
                 if (!string.IsNullOrEmpty(_configFile))
                 {
-                    var startInfo = new ProcessStartInfo
+                    try
                     {
-                        FileName = "nginx",
-                        Arguments = $"-s stop -c {_configFile}",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardError = true,
-                        RedirectStandardOutput = true,
-                        // Trying a work around for https://github.com/aspnet/Hosting/issues/140.
-                        RedirectStandardInput = true
-                    };
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "nginx",
+                            Arguments = $"-s stop -c {_configFile}",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            RedirectStandardError = true,
+                            RedirectStandardOutput = true,
+                            // Trying a work around for https://github.com/aspnet/Hosting/issues/140.
+                            RedirectStandardInput = true
+                        };
 
-                    using (var runNginx = new Process() { StartInfo = startInfo })
-                    {
-                        runNginx.StartAndCaptureOutAndErrToLogger("nginx stop", Logger);
-                        runNginx.WaitForExit(_waitTime);
-                        Logger.LogInformation("nginx stop command issued");
+                        using (var runNginx = new Process() { StartInfo = startInfo })
+                        {
+                            runNginx.StartAndCaptureOutAndErrToLogger("nginx stop", Logger);
+                            runNginx.WaitForExit((int)_waitTime.TotalMilliseconds);
+                            Logger.LogInformation("nginx stop command issued");
+                            if (_nginxProcess.HasExited)
+                            {
+                                Logger.LogInformation("nginx has shut down");
+                            }
+                            else
+                            {
+                                Logger.LogError("nginx did not shut down after {timeout} seconds", _waitTime.TotalSeconds);
+                                throw new Exception("nginx failed to stop");
+                            }
+                        }
                     }
-
-                    Logger.LogDebug("Deleting config file: {configFile}", _configFile);
-                    File.Delete(_configFile);
+                    finally
+                    {
+                        Logger.LogDebug("Deleting config file: {configFile}", _configFile);
+                        File.Delete(_configFile);
+                    }
                 }
 
                 base.Dispose();
