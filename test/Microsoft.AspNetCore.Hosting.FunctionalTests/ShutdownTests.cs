@@ -4,23 +4,18 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting.FunctionalTests;
 using Microsoft.AspNetCore.Server.IntegrationTesting;
 using Microsoft.AspNetCore.Server.IntegrationTesting.xunit;
 using Microsoft.AspNetCore.Testing.xunit;
-using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.AspNetCore.Hosting.FunctionalTests
 {
-    public class ShutdownTests
+    public class ShutdownTests : LoggedTest
     {
-        private readonly ITestOutputHelper _output;
-
-        public ShutdownTests(ITestOutputHelper output)
+        public ShutdownTests(ITestOutputHelper output) : base(output)
         {
-            _output = output;
         }
 
         [ConditionalFact]
@@ -28,7 +23,7 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
         [OSSkipCondition(OperatingSystems.MacOSX)]
         public async Task ShutdownTest()
         {
-            using (TestLogging.Start<ShutdownTests>(_output, out var loggerFactory))
+            using (StartLog(out var loggerFactory))
             {
                 var logger = loggerFactory.CreateLogger(nameof(ShutdownTest));
 

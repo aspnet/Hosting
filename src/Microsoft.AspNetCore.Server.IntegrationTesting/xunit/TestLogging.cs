@@ -16,9 +16,12 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
         public static readonly string OutputDirectoryEnvironmentVariableName = "ASPNETCORE_TEST_LOG_DIR";
         public static readonly string TestOutputRoot = Environment.GetEnvironmentVariable(OutputDirectoryEnvironmentVariableName);
 
-        public static IDisposable Start<TTestClass>(ITestOutputHelper output, out ILoggerFactory loggerFactory, [CallerMemberName] string testName = null)
+        public static IDisposable Start<TTestClass>(ITestOutputHelper output, out ILoggerFactory loggerFactory, [CallerMemberName] string testName = null) =>
+            Start(output, out loggerFactory, typeof(TTestClass).GetTypeInfo().Assembly.GetName().Name, typeof(TTestClass).FullName, testName);
+
+        public static IDisposable Start(ITestOutputHelper output, out ILoggerFactory loggerFactory, string assemblyName, string className, [CallerMemberName] string testName = null)
         {
-            loggerFactory = CreateLoggerFactory<TTestClass>(output, testName);
+            loggerFactory = CreateLoggerFactory(output, assemblyName, className, testName);
             var logger = loggerFactory.CreateLogger("TestLifetime");
 
             GlobalLogger.LogInformation("Starting test {testName}", testName);
@@ -30,22 +33,21 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             });
         }
 
-        public static ILoggerFactory CreateLoggerFactory<TTestClass>(ITestOutputHelper output, [CallerMemberName] string testName = null)
+        public static ILoggerFactory CreateLoggerFactory<TTestClass>(ITestOutputHelper output, [CallerMemberName] string testName = null) =>
+            CreateLoggerFactory(output, typeof(TTestClass).GetTypeInfo().Assembly.GetName().Name, typeof(TTestClass).FullName, testName);
+
+        public static ILoggerFactory CreateLoggerFactory(ITestOutputHelper output, string assemblyName, string className, [CallerMemberName] string testName = null)
         {
             var loggerFactory = new LoggerFactory();
             loggerFactory.AddXunit(output, LogLevel.Debug);
 
-            var testClass = typeof(TTestClass).GetTypeInfo();
-            var asmName = testClass.Assembly.GetName().Name;
-            var className = testClass.FullName;
-
             // Try to shorten the class name using the assembly name
-            if (className.StartsWith(asmName + "."))
+            if (className.StartsWith(assemblyName + "."))
             {
-                className = className.Substring(asmName.Length + 1);
+                className = className.Substring(assemblyName.Length + 1);
             }
 
-            var testOutputFile = Path.Combine(asmName, className, $"{testName}.log");
+            var testOutputFile = Path.Combine(assemblyName, className, $"{testName}.log");
             AddFileLogging(loggerFactory, testOutputFile);
 
             return loggerFactory;
@@ -56,22 +58,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
         {
             var loggerFactory = new LoggerFactory();
 
-#if NET46
             var appName = Assembly.GetEntryAssembly().GetName().Name;
-#else
-            // GROOOSSS but should work...
-            string appName;
-            var files = Directory.GetFiles(AppContext.BaseDirectory, "*.runtimeconfig.json");
-            if(files.Length == 0)
-            {
-                // Even Grosser
-                appName = Guid.NewGuid().ToString("N");
-            }
-            else
-            {
-                appName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(files[0]));
-            }
-#endif
 
             AddFileLogging(loggerFactory, Path.Combine(appName, "global.log"));
 
@@ -117,6 +104,26 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             {
                 _action();
             }
+        }
+    }
+
+    public abstract class LoggedTest
+    {
+        private readonly ITestOutputHelper _output;
+
+        protected LoggedTest(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
+        public IDisposable StartLog(out ILoggerFactory loggerFactory, [CallerMemberName] string testName = null)
+        {
+            return TestLogging.Start(
+                _output,
+                out loggerFactory,
+                GetType().GetTypeInfo().Assembly.GetName().Name,
+                GetType().FullName,
+                testName);
         }
     }
 }
