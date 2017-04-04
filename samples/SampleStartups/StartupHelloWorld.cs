@@ -6,26 +6,58 @@ using Microsoft.AspNetCore.Http;
 
 namespace SampleStartups
 {
-    public class StartupHelloWorld : StartupBase
+    public class Program
     {
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public override void Configure(IApplicationBuilder app)
-        {
-            app.Run(async (context) =>
-            {
-                await context.Response.WriteAsync("Hello World!");
-            });
-        }
-
-        // Entry point for the application.
-        public static void Main(string[] args)
+        public static void Main()
         {
             var host = new WebHostBuilder()
-              //.UseKestrel()
-                .UseStartup<StartupHelloWorld>()
-                .Build();
+                .Run(async context =>
+                {
+                    await context.Response.WriteAsync("Hello World");
+                });
 
-            host.Run();
+            host.WaitForShutdown();
+        }
+
+        public static void MainWithPort()
+        {
+            var host = new WebHostBuilder()
+                .Run("localhost", 8080, async context =>
+                {
+                    await context.Response.WriteAsync("Hello World");
+                });
+
+            host.WaitForShutdown();
+        }
+
+        public static void MainWithMiddlewareWithPort()
+        {
+            var host = new WebHostBuilder()
+                .RunApplication("localhost", 8080, app =>
+                {
+                    // You can add middleware here
+                    app.Run(async context =>
+                    {
+                        await context.Response.WriteAsync("Hello World");
+                    });
+                });
+
+            host.WaitForShutdown();
+        }
+
+        public static void MainWithMiddleware()
+        {
+            var host = new WebHostBuilder()
+                .RunApplication(app =>
+                {
+                    // You can add middleware here
+                    app.Run(async context =>
+                    {
+                        await context.Response.WriteAsync("Hello World");
+                    });
+                });
+
+            host.WaitForShutdown();
         }
     }
 }
