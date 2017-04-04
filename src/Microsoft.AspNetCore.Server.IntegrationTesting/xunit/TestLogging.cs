@@ -11,10 +11,16 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
     public static class TestLogging
     {
         // Need to qualify because of Serilog.ILogger :(
-        private static readonly Extensions.Logging.ILogger GlobalLogger = CreateGlobalLogger();
+        private static readonly Extensions.Logging.ILogger GlobalLogger;
 
         public static readonly string OutputDirectoryEnvironmentVariableName = "ASPNETCORE_TEST_LOG_DIR";
-        public static readonly string TestOutputRoot = Environment.GetEnvironmentVariable(OutputDirectoryEnvironmentVariableName);
+        public static readonly string TestOutputRoot;
+
+        static TestLogging()
+        {
+            TestOutputRoot = Environment.GetEnvironmentVariable(OutputDirectoryEnvironmentVariableName);
+            GlobalLogger = CreateGlobalLogger(TestOutputRoot);
+        }
 
         public static IDisposable Start<TTestClass>(ITestOutputHelper output, out ILoggerFactory loggerFactory, [CallerMemberName] string testName = null) =>
             Start(output, out loggerFactory, typeof(TTestClass).GetTypeInfo().Assembly.GetName().Name, typeof(TTestClass).FullName, testName);
@@ -54,7 +60,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
         }
 
         // Need to qualify because of Serilog.ILogger :(
-        private static Extensions.Logging.ILogger CreateGlobalLogger()
+        private static Extensions.Logging.ILogger CreateGlobalLogger(string testOutputRoot)
         {
             Console.WriteLine("Creating global logger");
             var loggerFactory = new LoggerFactory();
