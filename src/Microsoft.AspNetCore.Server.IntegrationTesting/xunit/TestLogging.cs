@@ -56,11 +56,14 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
         // Need to qualify because of Serilog.ILogger :(
         private static Extensions.Logging.ILogger CreateGlobalLogger()
         {
+            Console.WriteLine("Creating global logger");
             var loggerFactory = new LoggerFactory();
 
             var appName = Assembly.GetEntryAssembly().GetName().Name;
 
-            AddFileLogging(loggerFactory, Path.Combine(appName, "global.log"));
+            var globalLogFileName = Path.Combine(appName, "global.log");
+            Console.WriteLine($"Logging to: {globalLogFileName}");
+            AddFileLogging(loggerFactory, globalLogFileName);
 
             return loggerFactory.CreateLogger("GlobalTestLog");
         }
@@ -70,6 +73,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             if (!string.IsNullOrEmpty(TestOutputRoot))
             {
                 fileName = Path.Combine(TestOutputRoot, fileName);
+                Console.WriteLine($"Creating logging for: {fileName}");
 
                 var dir = Path.GetDirectoryName(fileName);
                 if (!Directory.Exists(dir))
