@@ -65,7 +65,21 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             Console.WriteLine("Creating global logger");
             var loggerFactory = new LoggerFactory();
 
-            var appName = Assembly.GetEntryAssembly().GetName().Name;
+            // We can't use entry assembly, because it's testhost
+            // We can't use process mainmodule, because it's dotnet.exe
+            // So we're left with this...
+            string appName;
+            var files = Directory.GetFiles(AppContext.BaseDirectory, "*.runtimeconfig.json");
+            if (files.Length == 0)
+            {
+                // Just use a GUID...
+                appName = Guid.NewGuid().ToString("N");
+            }
+            else
+            {
+                // Strip off .json and .runtimeconfig
+                appName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(files[0]));
+            }
 
             var globalLogFileName = Path.Combine(appName, "global.log");
             Console.WriteLine($"Logging to: {globalLogFileName}");
