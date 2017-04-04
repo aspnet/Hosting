@@ -29,7 +29,16 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             if (!string.IsNullOrEmpty(TestOutputRoot))
             {
                 var testClass = typeof(TTestClass).GetTypeInfo();
-                var testOutputDir = Path.Combine(TestOutputRoot, testClass.Assembly.GetName().Name, testClass.FullName);
+                var asmName = testClass.Assembly.GetName().Name;
+                var className = testClass.FullName;
+
+                // Try to shorten the class name using the assembly name
+                if (className.StartsWith(asmName + "."))
+                {
+                    className = className.Substring(asmName.Length + 1);
+                }
+
+                var testOutputDir = Path.Combine(TestOutputRoot, asmName, className);
                 if (!Directory.Exists(testOutputDir))
                 {
                     Directory.CreateDirectory(testOutputDir);
