@@ -65,8 +65,10 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
         // Need to qualify because of Serilog.ILogger :(
         private static Extensions.Logging.ILogger CreateGlobalLogger(string testOutputRoot)
         {
-            Console.WriteLine("Creating global logger");
             var loggerFactory = new LoggerFactory();
+
+            // Let the global logger log to the console, it's just "Starting X..." "Finished X..."
+            loggerFactory.AddConsole();
 
             // We can't use entry assembly, because it's testhost
             // We can't use process mainmodule, because it's dotnet.exe
@@ -85,7 +87,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             }
 
             var globalLogFileName = Path.Combine(appName, "global.log");
-            Console.WriteLine($"Logging to: {globalLogFileName}");
             AddFileLogging(loggerFactory, globalLogFileName);
 
             return loggerFactory.CreateLogger("GlobalTestLog");

@@ -27,8 +27,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
         private Process _hostProcess;
 
-        public IISExpressDeployer(DeploymentParameters deploymentParameters, ILogger logger)
-            : base(deploymentParameters, logger)
+        public IISExpressDeployer(DeploymentParameters deploymentParameters, ILoggerFactory loggerFactory)
+            : base(deploymentParameters, loggerFactory)
         {
         }
 
@@ -74,14 +74,13 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                 Logger.LogInformation("Application ready at URL: {appUrl}", actualUri);
 
-                return new DeploymentResult
-                {
-                    ContentRoot = contentRoot,
-                    DeploymentParameters = DeploymentParameters,
-                    // Right now this works only for urls like http://localhost:5001/. Does not work for http://localhost:5001/subpath.
-                    ApplicationBaseUri = actualUri.ToString(),
-                    HostShutdownToken = hostExitToken
-                };
+                // Right now this works only for urls like http://localhost:5001/. Does not work for http://localhost:5001/subpath.
+                return new DeploymentResult(
+                    LoggerFactory,
+                    DeploymentParameters,
+                    applicationBaseUri: actualUri.ToString(),
+                    contentRoot: contentRoot,
+                    hostShutdownToken: hostExitToken);
             }
         }
 
@@ -294,7 +293,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
             // If by this point, the host process is still running (somehow), throw an error.
             // A test failure is better than a silent hang and unknown failure later on
-            if(!_hostProcess.HasExited)
+            if (!_hostProcess.HasExited)
             {
                 throw new Exception($"iisexpress Process {_hostProcess.Id} failed to shutdown");
             }
