@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.Hosting.FunctionalTests
                     PublishApplicationBeforeDeployment = true
                 };
 
-                using (var deployer = new SelfHostDeployer(deploymentParameters, logger))
+                using (var deployer = new SelfHostDeployer(deploymentParameters, loggerFactory))
                 {
                     await deployer.DeployAsync();
 

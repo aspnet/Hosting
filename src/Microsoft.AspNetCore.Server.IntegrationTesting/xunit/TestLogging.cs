@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -33,12 +34,14 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             loggerFactory = CreateLoggerFactory(output, assemblyName, className, testName);
             var logger = loggerFactory.CreateLogger("TestLifetime");
 
+            var stopwatch = Stopwatch.StartNew();
             GlobalLogger.LogInformation("Starting test {testName}", testName);
             logger.LogInformation("Starting test {testName}", testName);
             return new Disposable(() =>
             {
-                GlobalLogger.LogInformation("Finished test {testName}", testName);
-                logger.LogInformation("Finished test {testName}", testName);
+                stopwatch.Stop();
+                GlobalLogger.LogInformation("Finished test {testName} in {duration}s", testName, stopwatch.Elapsed.TotalSeconds);
+                logger.LogInformation("Finished test {testName} in {duration}s", testName, stopwatch.Elapsed.TotalSeconds);
             });
         }
 
@@ -89,7 +92,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             var globalLogFileName = Path.Combine(appName, "global.log");
             AddFileLogging(loggerFactory, globalLogFileName);
 
-            return loggerFactory.CreateLogger("GlobalTestLog");
+            var logger = loggerFactory.CreateLogger("GlobalTestLog");
+            logger.LogInformation($"Global Test Logging initialized. Set the '{OutputDirectoryEnvironmentVariableName}' Environment Variable to a path in order to save logs to files");
+            return logger;
         }
 
         private static void AddFileLogging(ILoggerFactory loggerFactory, string fileName)
@@ -97,7 +102,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             if (!string.IsNullOrEmpty(TestOutputRoot))
             {
                 fileName = Path.Combine(TestOutputRoot, fileName);
-                Console.WriteLine($"Creating logging for: {fileName}");
 
                 var dir = Path.GetDirectoryName(fileName);
                 if (!Directory.Exists(dir))
