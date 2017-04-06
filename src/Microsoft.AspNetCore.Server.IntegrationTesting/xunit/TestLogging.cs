@@ -93,7 +93,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.xunit
             AddFileLogging(loggerFactory, globalLogFileName);
 
             var logger = loggerFactory.CreateLogger("GlobalTestLog");
-            logger.LogInformation($"Global Test Logging initialized. Set the '{OutputDirectoryEnvironmentVariableName}' Environment Variable to a path in order to save logs to files");
+            logger.LogInformation($"Global Test Logging initialized. Set the '{OutputDirectoryEnvironmentVariableName}' Environment Variable in order to create log files on disk.");
             return logger;
         }
 
