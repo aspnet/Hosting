@@ -215,7 +215,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                         Logger.LogInformation("iisexpress Process {pid} shut down", process.Id);
 
                         // If TrySetResult was called above, this will just silently fail to set the new state, which is what we want
-                        started.TrySetException(new Exception($"Command exited unexpectedly with exit code: {HostProcess.ExitCode}"));
+                        started.TrySetException(new Exception($"Command exited unexpectedly with exit code: {process.ExitCode}"));
 
                         TriggerHostShutdown(hostExitTokenSource);
                     };
