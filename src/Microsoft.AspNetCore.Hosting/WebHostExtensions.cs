@@ -9,7 +9,7 @@ using System.Runtime.Loader;
 using System.Threading;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
-
+using System.Threading.Tasks;
 namespace Microsoft.AspNetCore.Hosting
 {
     public static class WebHostExtensions
@@ -60,15 +60,26 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="token">The token to trigger shutdown.</param>
         public static void Run(this IWebHost host, CancellationToken token)
         {
-            host.Run(token, shutdownMessage: null);
+            host.RunAsync(token, shutdownMessage: null).Wait();
         }
 
-        private static void Run(this IWebHost host, CancellationToken token, string shutdownMessage)
+        /// <summary>
+        /// Runs a web application asynchronously and hold the awaiter until token is triggered or shutdown is triggered.
+        /// </summary>
+        /// <param name="host">The <see cref="IWebHost"/> to run.</param>
+        /// <param name="token">The token to trigger shutdown.</param>
+        public static async Task RunAsync(this IWebHost host, CancellationToken token)
+        {
+            await host.RunAsync(token, shutdownMessage: null);
+        }
+
+
+        private static async Task RunAsync(this IWebHost host, CancellationToken token, string shutdownMessage)
         {
             using (host)
             {
                 host.Start();
-
+                var tcs = new TaskCompletionSource<object>();
                 var hostingEnvironment = host.Services.GetService<IHostingEnvironment>();
                 var applicationLifetime = host.Services.GetService<IApplicationLifetime>();
 
@@ -89,13 +100,17 @@ namespace Microsoft.AspNetCore.Hosting
                     Console.WriteLine(shutdownMessage);
                 }
 
-                token.Register(state =>
+                token.Register(() =>
                 {
-                    ((IApplicationLifetime)state).StopApplication();
-                },
-                applicationLifetime);
+                    applicationLifetime.StopApplication();
+                });
 
-                applicationLifetime.ApplicationStopping.WaitHandle.WaitOne();
+                applicationLifetime.ApplicationStopping.Register(() =>
+                {
+                    tcs.TrySetCanceled();
+                });
+
+                await tcs.Task;
             }
         }
     }
