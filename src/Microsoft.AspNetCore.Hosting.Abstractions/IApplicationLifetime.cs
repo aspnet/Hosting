@@ -2,13 +2,14 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Threading;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.AspNetCore.Hosting
 {
     /// <summary>
     /// Allows consumers to perform cleanup during a graceful shutdown.
     /// </summary>
-    public interface IApplicationLifetime
+    public interface IApplicationLifetime : IHostLifetime
     {
         /// <summary>
         /// Triggered when the application host has fully started and is about to wait
@@ -28,10 +29,5 @@ namespace Microsoft.AspNetCore.Hosting
         /// until this event completes.
         /// </summary>
         CancellationToken ApplicationStopped { get; }
-
-        /// <summary>
-        /// Requests termination the current application.
-        /// </summary>
-        void StopApplication();
     }
 }

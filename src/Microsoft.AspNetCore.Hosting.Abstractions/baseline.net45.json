@@ -309,7 +309,7 @@
       "Visibility": "Public",
       "Kind": "Interface",
       "Abstract": true,
-      "ImplementedInterfaces": [],
+      "ImplementedInterfaces": ["Microsoft.Extensions.Hosting.IHostLifetime"],
       "Members": [
         {
           "Kind": "Method",
@@ -331,13 +331,6 @@
           "Parameters": [],
           "ReturnType": "System.Threading.CancellationToken",
           "GenericParameter": []
-        },
-        {
-          "Kind": "Method",
-          "Name": "StopApplication",
-          "Parameters": [],
-          "ReturnType": "System.Void",
-          "GenericParameter": []
         }
       ],
       "GenericParameters": []
@@ -347,46 +340,8 @@
       "Visibility": "Public",
       "Kind": "Interface",
       "Abstract": true,
-      "ImplementedInterfaces": [],
+      "ImplementedInterfaces": ["Microsoft.Extensions.Hosting.IApplicationEnvironment"],
       "Members": [
-        {
-          "Kind": "Method",
-          "Name": "get_EnvironmentName",
-          "Parameters": [],
-          "ReturnType": "System.String",
-          "GenericParameter": []
-        },
-        {
-          "Kind": "Method",
-          "Name": "set_EnvironmentName",
-          "Parameters": [
-            {
-              "Name": "value",
-              "Type": "System.String"
-            }
-          ],
-          "ReturnType": "System.Void",
-          "GenericParameter": []
-        },
-        {
-          "Kind": "Method",
-          "Name": "get_ApplicationName",
-          "Parameters": [],
-          "ReturnType": "System.String",
-          "GenericParameter": []
-        },
-        {
-          "Kind": "Method",
-          "Name": "set_ApplicationName",
-          "Parameters": [
-            {
-              "Name": "value",
-              "Type": "System.String"
-            }
-          ],
-          "ReturnType": "System.Void",
-          "GenericParameter": []
-        },
         {
           "Kind": "Method",
           "Name": "get_WebRootPath",
