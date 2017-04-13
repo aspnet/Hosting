@@ -5,9 +5,9 @@
   },
   "dependencies": {
     "dotnet-test-xunit": "2.2.0-*",
-    "Microsoft.AspNetCore.TestHost": "1.1.1",
-    "Microsoft.AspNetCore.Testing": "1.1.0-rtm-22752",
-    "Microsoft.Extensions.DiagnosticAdapter": "1.1.0",
+    "Microsoft.AspNetCore.TestHost": "1.1.2",
+    "Microsoft.AspNetCore.Testing": "1.1.1",
+    "Microsoft.Extensions.DiagnosticAdapter": "1.1.1",
     "xunit": "2.2.0-*"
   },
   "frameworks": {

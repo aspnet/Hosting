@@ -1,10 +1,10 @@
 {
   "version": "1.1.0-*",
   "dependencies": {
-    "Microsoft.AspNetCore.Hosting": "1.1.1",
-    "Microsoft.Extensions.Configuration": "1.1.1",
-    "Microsoft.Extensions.Configuration.CommandLine": "1.1.1",
-    "Microsoft.Extensions.Logging.Console": "1.1.1"
+    "Microsoft.AspNetCore.Hosting": "1.1.2",
+    "Microsoft.Extensions.Configuration": "1.1.2",
+    "Microsoft.Extensions.Configuration.CommandLine": "1.1.2",
+    "Microsoft.Extensions.Logging.Console": "1.1.2"
   },
   "buildOptions": {
     "emitEntryPoint": true
