@@ -35,5 +35,40 @@
     "NewTypeId": "public interface Microsoft.AspNetCore.Hosting.IWebHost : System.IDisposable",
     "NewMemberId": "System.Threading.Tasks.Task StopAsync(System.Threading.CancellationToken cancellationToken)",
     "Kind": "Addition"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IApplicationLifetime",
+    "NewTypeId": "public interface Microsoft.AspNetCore.Hosting.IApplicationLifetime : Microsoft.Extensions.Hosting.IHostLifetime",
+    "Kind": "Modification"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IHostingEnvironment",
+    "NewTypeId": "public interface Microsoft.AspNetCore.Hosting.IHostingEnvironment : Microsoft.Extensions.Hosting.IApplicationEnvironment",
+    "Kind": "Modification"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IApplicationLifetime",
+    "OldMemberId": "System.Void StopApplication()",
+    "Kind": "Removal"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IHostingEnvironment",
+    "OldMemberId": "System.String get_EnvironmentName()",
+    "Kind": "Removal"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IHostingEnvironment",
+    "OldMemberId": "System.String get_ApplicationName()",
+    "Kind": "Removal"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IHostingEnvironment",
+    "OldMemberId": "System.Void set_EnvironmentName(System.String value)",
+    "Kind": "Removal"
+  },
+  {
+    "OldTypeId": "public interface Microsoft.AspNetCore.Hosting.IHostingEnvironment",
+    "OldMemberId": "System.Void set_ApplicationName(System.String value)",
+    "Kind": "Removal"
   }
 ]
