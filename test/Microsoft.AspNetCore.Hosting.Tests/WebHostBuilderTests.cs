@@ -888,7 +888,7 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
-        public void Build_DoesNotRunHostingStartupAssembliesDoNotRunIfNotSpecified()
+        public void Build_DoesRunHostingStartupFromPrimaryAssemblyEvenIfNotSpecified()
         {
             var builder = CreateWebHostBuilder()
                 .Configure(app => { })
@@ -896,7 +896,7 @@ namespace Microsoft.AspNetCore.Hosting
 
             using (builder.Build())
             {
-                Assert.Null(builder.GetSetting("testhostingstartup"));
+                Assert.Equal("1", builder.GetSetting("testhostingstartup"));
             }
         }
 
