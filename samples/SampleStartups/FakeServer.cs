@@ -13,15 +13,9 @@ namespace SampleStartups
     {
         public IFeatureCollection Features => new FeatureCollection();
 
-        public Task StartAsync<TContext>(IHttpApplication<TContext> application, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+        public Task StartAsync<TContext>(IHttpApplication<TContext> application, CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public void Dispose()
         {

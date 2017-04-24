@@ -27,7 +27,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             WebRoot = configuration[WebHostDefaults.WebRootKey];
             ContentRootPath = configuration[WebHostDefaults.ContentRootKey];
             // Search the primary assembly and configured assemblies.
-            HostingStartupAssemblies = (ApplicationName + ";" + configuration[WebHostDefaults.HostingStartupAssembliesKey] ?? "")
+            HostingStartupAssemblies = $"{ApplicationName};{configuration[WebHostDefaults.HostingStartupAssembliesKey]}"
                 .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
             PreferHostingUrls = ParseBool(configuration, WebHostDefaults.PreferHostingUrls);
 
