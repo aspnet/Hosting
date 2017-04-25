@@ -30,7 +30,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // Search the primary assembly and configured assemblies.
             HostingStartupAssemblies = $"{ApplicationName};{configuration[WebHostDefaults.HostingStartupAssembliesKey]}"
                 .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
-            PreferHostingUrls = ParseBool(configuration, WebHostDefaults.PreferHostingUrls);
+            PreferHostingUrls = ParseBool(configuration, WebHostDefaults.PreferHostingUrlsKey);
 
             var timeout = configuration[WebHostDefaults.ShutdownTimeoutKey];
             if (!string.IsNullOrEmpty(timeout)
