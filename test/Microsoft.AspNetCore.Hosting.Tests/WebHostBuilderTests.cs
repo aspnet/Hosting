@@ -186,6 +186,28 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
+        public void ConfigureDefaultServiceProviderWithContext()
+        {
+            var hostBuilder = new WebHostBuilder()
+                .UseServer(new TestServer())
+                .ConfigureServices(s =>
+                {
+                    s.AddTransient<ServiceD>();
+                    s.AddScoped<ServiceC>();
+                })
+                .Configure(app =>
+                {
+                    app.ApplicationServices.GetRequiredService<ServiceC>();
+                })
+                .UseDefaultServiceProvider((context, options) =>
+                {
+                    options.ValidateScopes = true;
+                });
+
+            Assert.Throws<InvalidOperationException>(() => hostBuilder.Build());
+        }
+
+        [Fact]
         public void UseLoggerFactoryHonored()
         {
             var loggerFactory = new LoggerFactory();
