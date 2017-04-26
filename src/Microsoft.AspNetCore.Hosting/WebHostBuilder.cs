@@ -288,20 +288,6 @@ namespace Microsoft.AspNetCore.Hosting
                 .SetBasePath(_hostingEnvironment.ContentRootPath)
                 .AddInMemoryCollection(_config.AsEnumerable());
 
-            foreach (var configureAppConfiguration in _configureAppConfigurationBuilderDelegates)
-            {
-                configureAppConfiguration(_context, builder);
-            }
-
-            var configuration = builder.Build();
-            services.AddSingleton<IConfiguration>(configuration);
-            _context.Configuration = configuration;
-
-            // The configured ILoggerFactory is added as a singleton here. AddLogging below will not add an additional one.
-            var loggerFactory = _createLoggerFactoryDelegate?.Invoke(_context) ?? new LoggerFactory(configuration.GetSection("Logging"));
-            services.AddSingleton(loggerFactory);
-            _context.LoggerFactory = loggerFactory;
-
             if (!_options.PreventHostingStartup)
             {
                 var exceptions = new List<Exception>();
@@ -337,6 +323,22 @@ namespace Microsoft.AspNetCore.Hosting
                     }
                 }
             }
+
+            foreach (var configureAppConfiguration in _configureAppConfigurationBuilderDelegates)
+            {
+                configureAppConfiguration(_context, builder);
+            }
+
+            var configuration = builder.Build();
+            services.AddSingleton<IConfiguration>(configuration);
+            _context.Configuration = configuration;
+
+            // The configured ILoggerFactory is added as a singleton here. AddLogging below will not add an additional one.
+            var loggerFactory = _createLoggerFactoryDelegate?.Invoke(_context) ?? new LoggerFactory(configuration.GetSection("Logging"));
+            services.AddSingleton(loggerFactory);
+            _context.LoggerFactory = loggerFactory;
+
+
 
             foreach (var configureLogging in _configureLoggingDelegates)
             {
