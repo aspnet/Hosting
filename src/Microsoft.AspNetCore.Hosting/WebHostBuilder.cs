@@ -338,8 +338,6 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddSingleton(loggerFactory);
             _context.LoggerFactory = loggerFactory;
 
-
-
             foreach (var configureLogging in _configureLoggingDelegates)
             {
                 configureLogging(_context, loggerFactory);
