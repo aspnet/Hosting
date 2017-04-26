@@ -273,13 +273,6 @@ namespace Microsoft.AspNetCore.Hosting
 
             _options = new WebHostOptions(_config);
 
-            var contentRootPath = ResolveContentRootPath(_options.ContentRootPath, AppContext.BaseDirectory);
-            var applicationName = _options.ApplicationName;
-
-            // Initialize the hosting environment
-            _hostingEnvironment.Initialize(applicationName, contentRootPath, _options);
-            _context.HostingEnvironment = _hostingEnvironment;
-
             if (!_options.PreventHostingStartup)
             {
                 var exceptions = new List<Exception>();
@@ -315,6 +308,13 @@ namespace Microsoft.AspNetCore.Hosting
                     }
                 }
             }
+
+            var contentRootPath = ResolveContentRootPath(_options.ContentRootPath, AppContext.BaseDirectory);
+            var applicationName = _options.ApplicationName;
+
+            // Initialize the hosting environment
+            _hostingEnvironment.Initialize(applicationName, contentRootPath, _options);
+            _context.HostingEnvironment = _hostingEnvironment;
 
             var services = new ServiceCollection();
             services.AddSingleton(_hostingEnvironment);
