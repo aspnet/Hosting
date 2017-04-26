@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "Microsoft.AspNetCore.Hosting": "1.0.2",
+    "Microsoft.AspNetCore.Hosting": "1.0.3",
     "Microsoft.Extensions.Configuration.CommandLine": "1.0.2",
     "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.2",
     "Microsoft.Extensions.Configuration.Json": "1.0.2"
