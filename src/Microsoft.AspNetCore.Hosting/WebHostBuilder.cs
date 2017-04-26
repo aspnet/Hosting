@@ -280,14 +280,6 @@ namespace Microsoft.AspNetCore.Hosting
             _hostingEnvironment.Initialize(applicationName, contentRootPath, _options);
             _context.HostingEnvironment = _hostingEnvironment;
 
-            var services = new ServiceCollection();
-            services.AddSingleton(_hostingEnvironment);
-            services.AddSingleton(_context);
-
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(_hostingEnvironment.ContentRootPath)
-                .AddInMemoryCollection(_config.AsEnumerable());
-
             if (!_options.PreventHostingStartup)
             {
                 var exceptions = new List<Exception>();
@@ -323,6 +315,14 @@ namespace Microsoft.AspNetCore.Hosting
                     }
                 }
             }
+
+            var services = new ServiceCollection();
+            services.AddSingleton(_hostingEnvironment);
+            services.AddSingleton(_context);
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(_hostingEnvironment.ContentRootPath)
+                .AddInMemoryCollection(_config.AsEnumerable());
 
             foreach (var configureAppConfiguration in _configureAppConfigurationBuilderDelegates)
             {
