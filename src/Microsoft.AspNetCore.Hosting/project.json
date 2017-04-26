@@ -48,7 +48,7 @@
       "type": "build"
     },
     "NETStandard.Library": "1.6.1",
-    "System.Diagnostics.DiagnosticSource": "4.3.0",
+    "System.Diagnostics.DiagnosticSource": "4.3.1",
     "System.Reflection.Metadata": "1.4.1"
   },
   "frameworks": {
