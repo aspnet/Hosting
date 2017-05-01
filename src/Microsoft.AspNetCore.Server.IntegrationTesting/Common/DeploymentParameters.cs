@@ -93,6 +93,17 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         /// </summary>
         public bool PublishApplicationBeforeDeployment { get; set; }
 
+        /// <summary>
+        /// Create package cache and publish the application using the cache's manifest file. Defaults to <c>false</c>.
+        /// </summary>
+        public bool CreatePackageCacheAndPublish { get; set; } = false;
+
+        /// <summary>
+        /// By default package cache is created as a sibling folder to the CLI's 'sdk' folder. Set the value to <c>true</c> to create the
+        /// package cache in a custom location instead. Defaults to <c>false</c>.
+        /// </summary>
+        public bool CreatePackageCacheInCustomLocation { get; set; } = false;
+
         public bool PreservePublishedApplicationForDebugging { get; set; } = false;
 
         public ApplicationType ApplicationType { get; set; }

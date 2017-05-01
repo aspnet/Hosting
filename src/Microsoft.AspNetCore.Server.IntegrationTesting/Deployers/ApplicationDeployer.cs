@@ -49,6 +49,12 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                     throw new Exception($"A target framework must be specified in the deployment parameters for applications that require publishing before deployment");
                 }
 
+                if (DeploymentParameters.ApplicationType == ApplicationType.Portable
+                    && DeploymentParameters.CreatePackageCacheAndPublish)
+                {
+                    SetupPackageCache();
+                }
+
                 DeploymentParameters.PublishedApplicationRootPath = publishRoot ?? Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
                 var parameters = $"publish "
@@ -60,7 +66,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 {
                     parameters += $" --runtime {GetRuntimeIdentifier()}";
                 }
-
                 parameters += $" {DeploymentParameters.AdditionalPublishParameters}";
 
                 var startInfo = new ProcessStartInfo
@@ -92,6 +97,55 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 }
 
                 Logger.LogInformation($"{DotnetCommandName} publish finished with exit code : {hostProcess.ExitCode}");
+            }
+        }
+
+        protected void SetupPackageCache()
+        {
+            using (Logger.BeginScope("package-cache"))
+            {
+                var applicationProjFilePath = Path.Combine(DeploymentParameters.ApplicationPath, DeploymentParameters.ApplicationName + ".csproj");
+                var packageCacheWorkingDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                var parameters = $"store "
+                    + $" --framework {DeploymentParameters.TargetFramework}"
+                    + $" --configuration {DeploymentParameters.Configuration}"
+                    + $" --runtime {GetRuntimeIdentifier()}"
+                    + $" --working-dir {packageCacheWorkingDir}"
+                    + $" --manifest {applicationProjFilePath}";
+
+                if (!DeploymentParameters.CreatePackageCacheInCustomLocation)
+                {
+                    var packageCacheDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                    parameters += $" --output {packageCacheDir}";
+                }
+                
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = DotnetCommandName,
+                    Arguments = parameters,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true,
+                    WorkingDirectory = DeploymentParameters.ApplicationPath,
+                };
+
+                var hostProcess = new Process() { StartInfo = startInfo };
+
+                Logger.LogInformation($"Executing command {DotnetCommandName} {parameters}");
+
+                hostProcess.StartAndCaptureOutAndErrToLogger("package-cache", Logger);
+
+                hostProcess.WaitForExit();
+
+                if (hostProcess.ExitCode != 0)
+                {
+                    var message = $"{DotnetCommandName} store exited with exit code : {hostProcess.ExitCode}";
+                    Logger.LogError(message);
+                    throw new Exception(message);
+                }
+
+                Logger.LogInformation($"{DotnetCommandName} store finished with exit code : {hostProcess.ExitCode}");
             }
         }
 
