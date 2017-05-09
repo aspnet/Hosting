@@ -7,7 +7,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     public class HostingEnvironment : IHostingEnvironment
     {
-        public string EnvironmentName { get; set; } = Hosting.EnvironmentName.Production;
+        public string EnvironmentName { get; set; } = Hosting.EnvironmentName.Development;
 
         public string ApplicationName { get; set; }
 
