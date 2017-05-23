@@ -1041,13 +1041,13 @@ namespace Microsoft.AspNetCore.Hosting
         {
             var builder = CreateWebHostBuilder()
                 .CaptureStartupErrors(false)
-                .UseShutdownTimeout(TimeSpan.FromSeconds(42))
+                .UseShutdownTimeout(TimeSpan.FromSeconds(102))
                 .Configure(app => { })
                 .UseServer(new TestServer());
 
             using (var host = (WebHost)builder.Build())
             {
-                Assert.Equal(42, host.Options.ShutdownTimeout.Seconds);
+                Assert.Equal(TimeSpan.FromSeconds(102), host.Options.ShutdownTimeout);
             }
         }
 

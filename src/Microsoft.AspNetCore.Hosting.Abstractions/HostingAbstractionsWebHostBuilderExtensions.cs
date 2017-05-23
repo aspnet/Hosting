@@ -166,7 +166,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseShutdownTimeout(this IWebHostBuilder hostBuilder, TimeSpan timeout)
         {
-            return hostBuilder.UseSetting(WebHostDefaults.ShutdownTimeoutKey, timeout.Seconds.ToString());
+            return hostBuilder.UseSetting(WebHostDefaults.ShutdownTimeoutKey, timeout.TotalSeconds.ToString());
         }
 
         /// <summary>
