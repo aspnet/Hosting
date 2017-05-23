@@ -93,7 +93,7 @@ namespace Microsoft.AspNetCore.TestHost
                     {
                         registration.Dispose();
                     }
-                });
+                }, cancellationToken);
 
             return await state.ResponseTask.ConfigureAwait(false);
         }
