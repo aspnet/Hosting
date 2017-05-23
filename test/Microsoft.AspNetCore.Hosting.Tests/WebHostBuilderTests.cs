@@ -1036,6 +1036,21 @@ namespace Microsoft.AspNetCore.Hosting
             Assert.Throws<ArgumentException>(() => new HostingStartupAttribute(typeof(WebHostTests)));
         }
 
+        [Fact]
+        public void UseShutdownTimeoutConfiguresShutdownTimeout()
+        {
+            var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
+                .UseShutdownTimeout(TimeSpan.FromSeconds(42))
+                .Configure(app => { })
+                .UseServer(new TestServer());
+
+            using (var host = (WebHost)builder.Build())
+            {
+                Assert.Equal(42, host.Options.ShutdownTimeout.Seconds);
+            }
+        }
+
         private static void StaticConfigureMethod(IApplicationBuilder app) { }
 
         private IWebHostBuilder CreateWebHostBuilder()

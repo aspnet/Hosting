@@ -159,6 +159,17 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         /// <summary>
+        /// Specify the amount of time to wait for the web host to shutdown.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
+        /// <param name="timeout">The amount of time to wait for server shutdown.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder UseShutdownTimeout(this IWebHostBuilder hostBuilder, TimeSpan timeout)
+        {
+            return hostBuilder.UseSetting(WebHostDefaults.ShutdownTimeoutKey, timeout.Seconds.ToString());
+        }
+
+        /// <summary>
         /// Start the web host and listen on the specified urls.
         /// </summary>
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to start.</param>
