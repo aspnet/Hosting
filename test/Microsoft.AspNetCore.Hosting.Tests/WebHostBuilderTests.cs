@@ -213,22 +213,6 @@ namespace Microsoft.AspNetCore.Hosting
             Assert.True(configurationCallbackCalled);
         }
 
-        //[Fact]
-        //public void UseLoggerFactoryHonored()
-        //{
-        //    var loggerFactory = new LoggerFactory();
-
-        //    var hostBuilder = new WebHostBuilder()
-        //        .UseLoggerFactory(loggerFactory)
-        //        .UseServer(new TestServer())
-        //        .UseStartup<StartupNoServices>();
-
-        //    using (var host = (WebHost)hostBuilder.Build())
-        //    {
-        //        Assert.Same(loggerFactory, host.Services.GetService<ILoggerFactory>());
-        //    }
-        //}
-
         [Fact]
         public void MultipleConfigureLoggingInvokedInOrder()
         {
