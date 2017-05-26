@@ -115,7 +115,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<ILoggerBuilder> configureLogging)
         {
-            return hostBuilder.ConfigureServices(collection => configureLogging(collection.AddLogging()));
+            return hostBuilder.ConfigureServices(collection => collection.AddLogging(configureLogging));
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ILoggerBuilder> configureLogging)
         {
-            return hostBuilder.ConfigureServices((context, collection) => configureLogging(context, collection.AddLogging()));
+            return hostBuilder.ConfigureServices((context, collection) => collection.AddLogging(builder => configureLogging(context, builder)));
         }
     }
 }
