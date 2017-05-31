@@ -111,9 +111,9 @@ namespace Microsoft.AspNetCore.Hosting
         /// Adds a delegate for configuring the provided <see cref="LoggerFactory"/>. This may be called multiple times.
         /// </summary>
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder" /> to configure.</param>
-        /// <param name="configureLogging">The delegate that configures the <see cref="ILoggerBuilder"/>.</param>
+        /// <param name="configureLogging">The delegate that configures the <see cref="ILoggingBuilder"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
-        public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<ILoggerBuilder> configureLogging)
+        public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<ILoggingBuilder> configureLogging)
         {
             return hostBuilder.ConfigureServices(collection => collection.AddLogging(configureLogging));
         }
@@ -124,7 +124,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder" /> to configure.</param>
         /// <param name="configureLogging">The delegate that configures the <see cref="LoggerFactory"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
-        public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ILoggerBuilder> configureLogging)
+        public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ILoggingBuilder> configureLogging)
         {
             return hostBuilder.ConfigureServices((context, collection) => collection.AddLogging(builder => configureLogging(context, builder)));
         }
