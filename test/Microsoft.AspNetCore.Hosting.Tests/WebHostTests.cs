@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection.Internal;
 using Microsoft.AspNetCore.Hosting.Fakes;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -927,6 +928,23 @@ namespace Microsoft.AspNetCore.Hosting
         {
             public void ConfigureServices(IServiceCollection services, int gunk) { }
             public void Configure(IApplicationBuilder app) { }
+        }
+
+        [Fact]
+        public async Task InitializesDataProtectionIfExists()
+        {
+            var mock = new Mock<IDataProtectionInitializer>();
+            mock.Setup(m => m.Initialize());
+
+            using (var host = CreateBuilder()
+                .UseFakeServer()
+                .ConfigureServices(services => services.AddSingleton(mock.Object))
+                .Build())
+            {
+                await host.StartAsync();
+            }
+
+            mock.VerifyAll();
         }
 
         private IWebHost CreateHost(RequestDelegate requestDelegate)

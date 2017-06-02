@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection.Internal;
 using Microsoft.AspNetCore.Hosting.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -183,6 +184,16 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
 
                 configure(builder);
+
+                // It is common for data protection to require large amounts of initialization work. To avoid
+                // delaying this until the first-request, we call this here, before server starts. Normally, this would
+                // be done by using IStartupFilter or IHostedService, but DataProtection gets special consideration
+                // because Hosting has a dependency on DataProtection.
+                var dataProtectionInitializer = _applicationServices.GetService<IDataProtectionInitializer>();
+                if (dataProtectionInitializer != null)
+                {
+                    dataProtectionInitializer.Initialize();
+                }
 
                 return builder.Build();
             }
