@@ -1,0 +1,12 @@
+[
+  {
+    "TypeId": "public class Microsoft.AspNetCore.TestHost.ClientHandler : System.Net.Http.HttpMessageHandler",
+    "MemberId": "public .ctor(Microsoft.AspNetCore.Http.PathString pathBase, Microsoft.AspNetCore.Hosting.Server.IHttpApplication<Microsoft.AspNetCore.Hosting.Internal.HostingApplication+Context> application)",
+    "Kind": "Removal"
+  },
+  {
+    "TypeId": "public class Microsoft.AspNetCore.TestHost.TestServer : Microsoft.AspNetCore.Hosting.Server.IServer",
+    "MemberId": "public System.Net.Http.HttpClient CreateClient()",
+    "Kind": "Removal"
+  }
+]

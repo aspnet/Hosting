@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,8 +35,8 @@ namespace Microsoft.AspNetCore.TestHost
             if (featureCollection == null)
             {
                 throw new ArgumentNullException(nameof(featureCollection));
-            }        
-        
+            }
+
             Features = featureCollection;
 
             var host = builder.UseServer(this).Build();
@@ -54,16 +55,35 @@ namespace Microsoft.AspNetCore.TestHost
         }
 
         public IFeatureCollection Features { get; }
+        
+        public HttpMessageHandler CreateHandler(params DelegatingHandler[] handlers)
+        {
+            HttpMessageHandler handler = CreateHandler();
+            foreach (var delegatingHandler in handlers.Reverse())
+            {
+                delegatingHandler.InnerHandler = handler;
+                handler = delegatingHandler;
+            }
+
+            return handler;
+        }
 
         public HttpMessageHandler CreateHandler()
         {
             var pathBase = BaseAddress == null ? PathString.Empty : PathString.FromUriComponent(BaseAddress);
-            return new ClientHandler(pathBase, _application);
+            return new ClientHandler(pathBase, () => _application);
         }
 
-        public HttpClient CreateClient()
+        public HttpClient CreateClient(params DelegatingHandler[] handlers)
         {
-            return new HttpClient(CreateHandler()) { BaseAddress = BaseAddress };
+            HttpMessageHandler handler = CreateHandler();
+            foreach (var delegatingHandler in handlers.Reverse())
+            {
+                delegatingHandler.InnerHandler = handler;
+                handler = delegatingHandler;
+            }
+
+            return new HttpClient(handler) { BaseAddress = BaseAddress };
         }
 
         public WebSocketClient CreateWebSocketClient()

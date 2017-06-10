@@ -25,7 +25,7 @@ namespace Microsoft.AspNetCore.TestHost
         [Fact]
         public Task ExpectedKeysAreAvailable()
         {
-            var handler = new ClientHandler(new PathString("/A/Path/"), new DummyApplication(context =>
+            var handler = new ClientHandler(new PathString("/A/Path/"),() => new DummyApplication(context =>
             {
                 // TODO: Assert.True(context.RequestAborted.CanBeCanceled);
                 Assert.Equal("HTTP/1.1", context.Request.Protocol);
@@ -51,7 +51,7 @@ namespace Microsoft.AspNetCore.TestHost
         [Fact]
         public Task ExpectedKeysAreInFeatures()
         {
-            var handler = new ClientHandler(new PathString("/A/Path/"), new InspectingApplication(features =>
+            var handler = new ClientHandler(new PathString("/A/Path/"), () => new InspectingApplication(features =>
             {
                 // TODO: Assert.True(context.RequestAborted.CanBeCanceled);
                 Assert.Equal("HTTP/1.1", features.Get<IHttpRequestFeature>().Protocol);
@@ -76,7 +76,7 @@ namespace Microsoft.AspNetCore.TestHost
         [Fact]
         public Task SingleSlashNotMovedToPathBase()
         {
-            var handler = new ClientHandler(new PathString(""), new DummyApplication(context =>
+            var handler = new ClientHandler(new PathString(""), () => new DummyApplication(context =>
             {
                 Assert.Equal("", context.Request.PathBase.Value);
                 Assert.Equal("/", context.Request.Path.Value);
@@ -92,7 +92,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task ResubmitRequestWorks()
         {
             int requestCount = 1;
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(context =>
             {
                 int read = context.Request.Body.Read(new byte[100], 0, 100);
                 Assert.Equal(11, read);
@@ -116,7 +116,7 @@ namespace Microsoft.AspNetCore.TestHost
         [FrameworkSkipCondition(RuntimeFrameworks.Mono, SkipReason = "Hangs randomly (issue #507)")]
         public async Task MiddlewareOnlySetsHeaders()
         {
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(context =>
             {
                 context.Response.Headers["TestHeader"] = "TestValue";
                 return Task.FromResult(0);
@@ -131,7 +131,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task BlockingMiddlewareShouldNotBlockClient()
         {
             ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(context =>
             {
                 block.WaitOne();
                 return Task.FromResult(0);
@@ -149,7 +149,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task HeadersAvailableBeforeBodyFinished()
         {
             ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(async context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(async context =>
             {
                 context.Response.Headers["TestHeader"] = "TestValue";
                 await context.Response.WriteAsync("BodyStarted,");
@@ -169,7 +169,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task FlushSendsHeaders()
         {
             ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(async context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(async context =>
             {
                 context.Response.Headers["TestHeader"] = "TestValue";
                 context.Response.Body.Flush();
@@ -189,7 +189,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task ClientDisposalCloses()
         {
             ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(context =>
             {
                 context.Response.Headers["TestHeader"] = "TestValue";
                 context.Response.Body.Flush();
@@ -215,7 +215,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task ClientCancellationAborts()
         {
             ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(context =>
             {
                 context.Response.Headers["TestHeader"] = "TestValue";
                 context.Response.Body.Flush();
@@ -240,7 +240,7 @@ namespace Microsoft.AspNetCore.TestHost
         [Fact]
         public Task ExceptionBeforeFirstWriteIsReported()
         {
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(context =>
             {
                 throw new InvalidOperationException("Test Exception");
             }));
@@ -254,7 +254,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task ExceptionAfterFirstWriteIsReported()
         {
             ManualResetEvent block = new ManualResetEvent(false);
-            var handler = new ClientHandler(PathString.Empty, new DummyApplication(async context =>
+            var handler = new ClientHandler(PathString.Empty, () => new DummyApplication(async context =>
             {
                 context.Response.Headers["TestHeader"] = "TestValue";
                 await context.Response.WriteAsync("BodyStarted");

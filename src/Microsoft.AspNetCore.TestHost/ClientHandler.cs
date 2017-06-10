@@ -23,7 +23,7 @@ namespace Microsoft.AspNetCore.TestHost
     /// </summary>
     public class ClientHandler : HttpMessageHandler
     {
-        private readonly IHttpApplication<Context> _application;
+        private readonly Func<IHttpApplication<Context>> _application;
         private readonly PathString _pathBase;
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace Microsoft.AspNetCore.TestHost
         /// </summary>
         /// <param name="pathBase">The base path.</param>
         /// <param name="application">The <see cref="IHttpApplication{TContext}"/>.</param>
-        public ClientHandler(PathString pathBase, IHttpApplication<Context> application)
+        public ClientHandler(PathString pathBase, Func<IHttpApplication<Context>> application)
         {
             if (application == null)
             {
@@ -64,7 +64,7 @@ namespace Microsoft.AspNetCore.TestHost
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var state = new RequestState(request, _pathBase, _application);
+            var state = new RequestState(request, _pathBase, _application());
             var requestContent = request.Content ?? new StreamContent(Stream.Null);
             var body = await requestContent.ReadAsStreamAsync();
             if (body.CanSeek)
@@ -80,7 +80,7 @@ namespace Microsoft.AspNetCore.TestHost
                 {
                     try
                     {
-                        await _application.ProcessRequestAsync(state.Context);
+                        await _application().ProcessRequestAsync(state.Context);
                         await state.CompleteResponseAsync();
                         state.ServerCleanup(exception: null);
                     }
