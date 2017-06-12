@@ -57,7 +57,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                     + $" --configuration {DeploymentParameters.Configuration}";
 
                 // Workaround for:
-                //   "dotnet publish -f" fails on app with project reference to netstandard2.0 class library
+                //   Publish fails on app with project reference to netstandard2.0 class library
                 //   https://github.com/dotnet/cli/issues/6843
                 parameters += " --no-restore"
 
