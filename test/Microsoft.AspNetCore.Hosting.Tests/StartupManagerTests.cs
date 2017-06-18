@@ -36,6 +36,26 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             Assert.Equal(2, callbackStartup.MethodsCalled);
         }
 
+        [Fact]
+        public void StartupClassMayHaveScopedServicesInjected()
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton<IServiceProviderFactory<IServiceCollection>>(new DefaultServiceProviderFactory(new ServiceProviderOptions
+            {
+                ValidateScopes = true
+            }));
+
+            serviceCollection.AddScoped<DisposableService>();
+            var services = serviceCollection.BuildServiceProvider();
+
+            var type = StartupLoader.FindStartupType("Microsoft.AspNetCore.Hosting.Tests", "WithScopedServices");
+            var startup = StartupLoader.LoadMethods(services, type, "WithScopedServices");
+
+            var app = new ApplicationBuilder(services);
+            app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
+            startup.ConfigureDelegate(app);
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("Dev")]
@@ -403,6 +423,16 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             public void ConfigurationMethodCalled(object instance)
             {
                 _configurationMethodCalledList.Add(instance);
+            }
+        }
+
+        public class DisposableService : IDisposable
+        {
+            public bool Disposed { get; set; }
+
+            public void Dispose()
+            {
+                Disposed = true;
             }
         }
     }
