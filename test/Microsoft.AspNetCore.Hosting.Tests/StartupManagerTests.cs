@@ -50,10 +50,15 @@ namespace Microsoft.AspNetCore.Hosting.Tests
 
             var type = StartupLoader.FindStartupType("Microsoft.AspNetCore.Hosting.Tests", "WithScopedServices");
             var startup = StartupLoader.LoadMethods(services, type, "WithScopedServices");
+            Assert.NotNull(startup.StartupInstance);
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
             startup.ConfigureDelegate(app);
+
+            var instance = (StartupWithScopedServices)startup.StartupInstance;
+            Assert.NotNull(instance.DisposableService);
+            Assert.True(instance.DisposableService.Disposed);
         }
 
         [Theory]
