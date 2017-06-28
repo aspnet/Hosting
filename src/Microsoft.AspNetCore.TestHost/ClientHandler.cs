@@ -72,7 +72,7 @@ namespace Microsoft.AspNetCore.TestHost
                 // This body may have been consumed before, rewind it.
                 body.Seek(0, SeekOrigin.Begin);
             }
-            state.Context.HttpContext.Request.Body = body;
+            state.Context.HttpContext.Request.Body = new NoSyncStreamWrapper(body);
             var registration = cancellationToken.Register(state.AbortRequest);
 
             // Async offload, don't let the test code block the caller.
@@ -166,7 +166,7 @@ namespace Microsoft.AspNetCore.TestHost
                 }
 
                 _responseStream = new ResponseStream(ReturnResponseMessageAsync, AbortRequest);
-                _responseFeature.Body = _responseStream;
+                _responseFeature.Body = new NoSyncStreamWrapper(_responseStream);
                 _responseFeature.StatusCode = 200;
                 requestLifetimeFeature.RequestAborted = _requestAbortedSource.Token;
 
