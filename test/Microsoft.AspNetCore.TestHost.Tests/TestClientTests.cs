@@ -239,8 +239,47 @@ namespace Microsoft.AspNetCore.TestHost
             clientSocket.Dispose();
         }
 
+		[ConditionalFact]
+		[FrameworkSkipCondition(RuntimeFrameworks.Mono, SkipReason = "Hangs randomly (issue #507)")]
+		public async Task WebSocketAcceptThrowsWhenCancelled() {
+			// Arrange
+			// This logger will attempt to access information from HttpRequest once the HttpContext is createds
+			var logger = new VerifierLogger();
+			RequestDelegate appDelegate = async ctx => {
+				if (ctx.WebSockets.IsWebSocketRequest) {
+					var websocket = await ctx.WebSockets.AcceptWebSocketAsync();
+					var receiveArray = new byte[1024];
+					while (true) {
+						var receiveResult = await websocket.ReceiveAsync(new System.ArraySegment<byte>(receiveArray), CancellationToken.None);
+						if (receiveResult.MessageType == WebSocketMessageType.Close) {
+							await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Normal Closure", CancellationToken.None);
+							break;
+						} else {
+							var sendBuffer = new System.ArraySegment<byte>(receiveArray, 0, receiveResult.Count);
+							await websocket.SendAsync(sendBuffer, receiveResult.MessageType, receiveResult.EndOfMessage, CancellationToken.None);
+						}
+					}
+				}
+			};
+			var builder = new WebHostBuilder()
+				.ConfigureServices(services => {
+					services.AddSingleton<ILogger<IWebHost>>(logger);
+				})
+				.Configure(app => {
+					app.Run(appDelegate);
+				});
+			var server = new TestServer(builder);
 
-        private class VerifierLogger : ILogger<IWebHost>
+			// Act
+			var client = server.CreateWebSocketClient();
+			var tokenSource = new CancellationTokenSource();
+			tokenSource.Cancel();
+
+			// Assert
+			await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await client.ConnectAsync(new System.Uri("http://localhost"), tokenSource.Token));
+		}
+
+		private class VerifierLogger : ILogger<IWebHost>
         {
             public IDisposable BeginScope<TState>(TState state) => new NoopDispoasble();
 
