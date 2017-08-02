@@ -28,7 +28,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         {
             using (Logger.BeginScope("Deploy"))
             {
-                _configFile = Path.GetTempFileName();
+                _configFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 var uri = string.IsNullOrEmpty(DeploymentParameters.ApplicationBaseUriHint) ?
                     TestUriHelper.BuildTestUri() :
                     new Uri(DeploymentParameters.ApplicationBaseUriHint);

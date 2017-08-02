@@ -148,7 +148,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                                 .Replace("[ApplicationPhysicalPath]", contentRoot)
                                 .Replace("[PORT]", port.ToString());
 
-                        DeploymentParameters.ServerConfigLocation = Path.GetTempFileName();
+                        DeploymentParameters.ServerConfigLocation = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
                         Logger.LogDebug("Saving Config to {configPath}", DeploymentParameters.ServerConfigLocation);
 
