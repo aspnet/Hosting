@@ -87,8 +87,8 @@ namespace Microsoft.AspNetCore.TestHost
         {
             private readonly IHttpApplication<Context> _application;
             private TaskCompletionSource<WebSocket> _clientWebSocketTcs;
-			private CancellationToken _cancellationToken;
-			private CancellationTokenRegistration _cancellationTokenRegistration;
+            private CancellationToken _cancellationToken;
+            private CancellationTokenRegistration _cancellationTokenRegistration;
             private WebSocket _serverWebSocket;
 
             public Context Context { get; private set; }
@@ -167,11 +167,11 @@ namespace Microsoft.AspNetCore.TestHost
                 _application.DisposeContext(Context, exception);
             }
 
-			private void RequestCancelled() {
-				_clientWebSocketTcs.TrySetCanceled(_cancellationToken);
-			}
+            private void RequestCancelled() {
+                _clientWebSocketTcs.TrySetCanceled(_cancellationToken);
+            }
 
-			private string CreateRequestKey()
+            private string CreateRequestKey()
             {
                 byte[] data = new byte[16];
                 var rng = RandomNumberGenerator.Create();
