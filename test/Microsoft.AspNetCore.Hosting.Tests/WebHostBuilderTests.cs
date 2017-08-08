@@ -332,6 +332,7 @@ namespace Microsoft.AspNetCore.Hosting
         public void DoNotCaptureStartupErrorsByDefault()
         {
             var hostBuilder = new WebHostBuilder()
+                .UseEnvironment(EnvironmentName.Production)
                 .UseServer(new TestServer())
                 .UseStartup<StartupBoom>();
 
@@ -344,6 +345,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             var hostBuilder = new WebHostBuilder()
                 .CaptureStartupErrors(false)
+                .UseEnvironment(EnvironmentName.Production)
                 .UseServer(new TestServer())
                 .UseStartup<StartupBoom>();
 
