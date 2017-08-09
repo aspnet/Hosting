@@ -59,7 +59,7 @@ namespace Microsoft.AspNetCore.TestHost
 
             // Act
             var actual = await client.GetStringAsync("http://localhost:12345");
-
+        
             // Assert
             Assert.Equal(expected, actual);
         }
