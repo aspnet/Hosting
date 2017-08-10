@@ -11,7 +11,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
     {
         public static readonly HostingEventSource Log = new HostingEventSource();
 
-        private HostingEventSource() { }
+        private HostingEventSource()
+        {
+            _requestCounter = new EventCounter("Request", this);
+        }
+
+        private EventCounter _requestCounter = null;
 
         // NOTE
         // - The 'Start' and 'Stop' suffixes on the following event names have special meaning in EventSource. They
@@ -35,6 +40,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [Event(3, Level = EventLevel.Informational)]
         public void RequestStart(string method, string path)
         {
+            _requestCounter.WriteMetric(1);
             WriteEvent(3, method, path);
         }
 
