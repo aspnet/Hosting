@@ -15,8 +15,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.Fakes
             services.Configure<FakeOptions>(o =>
             {
                 o.Configured = true;
-                o.Environment = "CaseInsensitive";
-                o.Message = "ConfigureCaseInsensitiveServices";
+                o.Environment = "ConfigureCaseInsensitiveServices";
             });
             return services.BuildServiceProvider();
         }
