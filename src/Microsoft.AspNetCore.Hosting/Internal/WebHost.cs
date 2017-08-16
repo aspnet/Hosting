@@ -43,7 +43,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         private bool _stopped;
 
-        // Used for testing only
         internal WebHostOptions Options => _options;
 
         private IServer Server { get; set; }
@@ -180,6 +179,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var builder = builderFactory.CreateBuilder(Server.Features);
                 builder.ApplicationServices = _applicationServices;
 
+                if (!string.IsNullOrEmpty(_options.UsePathBase))
+                {
+                    builder.UsePathBase(_options.UsePathBase);
+                }
                 var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
                 Action<IApplicationBuilder> configure = _startup.Configure;
                 foreach (var filter in startupFilters.Reverse())

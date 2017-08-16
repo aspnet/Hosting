@@ -91,6 +91,22 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
+        public void PathBaseTemp()
+        {
+            var data = new Dictionary<string, string>
+            {
+                { "pathbase", "/test" }
+            };
+
+            var config = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
+
+            using (var host = CreateBuilder(config).UseFakeServer().Build())
+            {
+                host.Run();
+            }
+        }
+
+        [Fact]
         public async Task UsesNewConfigurationOverLegacyConfigForAddressesAndDoNotPreferHostingUrlsIfNotConfigured()
         {
             var data = new Dictionary<string, string>
@@ -847,6 +863,36 @@ namespace Microsoft.AspNetCore.Hosting
                 var featuresTraceIdentifier = httpContext.Features.Get<IHttpRequestIdentifierFeature>().TraceIdentifier;
                 Assert.False(string.IsNullOrWhiteSpace(httpContext.TraceIdentifier));
                 Assert.Same(httpContext.TraceIdentifier, featuresTraceIdentifier);
+            }
+        }
+
+        [Fact]
+        public async Task WebHost_PathBase()
+        {
+            // Arrange
+            HttpContext httpContext = null;
+            var requestDelegate = new RequestDelegate(innerHttpContext =>
+            {
+                httpContext = innerHttpContext;
+                return Task.FromResult(0);
+            });
+            var data = new Dictionary<string, string>
+            {
+                { "pathbase", "/test" }
+            };
+            var config = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
+
+
+            using (var host = CreateBuilder(config).UseFakeServer().Configure(app =>
+            {
+                app.Run(requestDelegate);
+            }).Build())
+            {
+                // Act
+                await host.StartAsync();
+                // Assert
+                Assert.NotNull(httpContext);
+                Assert.Equal(new PathString("/test"), httpContext.Request.PathBase);
             }
         }
 
