@@ -19,5 +19,6 @@ namespace Microsoft.AspNetCore.Hosting
         public static readonly string PreventHostingStartupKey = "preventHostingStartup";
 
         public static readonly string ShutdownTimeoutKey = "shutdownTimeoutSeconds";
+        public static readonly string UsePathBaseKey = "pathbase";
     }
 }

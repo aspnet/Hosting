@@ -30,7 +30,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // Search the primary assembly and configured assemblies.
             HostingStartupAssemblies = $"{ApplicationName};{configuration[WebHostDefaults.HostingStartupAssembliesKey]}"
                 .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
-
+            UsePathBase = configuration[WebHostDefaults.UsePathBaseKey];
             var timeout = configuration[WebHostDefaults.ShutdownTimeoutKey];
             if (!string.IsNullOrEmpty(timeout)
                 && int.TryParse(timeout, NumberStyles.None, CultureInfo.InvariantCulture, out var seconds))
@@ -56,6 +56,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public string WebRoot { get; set; }
 
         public string ContentRootPath { get; set; }
+
+        public string UsePathBase { get; set; }
 
         public TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
