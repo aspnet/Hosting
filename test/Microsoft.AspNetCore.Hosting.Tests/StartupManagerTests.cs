@@ -105,6 +105,18 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         [InlineData("CaseInsensitive")]
         [InlineData("CASEINSENSITIVE")]
         [InlineData("CaSEiNSENsitiVE")]
+        public void FindsStartupClassCaseInsensitive(string environment)
+        {
+            var type = StartupLoader.FindStartupType("Microsoft.AspNetCore.Hosting.Tests", environment);
+
+            Assert.Equal("StartupCaseInsensitive", type.Name);
+        }
+
+        [Theory]
+        [InlineData("caseinsensitive")]
+        [InlineData("CaseInsensitive")]
+        [InlineData("CASEINSENSITIVE")]
+        [InlineData("CaSEiNSENsitiVE")]
         public void StartupClassAddsConfigureServicesToApplicationServicesCaseInsensitive(string environment)
         {
             var services = new ServiceCollection()
@@ -115,37 +127,12 @@ namespace Microsoft.AspNetCore.Hosting.Tests
 
             var app = new ApplicationBuilder(services);
             app.ApplicationServices = startup.ConfigureServicesDelegate(new ServiceCollection());
-            startup.ConfigureDelegate(app);
+            startup.ConfigureDelegate(app); // By this not throwing, it found "ConfigureCaseInsensitive"
 
             var options = app.ApplicationServices.GetRequiredService<IOptions<FakeOptions>>().Value;
             Assert.NotNull(options);
             Assert.True(options.Configured);
-            Assert.Equal("CaseInsensitive", options.Environment);
-        }
-
-        [Theory]
-        [InlineData("caseinsensitive")]
-        [InlineData("CaseInsensitive")]
-        [InlineData("CASEINSENSITIVE")]
-        [InlineData("CaSEiNSENsitiVE")]
-        public void StartupClassAddsConfigureToApplicationServicesCaseInsensitive(string environment)
-        {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
-            serviceCollection.AddSingleton<IFakeStartupCallback>(new FakeStartupCallback());
-            var services = serviceCollection.BuildServiceProvider();
-
-            var type = StartupLoader.FindStartupType("Microsoft.AspNetCore.Hosting.Tests", environment);
-            var startup = StartupLoader.LoadMethods(services, type, environment);
-
-            var app = new ApplicationBuilder(services);
-            app.ApplicationServices = startup.ConfigureServicesDelegate(serviceCollection);
-            startup.ConfigureDelegate(app);
-
-            var options = app.ApplicationServices.GetRequiredService<IOptions<FakeOptions>>().Value;
-            Assert.NotNull(options);
-            Assert.True(options.Configured);
-            Assert.Equal("CaseInsensitive", options.Environment);
+            Assert.Equal("ConfigureCaseInsensitiveServices", options.Environment);
         }
 
         [Fact]
