@@ -50,7 +50,7 @@ namespace Microsoft.AspNetCore.Hosting
         public static IWebHostBuilder UseStartup(this IWebHostBuilder hostBuilder, Type startupType)
         {
             var startupAssemblyName = startupType.GetTypeInfo().Assembly.GetName().Name;
-
+            //if (hostBuilder.)
             return hostBuilder
                 .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
                 .ConfigureServices(services =>

@@ -42,6 +42,19 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
+        public void Build_honors_UseStartup_with_string2()
+        {
+            var builder = CreateWebHostBuilder().UseServer(new TestServer());
+            builder = builder.UseStartup<StartupNoServices>();
+            builder = builder.UseStartup<StartupNoServices>();
+            using (var host = (WebHost)builder.Build())
+            {
+                Assert.Equal("MyStartupAssembly", host.Options.ApplicationName);
+                Assert.Equal("MyStartupAssembly", host.Options.StartupAssembly);
+            }
+        }
+
+        [Fact]
         public async Task StartupMissing_Fallback()
         {
             var builder = CreateWebHostBuilder();
