@@ -91,7 +91,7 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
-        public void PathBaseTemp()
+        public async Task PathBaseTemp()
         {
             var data = new Dictionary<string, string>
             {
@@ -102,7 +102,8 @@ namespace Microsoft.AspNetCore.Hosting
 
             using (var host = CreateBuilder(config).UseFakeServer().Build())
             {
-                host.Run();
+                await host.StartAsync();
+                // TODO
             }
         }
 

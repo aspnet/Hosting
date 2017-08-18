@@ -231,6 +231,7 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddSingleton(_hostingEnvironment);
             services.AddSingleton(_context);
 
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(_hostingEnvironment.ContentRootPath)
                 .AddInMemoryCollection(_config.AsEnumerable());
@@ -255,6 +256,7 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddLogging();
 
             // Conjure up a RequestServices
+
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
             services.AddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
 

@@ -178,13 +178,13 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
                 var builder = builderFactory.CreateBuilder(Server.Features);
                 builder.ApplicationServices = _applicationServices;
+                var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
+                Action<IApplicationBuilder> configure = _startup.Configure;
 
                 if (!string.IsNullOrEmpty(_options.UsePathBase))
                 {
                     builder.UsePathBase(_options.UsePathBase);
                 }
-                var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
-                Action<IApplicationBuilder> configure = _startup.Configure;
                 foreach (var filter in startupFilters.Reverse())
                 {
                     configure = filter.Configure(configure);
