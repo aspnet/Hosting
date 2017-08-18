@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Testing.xunit;
 using Microsoft.Extensions.DependencyInjection;
@@ -173,7 +172,7 @@ namespace Microsoft.AspNetCore.TestHost
         public async Task WebSocketWorks()
         {
             // Arrange
-            // This logger will attempt to access information from HttpRequest once the HttpContext is createds
+            // This logger will attempt to access information from HttpRequest once the HttpContext is created
             var logger = new VerifierLogger();
             RequestDelegate appDelegate = async ctx =>
             {
@@ -240,11 +239,10 @@ namespace Microsoft.AspNetCore.TestHost
         }
 
         [ConditionalFact]
-        [FrameworkSkipCondition(RuntimeFrameworks.Mono, SkipReason = "Hangs randomly (issue #507)")]
         public async Task WebSocketAcceptThrowsWhenCancelled()
         {
             // Arrange
-            // This logger will attempt to access information from HttpRequest once the HttpContext is createds
+            // This logger will attempt to access information from HttpRequest once the HttpContext is created
             var logger = new VerifierLogger();
             RequestDelegate appDelegate = async ctx =>
             {
