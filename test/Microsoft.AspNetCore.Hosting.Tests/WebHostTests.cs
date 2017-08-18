@@ -104,6 +104,7 @@ namespace Microsoft.AspNetCore.Hosting
             {
                 await host.StartAsync();
                 // TODO
+                host.Run();
             }
         }
 

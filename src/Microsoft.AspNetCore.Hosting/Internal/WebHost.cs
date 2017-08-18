@@ -178,6 +178,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
                 var builder = builderFactory.CreateBuilder(Server.Features);
                 builder.ApplicationServices = _applicationServices;
+
                 var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
                 Action<IApplicationBuilder> configure = _startup.Configure;
 
