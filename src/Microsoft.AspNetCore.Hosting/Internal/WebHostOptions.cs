@@ -25,7 +25,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             if (string.IsNullOrEmpty(startupAssembly))
             {
                 // Fall back to entry assembly name if startup assembly hasn't been set.
-                startupAssembly = Assembly.GetEntryAssembly().GetName().Name;
+                startupAssembly = Assembly.GetEntryAssembly()?.GetName().Name;
             }
 
             var applicationName = configuration[WebHostDefaults.ApplicationKey];

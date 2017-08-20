@@ -632,7 +632,7 @@ namespace Microsoft.AspNetCore.Hosting
                 .Build())
             {
                 var hostingEnv = host.Services.GetService<IHostingEnvironment>();
-                Assert.Equal(Assembly.GetEntryAssembly().GetName().Name, hostingEnv.ApplicationName);
+                Assert.Equal(Assembly.GetEntryAssembly()?.GetName().Name, hostingEnv.ApplicationName);
             }
         }
 

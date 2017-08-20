@@ -15,10 +15,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 throw new ArgumentNullException(nameof(options));
             }
-            if (string.IsNullOrEmpty(applicationName))
-            {
-                throw new ArgumentException("A valid non-empty application name must be provided.", nameof(applicationName));
-            }
             if (string.IsNullOrEmpty(contentRootPath))
             {
                 throw new ArgumentException("A valid non-empty content root must be provided.", nameof(contentRootPath));
