@@ -30,7 +30,7 @@ namespace Microsoft.AspNetCore.Hosting
             var startupAssemblyName = configureApp.GetMethodInfo().DeclaringType.GetTypeInfo().Assembly.GetName().Name;
 
             return hostBuilder
-                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
+                .UseSetting(WebHostDefaults.StartupAssemblyKey, startupAssemblyName)
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IStartup>(sp =>
@@ -52,7 +52,7 @@ namespace Microsoft.AspNetCore.Hosting
             var startupAssemblyName = startupType.GetTypeInfo().Assembly.GetName().Name;
 
             return hostBuilder
-                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
+                .UseSetting(WebHostDefaults.StartupAssemblyKey, startupAssemblyName)
                 .ConfigureServices(services =>
                 {
                     if (typeof(IStartup).GetTypeInfo().IsAssignableFrom(startupType.GetTypeInfo()))

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
@@ -19,8 +20,25 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            ApplicationName = configuration[WebHostDefaults.ApplicationKey];
-            StartupAssembly = configuration[WebHostDefaults.StartupAssemblyKey];
+            var startupAssembly = configuration[WebHostDefaults.StartupAssemblyKey];
+
+            if (string.IsNullOrEmpty(startupAssembly))
+            {
+                // Fall back to entry assembly name if startup assembly hasn't been set.
+                startupAssembly = Assembly.GetEntryAssembly()?.GetName().Name;
+            }
+
+            var applicationName = configuration[WebHostDefaults.ApplicationKey];
+
+            if (string.IsNullOrEmpty(applicationName))
+            {
+                // Fall back to name of Startup assembly if application name hasn't been overridden.
+                applicationName = startupAssembly;
+            }
+
+            ApplicationName = applicationName;
+            StartupAssembly = startupAssembly;
+            FindStartupType = WebHostUtilities.ParseBool(configuration, WebHostDefaults.FindStartupTypeKey);
             DetailedErrors = WebHostUtilities.ParseBool(configuration, WebHostDefaults.DetailedErrorsKey);
             CaptureStartupErrors = WebHostUtilities.ParseBool(configuration, WebHostDefaults.CaptureStartupErrorsKey);
             Environment = configuration[WebHostDefaults.EnvironmentKey];
@@ -28,7 +46,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             ContentRootPath = configuration[WebHostDefaults.ContentRootKey];
             PreventHostingStartup = WebHostUtilities.ParseBool(configuration, WebHostDefaults.PreventHostingStartupKey);
             // Search the primary assembly and configured assemblies.
-            HostingStartupAssemblies = $"{ApplicationName};{configuration[WebHostDefaults.HostingStartupAssembliesKey]}"
+            HostingStartupAssemblies = $"{StartupAssembly};{configuration[WebHostDefaults.HostingStartupAssembliesKey]}"
                 .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
 
             var timeout = configuration[WebHostDefaults.ShutdownTimeoutKey];
@@ -40,6 +58,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         }
 
         public string ApplicationName { get; set; }
+
+        public bool FindStartupType { get; set; }
 
         public bool PreventHostingStartup { get; set; }
 

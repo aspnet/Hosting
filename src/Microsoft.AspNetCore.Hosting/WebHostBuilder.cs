@@ -261,7 +261,7 @@ namespace Microsoft.AspNetCore.Hosting
             // Ensure object pooling is available everywhere.
             services.AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
 
-            if (!string.IsNullOrEmpty(_options.StartupAssembly))
+            if (_options.FindStartupType)
             {
                 try
                 {

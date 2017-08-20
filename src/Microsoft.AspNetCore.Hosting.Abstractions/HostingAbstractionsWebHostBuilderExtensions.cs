@@ -4,6 +4,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.Extensions.Configuration;
@@ -49,17 +50,65 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
         /// <param name="startupAssemblyName">The name of the assembly containing the startup type.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        [Obsolete("This method is obsolete and will be removed in a future version. Use UseStartupAssembly instead.")]
         public static IWebHostBuilder UseStartup(this IWebHostBuilder hostBuilder, string startupAssemblyName)
+        {
+            return hostBuilder.UseStartupAssembly(startupAssemblyName);
+        }
+
+        /// <summary>
+        /// Specify the assembly containing the startup type to be used by the web host.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
+        /// <param name="assembly">The assembly containing the startup type.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder UseStartupAssembly(this IWebHostBuilder hostBuilder, Assembly assembly)
+        {
+            if (assembly == null)
+            {
+                throw new ArgumentNullException(nameof(assembly));
+            }
+
+            return hostBuilder.UseStartupAssembly(assembly.GetName().Name);
+        }
+
+        /// <summary>
+        /// Specify the assembly containing the startup type to be used by the web host.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
+        /// <param name="startupAssemblyName">The name of the assembly containing the startup type.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder UseStartupAssembly(this IWebHostBuilder hostBuilder, string startupAssemblyName)
         {
             if (startupAssemblyName == null)
             {
                 throw new ArgumentNullException(nameof(startupAssemblyName));
             }
 
-
             return hostBuilder
-                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
+                .UseSetting(WebHostDefaults.FindStartupTypeKey, "true")
                 .UseSetting(WebHostDefaults.StartupAssemblyKey, startupAssemblyName);
+        }
+
+        /// <summary>
+        /// Specify the application name. This can be retrieved from <see cref="IHostingEnvironment.ApplicationName"/>.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
+        /// <param name="applicationName">The name of the application.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder UseApplicationName(this IWebHostBuilder hostBuilder, string applicationName)
+        {
+            if (applicationName == null)
+            {
+                throw new ArgumentNullException(nameof(applicationName));
+            }
+
+            if (applicationName.Length == 0)
+            {
+                throw new ArgumentException("Application name must not be empty.", nameof(applicationName));
+            }
+
+            return hostBuilder.UseSetting(WebHostDefaults.ApplicationKey, applicationName);
         }
 
         /// <summary>
