@@ -90,6 +90,27 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         /// <summary>
+        /// Specify the application name. This can be retrieved from <see cref="IHostingEnvironment.ApplicationName"/>.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
+        /// <param name="applicationName">The name of the application.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder UseApplicationName(this IWebHostBuilder hostBuilder, string applicationName)
+        {
+            if (applicationName == null)
+            {
+                throw new ArgumentNullException(nameof(applicationName));
+            }
+
+            if (applicationName.Length == 0)
+            {
+                throw new ArgumentException("Application name must not be empty.", nameof(applicationName));
+            }
+
+            return hostBuilder.UseSetting(WebHostDefaults.ApplicationKey, applicationName);
+        }
+
+        /// <summary>
         /// Specify the server to be used by the web host.
         /// </summary>
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
