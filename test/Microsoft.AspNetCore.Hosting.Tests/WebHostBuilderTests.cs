@@ -610,6 +610,33 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
+        public void CustomApplicationName()
+        {
+            using (var host = new WebHostBuilder()
+                .UseServer(new TestServer())
+                .UseApplicationName("Test Application")
+                .UseStartup<StartupNoServices>()
+                .Build())
+            {
+                var hostingEnv = host.Services.GetService<IHostingEnvironment>();
+                Assert.Equal("Test Application", hostingEnv.ApplicationName);
+            }
+        }
+
+        [Fact]
+        public void DefaultApplicationNameWithInjectedIStartup()
+        {
+            using (var host = new WebHostBuilder()
+                .UseServer(new TestServer())
+                .ConfigureServices(s => s.AddSingleton<IStartup, StartupNoServices>())
+                .Build())
+            {
+                var hostingEnv = host.Services.GetService<IHostingEnvironment>();
+                Assert.Equal(Assembly.GetEntryAssembly().GetName().Name, hostingEnv.ApplicationName);
+            }
+        }
+
+        [Fact]
         public void DefaultApplicationNameWithUseStartupOfType()
         {
             var builder = new ConfigurationBuilder();
