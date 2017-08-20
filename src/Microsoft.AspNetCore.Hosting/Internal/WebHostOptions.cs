@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
@@ -19,13 +20,19 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            var applicationName = configuration[WebHostDefaults.ApplicationKey];
             var startupAssembly = configuration[WebHostDefaults.StartupAssemblyKey];
+
+            if (string.IsNullOrEmpty(startupAssembly))
+            {
+                // Fall back to entry assembly name if startup assembly hasn't been set.
+                startupAssembly = Assembly.GetEntryAssembly().GetName().Name;
+            }
+
+            var applicationName = configuration[WebHostDefaults.ApplicationKey];
 
             if (string.IsNullOrEmpty(applicationName))
             {
-                // Fall back to name of Startup assembly if
-                // application name hasn't been overridden.
+                // Fall back to name of Startup assembly if application name hasn't been overridden.
                 applicationName = startupAssembly;
             }
 

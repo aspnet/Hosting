@@ -576,11 +576,9 @@ namespace Microsoft.AspNetCore.Hosting
             var host = new WebHostBuilder()
                 .UseServer(new TestServer());
 
-            var ex = Assert.Throws<ArgumentException>(() => host.Build());
+            var ex = Assert.Throws<InvalidOperationException>(() => host.Build());
 
-            // ArgumentException adds "Parameter name" to the message and this is the cleanest way to make sure we get the right
-            // expected string
-            Assert.Equal(new ArgumentException("A valid non-empty application name must be provided.", "applicationName").Message , ex.Message);
+            Assert.Equal("No service for type 'Microsoft.AspNetCore.Hosting.IStartup' has been registered.", ex.Message);
         }
 
         [Fact]
