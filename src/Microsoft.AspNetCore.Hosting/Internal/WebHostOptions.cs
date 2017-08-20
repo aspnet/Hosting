@@ -19,8 +19,18 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            ApplicationName = configuration[WebHostDefaults.ApplicationKey];
-            StartupAssembly = configuration[WebHostDefaults.StartupAssemblyKey];
+            var applicationName = configuration[WebHostDefaults.ApplicationKey];
+            var startupAssembly = configuration[WebHostDefaults.StartupAssemblyKey];
+
+            if (string.IsNullOrEmpty(applicationName))
+            {
+                // Fall back to name of Startup assembly if
+                // application name hasn't been overridden.
+                applicationName = startupAssembly;
+            }
+
+            ApplicationName = applicationName;
+            StartupAssembly = startupAssembly;
             DetailedErrors = WebHostUtilities.ParseBool(configuration, WebHostDefaults.DetailedErrorsKey);
             CaptureStartupErrors = WebHostUtilities.ParseBool(configuration, WebHostDefaults.CaptureStartupErrorsKey);
             Environment = configuration[WebHostDefaults.EnvironmentKey];
