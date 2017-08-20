@@ -58,7 +58,7 @@ namespace Microsoft.AspNetCore.Hosting
 
 
             return hostBuilder
-                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
+                .UseSetting(WebHostDefaults.FindStartupTypeKey, "true")
                 .UseSetting(WebHostDefaults.StartupAssemblyKey, startupAssemblyName);
         }
 

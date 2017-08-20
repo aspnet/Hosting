@@ -31,6 +31,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             ApplicationName = applicationName;
             StartupAssembly = startupAssembly;
+            FindStartupType = WebHostUtilities.ParseBool(configuration, WebHostDefaults.FindStartupTypeKey);
             DetailedErrors = WebHostUtilities.ParseBool(configuration, WebHostDefaults.DetailedErrorsKey);
             CaptureStartupErrors = WebHostUtilities.ParseBool(configuration, WebHostDefaults.CaptureStartupErrorsKey);
             Environment = configuration[WebHostDefaults.EnvironmentKey];
@@ -50,6 +51,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         }
 
         public string ApplicationName { get; set; }
+
+        public bool FindStartupType { get; set; }
 
         public bool PreventHostingStartup { get; set; }
 
