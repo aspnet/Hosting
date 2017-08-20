@@ -37,7 +37,7 @@ namespace Microsoft.AspNetCore.Hosting
         [Fact]
         public void UseStartupThrowsWithNull()
         {
-            Assert.Throws<ArgumentNullException>(() => CreateBuilder().UseStartup((string)null));
+            Assert.Throws<ArgumentNullException>(() => CreateBuilder().UseStartupAssembly((string)null));
         }
 
         [Fact]
@@ -144,7 +144,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             using (var host = CreateBuilder()
                 .UseFakeServer()
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Start())
             {
                 var server = (FakeServer)host.Services.GetRequiredService<IServer>();
@@ -163,7 +163,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             using (var host = CreateBuilder()
                 .UseFakeServer()
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 var lifetime = host.Services.GetRequiredService<IApplicationLifetime>();
@@ -216,7 +216,7 @@ namespace Microsoft.AspNetCore.Hosting
                 {
                     services.AddSingleton(server.Object);
                 })
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 await host.StartAsync();
@@ -255,7 +255,7 @@ namespace Microsoft.AspNetCore.Hosting
                 {
                     services.AddSingleton(server.Object);
                 })
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 await host.StartAsync();
@@ -291,7 +291,7 @@ namespace Microsoft.AspNetCore.Hosting
                 {
                     services.AddSingleton(server.Object);
                 })
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 await host.StartAsync();
@@ -310,7 +310,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             using (var host = CreateBuilder()
                 .UseFakeServer()
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 var lifetime = host.Services.GetRequiredService<IApplicationLifetime>();
@@ -377,7 +377,7 @@ namespace Microsoft.AspNetCore.Hosting
                     s.AddTransient<IFakeService, FakeService>();
                     s.AddSingleton<IFakeSingletonService, FakeService>();
                 })
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 await host.StartAsync();
@@ -683,7 +683,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             using (var host = CreateBuilder()
                 .UseFakeServer()
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .UseEnvironment("WithHostingEnvironment")
                 .Build())
             {
@@ -702,7 +702,7 @@ namespace Microsoft.AspNetCore.Hosting
                     services.AddTransient<IStartup, TestStartup>();
                 })
                 .UseFakeServer()
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests");
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests");
 
             Assert.Throws<NotImplementedException>(() => builder.Build());
         }
@@ -947,7 +947,7 @@ namespace Microsoft.AspNetCore.Hosting
 
         private IWebHostBuilder CreateBuilder(IConfiguration config = null)
         {
-            return new WebHostBuilder().UseConfiguration(config ?? new ConfigurationBuilder().Build()).UseStartup("Microsoft.AspNetCore.Hosting.Tests");
+            return new WebHostBuilder().UseConfiguration(config ?? new ConfigurationBuilder().Build()).UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests");
         }
 
         private static bool[] RegisterCallbacksThatThrow(IServiceCollection services)

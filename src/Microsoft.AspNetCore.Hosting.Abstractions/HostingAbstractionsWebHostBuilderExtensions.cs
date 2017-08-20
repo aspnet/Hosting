@@ -50,6 +50,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="hostBuilder">The <see cref="IWebHostBuilder"/> to configure.</param>
         /// <param name="startupAssemblyName">The name of the assembly containing the startup type.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        [Obsolete("This method is obsolete and will be removed in a future version. Use UseStartupAssembly instead.")]
         public static IWebHostBuilder UseStartup(this IWebHostBuilder hostBuilder, string startupAssemblyName)
         {
             return hostBuilder.UseStartupAssembly(startupAssemblyName);

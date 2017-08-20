@@ -31,7 +31,7 @@ namespace ServerComparison.TestSites
                     factory.AddConsole();
                     factory.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Warning);
                 })
-                .UseStartup("Microsoft.AspNetCore.Hosting.TestSites");
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.TestSites");
 
             if (config["STARTMECHANIC"] == "Run")
             {

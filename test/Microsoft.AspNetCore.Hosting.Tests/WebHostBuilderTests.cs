@@ -34,7 +34,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             var builder = CreateWebHostBuilder().UseServer(new TestServer());
 
-            using (var host = (WebHost)builder.UseStartup("MyStartupAssembly").Build())
+            using (var host = (WebHost)builder.UseStartupAssembly("MyStartupAssembly").Build())
             {
                 Assert.Equal("MyStartupAssembly", host.Options.ApplicationName);
                 Assert.Equal("MyStartupAssembly", host.Options.StartupAssembly);
@@ -46,7 +46,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             var builder = CreateWebHostBuilder();
             var server = new TestServer();
-            using (var host = builder.UseServer(server).UseStartup("MissingStartupAssembly").Build())
+            using (var host = builder.UseServer(server).UseStartupAssembly("MissingStartupAssembly").Build())
             {
                 await host.StartAsync();
                 await AssertResponseContains(server.RequestDelegate, "MissingStartupAssembly");
@@ -492,7 +492,7 @@ namespace Microsoft.AspNetCore.Hosting
                 .UseConfiguration(config)
                 .UseEnvironment(expected)
                 .UseServer(new TestServer())
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 Assert.Equal(expected, host.Services.GetService<IHostingEnvironment>().EnvironmentName);
@@ -515,7 +515,7 @@ namespace Microsoft.AspNetCore.Hosting
                 .UseConfiguration(config)
                 .UseEnvironment(expected)
                 .UseServer(new TestServer())
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build()) { }
         }
 
@@ -534,7 +534,7 @@ namespace Microsoft.AspNetCore.Hosting
                 .UseConfiguration(config)
                 .UseContentRoot("/")
                 .UseServer(new TestServer())
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 Assert.Equal("/", host.Services.GetService<IHostingEnvironment>().ContentRootPath);
@@ -547,7 +547,7 @@ namespace Microsoft.AspNetCore.Hosting
             using (var host = new WebHostBuilder()
                 .UseContentRoot("testroot")
                 .UseServer(new TestServer())
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 var basePath = host.Services.GetRequiredService<IHostingEnvironment>().ContentRootPath;
@@ -561,7 +561,7 @@ namespace Microsoft.AspNetCore.Hosting
         {
             using (var host = new WebHostBuilder()
                 .UseServer(new TestServer())
-                .UseStartup("Microsoft.AspNetCore.Hosting.Tests")
+                .UseStartupAssembly("Microsoft.AspNetCore.Hosting.Tests")
                 .Build())
             {
                 var appBase = AppContext.BaseDirectory;
@@ -589,7 +589,7 @@ namespace Microsoft.AspNetCore.Hosting
             var builder = new ConfigurationBuilder();
             using (var host = new WebHostBuilder()
                 .UseServer(new TestServer())
-                .UseStartup(typeof(Startup).Assembly.GetName().Name)
+                .UseStartupAssembly(typeof(Startup).Assembly.GetName().Name)
                 .Build())
             {
                 var hostingEnv = host.Services.GetService<IHostingEnvironment>();
