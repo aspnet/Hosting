@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder.Internal;
 using Microsoft.AspNetCore.Hosting.Fakes;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -868,34 +869,33 @@ namespace Microsoft.AspNetCore.Hosting
             }
         }
 
-        [Fact]
-        public async Task WebHost_PathBase()
+        [Theory]
+        [InlineData("/base", "", "/base/something/", "/base", "/something/")]
+        public async Task WebHost_UsePathBaseSpecifiesPathBase(string registeredPathBase, string pathBase, string requestPath, string expectedPathBase, string expectedPath)
         {
             // Arrange
-            HttpContext httpContext = null;
-            var requestDelegate = new RequestDelegate(innerHttpContext =>
-            {
-                httpContext = innerHttpContext;
-                return Task.FromResult(0);
-            });
             var data = new Dictionary<string, string>
             {
                 { "pathbase", "/test" }
             };
             var config = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
 
+            HttpContext requestContext = CreateRequest(pathBase, requestPath);
+            var builder = new WebHostBuilder().UseConfiguration(config).Build();
+            builder.Run(context =>
+            {
+                context.Items["test.Path"] = context.Request.Path;
+                context.Items["test.PathBase"] = context.Request.PathBase;
+                return Task.FromResult(0);
+            });
+            builder.Build().Invoke(requestContext).Wait();
 
-            using (var host = CreateBuilder(config).UseFakeServer().Configure(app =>
-            {
-                app.Run(requestDelegate);
-            }).Build())
-            {
-                // Act
-                await host.StartAsync();
-                // Assert
-                Assert.NotNull(httpContext);
-                Assert.Equal(new PathString("/test"), httpContext.Request.PathBase);
-            }
+            // Assert path and pathBase are split after middleware
+            Assert.Equal(expectedPath, ((PathString)requestContext.Items["test.Path"]).Value);
+            Assert.Equal(expectedPathBase, ((PathString)requestContext.Items["test.PathBase"]).Value);
+            // Assert path and pathBase are reset after request
+            Assert.Equal(pathBase, requestContext.Request.PathBase.Value);
+            Assert.Equal(requestPath, requestContext.Request.Path.Value);
         }
 
         [Fact]
@@ -942,6 +942,14 @@ namespace Microsoft.AspNetCore.Hosting
                 Assert.Equal(1, CountStartup.ConfigureCount);
                 Assert.Equal(1, CountStartup.ConfigureServicesCount);
             }
+        }
+
+        private static HttpContext CreateRequest(string pathBase, string requestPath)
+        {
+            HttpContext context = new DefaultHttpContext();
+            context.Request.PathBase = new PathString(pathBase);
+            context.Request.Path = new PathString(requestPath);
+            return context;
         }
 
         public class CountStartup
