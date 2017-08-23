@@ -42,19 +42,6 @@ namespace Microsoft.AspNetCore.Hosting
         }
 
         [Fact]
-        public void Build_honors_UseStartup_with_string2()
-        {
-            var builder = CreateWebHostBuilder().UseServer(new TestServer());
-            builder = builder.UseStartup<StartupNoServices>();
-            builder = builder.UseStartup<StartupNoServices>();
-            using (var host = (WebHost)builder.Build())
-            {
-                Assert.Equal("MyStartupAssembly", host.Options.ApplicationName);
-                Assert.Equal("MyStartupAssembly", host.Options.StartupAssembly);
-            }
-        }
-
-        [Fact]
         public async Task StartupMissing_Fallback()
         {
             var builder = CreateWebHostBuilder();
@@ -244,6 +231,36 @@ namespace Microsoft.AspNetCore.Hosting
             using (hostBuilder.Build())
             {
                 Assert.Equal(2, callCount);
+            }
+        }
+
+        [Fact]
+        public async Task MultipleStartupAssembliesSpecifiedOnlyAddAssemblyOnce()
+        {
+            var provider = new TestLoggerProvider();
+            var assemblyName = "Microsoft.AspNetCore.Hosting.Tests";
+            var data = new Dictionary<string, string>
+            {
+                { WebHostDefaults.ApplicationKey,  assemblyName },
+                { WebHostDefaults.HostingStartupAssembliesKey, assemblyName }
+            };
+            var config = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
+
+            var builder = CreateWebHostBuilder()
+                .UseConfiguration(config)
+                .ConfigureLogging(loggerFactory =>
+                {
+                    loggerFactory.AddProvider(provider);
+                })
+                .CaptureStartupErrors(true)
+                .UseServer(new TestServer());
+
+            using (var host = (WebHost)builder.Build())
+            {
+                await host.StartAsync();
+                var context = provider.Sink.Writes.FirstOrDefault(s => s.EventId.Id == LoggerEventIds.HostingStartupAssemblyException);
+                Assert.NotNull(context);
+                Assert.Equal(context.Exception.InnerException.Message, $"The assembly name: {assemblyName} was specified multiple times. Only adding once.");
             }
         }
 

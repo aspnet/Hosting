@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.Hosting
 {
@@ -32,7 +33,6 @@ namespace Microsoft.AspNetCore.Hosting
         private bool _webHostBuilt;
         private List<Action<WebHostBuilderContext, IConfigurationBuilder>> _configureAppConfigurationBuilderDelegates;
 
-        private IDictionary<string, string> assemblies;
         /// <summary>
         /// Initializes a new instance of the <see cref="WebHostBuilder"/> class.
         /// </summary>
@@ -41,7 +41,6 @@ namespace Microsoft.AspNetCore.Hosting
             _hostingEnvironment = new HostingEnvironment();
             _configureServicesDelegates = new List<Action<WebHostBuilderContext, IServiceCollection>>();
             _configureAppConfigurationBuilderDelegates = new List<Action<WebHostBuilderContext, IConfigurationBuilder>>();
-            assemblies = new Dictionary<string, string>();
 
             _config = new ConfigurationBuilder()
                 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
@@ -195,12 +194,18 @@ namespace Microsoft.AspNetCore.Hosting
             if (!_options.PreventHostingStartup)
             {
                 var exceptions = new List<Exception>();
+                var assemblies = new HashSet<StringSegment>(StringSegmentComparer.OrdinalIgnoreCase);
 
                 // Execute the hosting startup assemblies
                 foreach (var assemblyName in _options.HostingStartupAssemblies)
                 {
                     try
                     {
+                        if (assemblies.Contains(assemblyName))
+                        {
+                            throw new InvalidOperationException($"The assembly name: {assemblyName} was specified multiple times. Only adding once.");
+                        }
+                        assemblies.Add(assemblyName);
                         var assembly = Assembly.Load(new AssemblyName(assemblyName));
 
                         foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
