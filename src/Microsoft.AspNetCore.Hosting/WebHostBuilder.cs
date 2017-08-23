@@ -32,7 +32,7 @@ namespace Microsoft.AspNetCore.Hosting
         private bool _webHostBuilt;
         private List<Action<WebHostBuilderContext, IConfigurationBuilder>> _configureAppConfigurationBuilderDelegates;
 
-        private ISet<string> assemblies;
+        private IDictionary<string, string> assemblies;
         /// <summary>
         /// Initializes a new instance of the <see cref="WebHostBuilder"/> class.
         /// </summary>
@@ -41,7 +41,7 @@ namespace Microsoft.AspNetCore.Hosting
             _hostingEnvironment = new HostingEnvironment();
             _configureServicesDelegates = new List<Action<WebHostBuilderContext, IServiceCollection>>();
             _configureAppConfigurationBuilderDelegates = new List<Action<WebHostBuilderContext, IConfigurationBuilder>>();
-            assemblies = new HashSet<string>();
+            assemblies = new Dictionary<string, string>();
 
             _config = new ConfigurationBuilder()
                 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
@@ -201,12 +201,6 @@ namespace Microsoft.AspNetCore.Hosting
                 {
                     try
                     {
-                        if (assemblies.Contains(assemblyName))
-                        {
-                            // TODO print a warning
-                            continue;
-                        }
-                        assemblies.Add(assemblyName);
                         var assembly = Assembly.Load(new AssemblyName(assemblyName));
 
                         foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
