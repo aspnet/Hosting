@@ -591,7 +591,7 @@ namespace Microsoft.AspNetCore.Hosting
 
             using (var host = (WebHost)builder.Build())
             {
-                Assert.True(testSink.Writes.Any(w => w.Exception?.Message == "Startup exception"));
+                Assert.Contains("Startup exception", testSink.Writes.Select(w => w.Exception?.Message).Where(m => m != null));
             }
         }
 
@@ -604,7 +604,6 @@ namespace Microsoft.AspNetCore.Hosting
             var builder = CreateWebHostBuilder()
                 .CaptureStartupErrors(false)
                 .ConfigureServices(collection => collection.AddSingleton<ILoggerFactory>(factory))
-
                 .Configure(app =>
                 {
                     throw new InvalidOperationException("Startup exception");
@@ -613,7 +612,7 @@ namespace Microsoft.AspNetCore.Hosting
 
             Assert.Throws<InvalidOperationException>(() => builder.Build());
 
-            Assert.True(testSink.Writes.Any(w => w.Exception?.Message == "Startup exception"));
+            Assert.Contains("Startup exception", testSink.Writes.Select(w => w.Exception?.Message).Where(m => m != null));
         }
 
         private static void StaticConfigureMethod(IApplicationBuilder app)
