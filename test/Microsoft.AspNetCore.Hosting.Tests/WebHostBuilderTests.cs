@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +16,11 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+<<<<<<< HEAD
+=======
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Testing;
+>>>>>>> 3f7cb64... Always log startup exceptions
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
 using Xunit;
@@ -494,7 +500,126 @@ namespace Microsoft.AspNetCore.Hosting
             Assert.Equal("Microsoft.AspNetCore.Hosting.Tests", hostingEnv.ApplicationName);
         }
 
-        private static void StaticConfigureMethod(IApplicationBuilder app) 
+        [Fact]
+        public void Build_DoesNotAllowBuildingMuiltipleTimes()
+        {
+            var builder = CreateWebHostBuilder();
+            var server = new TestServer();
+            builder.UseServer(server)
+                .UseStartup<StartupNoServices>()
+                .Build();
+
+            var ex = Assert.Throws<InvalidOperationException>(() => builder.Build());
+
+            Assert.Equal("WebHostBuilder allows creation only of a single instance of WebHost", ex.Message);
+        }
+
+        [Fact]
+        public void Build_PassesSameAutoCreatedILoggerFactoryEverywhere()
+        {
+            var builder = CreateWebHostBuilder();
+            var server = new TestServer();
+            var host = builder.UseServer(server)
+                .UseStartup<StartupWithILoggerFactory>()
+                .Build();
+
+            var startup = host.Services.GetService<StartupWithILoggerFactory>();
+
+            Assert.Equal(startup.ConfigureLoggerFactory, startup.ConstructorLoggerFactory);
+        }
+
+        [Fact]
+        public void Build_PassesSamePassedILoggerFactoryEverywhere()
+        {
+            var factory = new LoggerFactory();
+            var builder = CreateWebHostBuilder();
+            var server = new TestServer();
+            var host = builder.UseServer(server)
+                .UseLoggerFactory(factory)
+                .UseStartup<StartupWithILoggerFactory>()
+                .Build();
+
+            var startup = host.Services.GetService<StartupWithILoggerFactory>();
+
+            Assert.Equal(factory, startup.ConfigureLoggerFactory);
+            Assert.Equal(factory, startup.ConstructorLoggerFactory);
+        }
+
+        [Fact]
+        public void Build_PassedILoggerFactoryNotDisposed()
+        {
+            var factory = new DisposableLoggerFactory();
+            var builder = CreateWebHostBuilder();
+            var server = new TestServer();
+
+            var host = builder.UseServer(server)
+                .UseLoggerFactory(factory)
+                .UseStartup<StartupWithILoggerFactory>()
+                .Build();
+
+            host.Dispose();
+
+            Assert.Equal(false, factory.Disposed);
+        }
+
+        [Fact]
+        public void Build_DoesNotOverrideILoggerFactorySetByConfigureServices()
+        {
+            var factory = new DisposableLoggerFactory();
+            var builder = CreateWebHostBuilder();
+            var server = new TestServer();
+
+            var host = builder.UseServer(server)
+                .ConfigureServices(collection => collection.AddSingleton<ILoggerFactory>(factory))
+                .UseStartup<StartupWithILoggerFactory>()
+                .Build();
+
+            var factoryFromHost = host.Services.GetService<ILoggerFactory>();
+            Assert.Equal(factory, factoryFromHost);
+        }
+
+        [Fact]
+        public void StartupErrorsAreLoggedIfCaptureStartupErrorsIsTrue()
+        {
+            var testSink = new TestSink();
+            var factory = new TestLoggerFactory(testSink, enabled: true);
+            var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(true)
+                .ConfigureServices(services => services.AddSingleton<ILoggerFactory>(factory))
+                .Configure(app =>
+                {
+                    throw new InvalidOperationException("Startup exception");
+                })
+                .UseServer(new TestServer());
+
+            using (var host = (WebHost)builder.Build())
+            {
+                Assert.True(testSink.Writes.Any(w => w.Exception?.Message == "Startup exception"));
+            }
+        }
+
+        [Fact]
+        public void StartupErrorsAreLoggedIfCaptureStartupErrorsIsFalse()
+        {
+            var testSink = new TestSink();
+            var factory = new TestLoggerFactory(testSink, enabled: true);
+
+            var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
+                .ConfigureServices(collection => collection.AddSingleton<ILoggerFactory>(factory))
+
+                .Configure(app =>
+                {
+                    throw new InvalidOperationException("Startup exception");
+                })
+                .UseServer(new TestServer());
+
+            Assert.Throws<InvalidOperationException>(() => builder.Build());
+
+            Assert.True(testSink.Writes.Any(w => w.Exception?.Message == "Startup exception"));
+        }
+
+        private static void StaticConfigureMethod(IApplicationBuilder app)
         { }
 
         private IWebHostBuilder CreateWebHostBuilder()
@@ -558,5 +683,27 @@ namespace Microsoft.AspNetCore.Hosting
         {
 
         }
+<<<<<<< HEAD
+=======
+
+        private class DisposableLoggerFactory : ILoggerFactory
+        {
+            public void Dispose()
+            {
+                Disposed = true;
+            }
+
+            public bool Disposed { get; set; }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            }
+
+            public void AddProvider(ILoggerProvider provider)
+            {
+            }
+        }
+>>>>>>> 3f7cb64... Always log startup exceptions
     }
 }
