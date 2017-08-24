@@ -154,7 +154,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
                 return builder.Build();
             }
-            catch (Exception ex) when (_options.CaptureStartupErrors)
+            catch (Exception ex)
             {
                 // EnsureApplicationServices may have failed due to a missing or throwing Startup class.
                 if (_applicationServices == null)
@@ -162,12 +162,17 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     _applicationServices = _applicationServiceCollection.BuildServiceProvider();
                 }
 
-                EnsureServer();
-
                 // Write errors to standard out so they can be retrieved when not in development mode.
                 Console.Out.WriteLine("Application startup exception: " + ex.ToString());
                 var logger = _applicationServices.GetRequiredService<ILogger<WebHost>>();
                 logger.ApplicationError(ex);
+
+                if (!_options.CaptureStartupErrors)
+                {
+                    throw;
+                }
+
+                EnsureServer();
 
                 // Generate an HTML error page.
                 var hostingEnv = _applicationServices.GetRequiredService<IHostingEnvironment>();
