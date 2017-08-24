@@ -20,6 +20,7 @@
     "Microsoft.AspNetCore.Testing": "1.1.1",
     "Microsoft.Extensions.Options": "1.1.2",
     "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
+    "Microsoft.Extensions.Logging.Testing": "1.1.1",
     "xunit": "2.2.0-*"
   },
   "frameworks": {
