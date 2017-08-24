@@ -27,7 +27,6 @@ namespace SampleStartups
                 // .UseSetting(WebHostDefaults.ApplicationKey, "SampleStartups")
                 // .Configure(_ => { })
                 .UseStartup<NormalStartup>()
-                .UseStartup<NormalStartup>()
                 .Build();
 
             host.Run();
