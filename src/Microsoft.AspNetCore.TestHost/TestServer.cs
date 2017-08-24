@@ -43,7 +43,7 @@ namespace Microsoft.AspNetCore.TestHost
             _hostInstance = host;
         }
 
-        public Uri BaseAddress { get; set; } = new Uri("http://localhost/");
+        public Uri BaseAddress { get; set; } = new Uri("http://127.0.0.1:80/");
 
         public IWebHost Host
         {
