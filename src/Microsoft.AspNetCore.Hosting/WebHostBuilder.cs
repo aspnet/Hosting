@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Microsoft.AspNetCore.Hosting.Builder;
@@ -194,18 +195,12 @@ namespace Microsoft.AspNetCore.Hosting
             if (!_options.PreventHostingStartup)
             {
                 var exceptions = new List<Exception>();
-                var assemblies = new HashSet<StringSegment>(StringSegmentComparer.OrdinalIgnoreCase);
 
                 // Execute the hosting startup assemblies
-                foreach (var assemblyName in _options.HostingStartupAssemblies)
+                foreach (var assemblyName in _options.HostingStartupAssemblies.Distinct(StringComparer.OrdinalIgnoreCase))
                 {
                     try
                     {
-                        if (assemblies.Contains(assemblyName))
-                        {
-                            throw new InvalidOperationException($"The assembly name: {assemblyName} was specified multiple times. Only adding once.");
-                        }
-                        assemblies.Add(assemblyName);
                         var assembly = Assembly.Load(new AssemblyName(assemblyName));
 
                         foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())

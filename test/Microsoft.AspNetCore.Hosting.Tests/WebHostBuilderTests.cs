@@ -238,7 +238,7 @@ namespace Microsoft.AspNetCore.Hosting
         public async Task MultipleStartupAssembliesSpecifiedOnlyAddAssemblyOnce()
         {
             var provider = new TestLoggerProvider();
-            var assemblyName = "Microsoft.AspNetCore.Hosting.Tests";
+            var assemblyName = "RandomName";
             var data = new Dictionary<string, string>
             {
                 { WebHostDefaults.ApplicationKey,  assemblyName },
@@ -247,20 +247,20 @@ namespace Microsoft.AspNetCore.Hosting
             var config = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
 
             var builder = CreateWebHostBuilder()
-                .UseConfiguration(config)
-                .ConfigureLogging(loggerFactory =>
-                {
-                    loggerFactory.AddProvider(provider);
-                })
-                .CaptureStartupErrors(true)
+                 .UseConfiguration(config)
+                 .ConfigureLogging((_, factory) =>
+                 {
+                     factory.AddProvider(provider);
+                 })
                 .UseServer(new TestServer());
 
+            // Verify that there was only one exception throw rather than two.
             using (var host = (WebHost)builder.Build())
             {
                 await host.StartAsync();
-                var context = provider.Sink.Writes.FirstOrDefault(s => s.EventId.Id == LoggerEventIds.HostingStartupAssemblyException);
+                var context = provider.Sink.Writes.Where(s => s.EventId.Id == LoggerEventIds.HostingStartupAssemblyException);
                 Assert.NotNull(context);
-                Assert.Equal(context.Exception.InnerException.Message, $"The assembly name: {assemblyName} was specified multiple times. Only adding once.");
+                Assert.Single(context);
             }
         }
 
