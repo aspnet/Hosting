@@ -20,7 +20,7 @@
     "Microsoft.AspNetCore.Owin": "1.0.3",
     "Microsoft.AspNetCore.Testing": "1.0.1",
     "Microsoft.Extensions.Options": "1.0.2",
-    "Microsoft.Extensions.Logging.Testing": "1.0.3",
+    "Microsoft.Extensions.Logging.Testing": "1.0.2",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
     "xunit": "2.1.0"
 

@@ -602,24 +602,5 @@ namespace Microsoft.AspNetCore.Hosting
         {
 
         }
-
-        private class DisposableLoggerFactory : ILoggerFactory
-        {
-            public void Dispose()
-            {
-                Disposed = true;
-            }
-
-            public bool Disposed { get; set; }
-
-            public ILogger CreateLogger(string categoryName)
-            {
-                return Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            }
-
-            public void AddProvider(ILoggerProvider provider)
-            {
-            }
-        }
     }
 }
