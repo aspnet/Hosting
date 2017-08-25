@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.PlatformAbstractions;
 using Xunit;
@@ -494,7 +496,47 @@ namespace Microsoft.AspNetCore.Hosting
             Assert.Equal("Microsoft.AspNetCore.Hosting.Tests", hostingEnv.ApplicationName);
         }
 
-        private static void StaticConfigureMethod(IApplicationBuilder app) 
+        [Fact]
+        public void StartupErrorsAreLoggedIfCaptureStartupErrorsIsTrue()
+        {
+            var testSink = new TestSink();
+            var factory = new TestLoggerFactory(testSink, enabled: true);
+            var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(true)
+                .ConfigureServices(services => services.AddSingleton<ILoggerFactory>(factory))
+                .Configure(app =>
+                {
+                    throw new InvalidOperationException("Startup exception");
+                })
+                .UseServer(new TestServer());
+
+            using (var host = (WebHost)builder.Build())
+            {
+                Assert.Contains("Startup exception", testSink.Writes.Select(w => w.Exception?.Message).Where(m => m != null));
+            }
+        }
+
+        [Fact]
+        public void StartupErrorsAreLoggedIfCaptureStartupErrorsIsFalse()
+        {
+            var testSink = new TestSink();
+            var factory = new TestLoggerFactory(testSink, enabled: true);
+
+            var builder = CreateWebHostBuilder()
+                .CaptureStartupErrors(false)
+                .ConfigureServices(collection => collection.AddSingleton<ILoggerFactory>(factory))
+                .Configure(app =>
+                {
+                    throw new InvalidOperationException("Startup exception");
+                })
+                .UseServer(new TestServer());
+
+            Assert.Throws<InvalidOperationException>(() => builder.Build());
+
+            Assert.Contains("Startup exception", testSink.Writes.Select(w => w.Exception?.Message).Where(m => m != null));
+        }
+
+        private static void StaticConfigureMethod(IApplicationBuilder app)
         { }
 
         private IWebHostBuilder CreateWebHostBuilder()
