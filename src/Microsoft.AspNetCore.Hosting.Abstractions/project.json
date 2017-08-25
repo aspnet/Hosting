@@ -1,5 +1,5 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "buildOptions": {
     "warningsAsErrors": true,
     "keyFile": "../../tools/Key.snk",
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.3",
-    "Microsoft.AspNetCore.Hosting.Server.Abstractions": "1.0.3",
+    "Microsoft.AspNetCore.Hosting.Server.Abstractions": "1.0.4",
     "Microsoft.Extensions.Configuration.Abstractions": "1.0.2",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.2",
     "Microsoft.Extensions.FileProviders.Abstractions": "1.0.1",
