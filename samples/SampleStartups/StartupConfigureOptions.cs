@@ -29,7 +29,7 @@ namespace SampleStartups
                 // Register transient IConfigureOptions
                 .ConfigureOptions<ConfigureOptions>()
                 // An instance will be registered as a singleton IConfigureOptions
-                .ConfigureOptions(new SingletonConfigure(new SomeState { Default = "Hi" })) // Transient ConfigureOptions
+                .ConfigureOptions(new SingletonConfigure(new SomeState { Default = "Hi" }))
                 .Build();
 
             host.Run();
