@@ -77,9 +77,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <typeparam name ="TStartup">The type containing the startup methods for the application.</typeparam>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseStartup<TStartup>(this IWebHostBuilder hostBuilder) where TStartup : class
-        {
-            return hostBuilder.UseStartup(typeof(TStartup));
-        }
+            => hostBuilder.UseStartup(typeof(TStartup));
 
         /// <summary>
         /// Configures the default service provider
@@ -88,9 +86,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="configure">A callback used to configure the <see cref="ServiceProviderOptions"/> for the default <see cref="IServiceProvider"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseDefaultServiceProvider(this IWebHostBuilder hostBuilder, Action<ServiceProviderOptions> configure)
-        {
-            return hostBuilder.UseDefaultServiceProvider((context, options) => configure(options));
-        }
+            => hostBuilder.UseDefaultServiceProvider((context, options) => configure(options));
 
         /// <summary>
         /// Configures the default service provider
@@ -99,14 +95,12 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="configure">A callback used to configure the <see cref="ServiceProviderOptions"/> for the default <see cref="IServiceProvider"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseDefaultServiceProvider(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ServiceProviderOptions> configure)
-        {
-            return hostBuilder.ConfigureServices((context, services) =>
+            => hostBuilder.ConfigureServices((context, services) =>
             {
                 var options = new ServiceProviderOptions();
                 configure(context, options);
                 services.Replace(ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(new DefaultServiceProviderFactory(options)));
             });
-        }
 
         /// <summary>
         /// Adds a delegate for configuring the <see cref="IConfigurationBuilder"/> that will construct an <see cref="IConfiguration"/>.
@@ -119,9 +113,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// The <see cref="IConfigurationBuilder"/> is pre-populated with the settings of the <see cref="IWebHostBuilder"/>.
         /// </remarks>
         public static IWebHostBuilder ConfigureAppConfiguration(this IWebHostBuilder hostBuilder, Action<IConfigurationBuilder> configureDelegate)
-        {
-            return hostBuilder.ConfigureAppConfiguration((context, builder) => configureDelegate(builder));
-        }
+            => hostBuilder.ConfigureAppConfiguration((context, builder) => configureDelegate(builder));
 
         /// <summary>
         /// Adds a delegate for configuring the provided <see cref="LoggerFactory"/>. This may be called multiple times.
@@ -130,9 +122,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="configureLogging">The delegate that configures the <see cref="ILoggingBuilder"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<ILoggingBuilder> configureLogging)
-        {
-            return hostBuilder.ConfigureServices(collection => collection.AddLogging(configureLogging));
-        }
+            => hostBuilder.ConfigureServices(collection => collection.AddLogging(configureLogging));
 
         /// <summary>
         /// Adds a delegate for configuring the provided <see cref="LoggerFactory"/>. This may be called multiple times.
@@ -141,8 +131,34 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="configureLogging">The delegate that configures the <see cref="LoggerFactory"/>.</param>
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ILoggingBuilder> configureLogging)
-        {
-            return hostBuilder.ConfigureServices((context, collection) => collection.AddLogging(builder => configureLogging(context, builder)));
-        }
+            => hostBuilder.ConfigureServices((context, collection) => collection.AddLogging(builder => configureLogging(context, builder)));
+
+        /// <summary>
+        /// Registers an object that will have all of its I[Post]ConfigureOptions registered.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder" /> to configure.</param>
+        /// <param name="configureOptionsInstance">Object that will have all of its I[Post]ConfigureOptions registered.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder ConfigureOptions(this IWebHostBuilder hostBuilder, object configureOptionsInstance)
+            => hostBuilder.ConfigureServices(services => services.ConfigureOptions(configureOptionsInstance));
+
+        /// <summary>
+        /// Registers a type that will have all of its I[Post]ConfigureOptions registered.
+        /// </summary>
+        /// <typeparam name="TConfigureOptions">The type that will have all of its I[Post]ConfigureOptions registered.</typeparam>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder" /> to configure.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder ConfigureOptions<TConfigureOptions>(this IWebHostBuilder hostBuilder) where TConfigureOptions : class
+            => hostBuilder.ConfigureServices(services => services.ConfigureOptions<TConfigureOptions>());
+
+        /// <summary>
+        /// Registers a type that will have all of its I[Post]ConfigureOptions registered.
+        /// </summary>
+        /// <param name="hostBuilder">The <see cref="IWebHostBuilder" /> to configure.</param>
+        /// <param name="configureOptionsType">The type that will have all of its I[Post]ConfigureOptions registered.</param>
+        /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+        public static IWebHostBuilder ConfigureOptions(this IWebHostBuilder hostBuilder, Type configureOptionsType)
+            => hostBuilder.ConfigureServices(services => services.ConfigureOptions(configureOptionsType));
+
     }
 }
