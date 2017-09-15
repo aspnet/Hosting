@@ -5,38 +5,22 @@ using Microsoft.Extensions.Hosting;
 
 namespace GenericHostSample
 {
-    public class MyServiceA : IHostedService
+    public class MyServiceA : BackgroundService
     {
-        private bool _stopping;
-        private Task _backgroundTask;
-
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine("MyServiceA is starting.");
-            _backgroundTask = BackgroundTask();
-            return Task.CompletedTask;
-        }
 
-        private async Task BackgroundTask()
-        {
-            while (!_stopping)
+            cancellationToken.Register(() => Console.WriteLine("MyServiceA is stopping."));
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromSeconds(5));
                 Console.WriteLine("MyServiceA is doing background work.");
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
 
             Console.WriteLine("MyServiceA background task is stopping.");
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
-        {
-            Console.WriteLine("MyServiceA is stopping.");
-            _stopping = true;
-            if (_backgroundTask != null)
-            {
-                // TODO: cancellation
-                await _backgroundTask;
-            }
         }
     }
 }
