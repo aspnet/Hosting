@@ -94,6 +94,7 @@ namespace Microsoft.Extensions.Hosting.Tests
             await Assert.ThrowsAsync<AggregateException>(() => service.StopAsync(cts.Token));
 
             Assert.Equal(2, service.TokenCalls);
+            Assert.True(service.ShutdownToken.IsCancellationRequested);
         }
 
         private class ThrowOnCancellationService : BackgroundService
