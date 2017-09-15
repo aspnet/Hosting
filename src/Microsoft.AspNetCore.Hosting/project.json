@@ -78,6 +78,6 @@
     }
   },
   "tools": {
-    "RazorPageGenerator": "1.1.2"
+    "RazorPageGenerator": "1.1.3"
   }
 }
