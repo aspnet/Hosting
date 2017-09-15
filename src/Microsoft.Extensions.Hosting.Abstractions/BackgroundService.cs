@@ -9,41 +9,53 @@ namespace Microsoft.Extensions.Hosting
     /// <summary>
     /// Base class for implementing a long running <see cref="IHostedService"/>.
     /// </summary>
-    public abstract class BackgroundService : IHostedService
+    public abstract class BackgroundService : IHostedService, IDisposable
     {
         private Task _executingTask;
-        private CancellationTokenSource _cts;
+        private CancellationTokenSource _executionCts;
+        private readonly CancellationTokenSource _startCts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _stopCts = new CancellationTokenSource();
 
         /// <summary>
         /// This method is called when the <see cref="IHostedService"/> starts. The implementation should return a task that represents
         /// the lifetime of the long running operation(s) being performed.
         /// </summary>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that fires when the <see cref="IHostedService"/> is stopped or cancelled.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that fires when the <see cref="IHostedService"/> is stopped.</param>
         /// <returns>A <see cref="Task"/> that represents the long running operations.</returns>
         protected abstract Task ExecuteAsync(CancellationToken cancellationToken);
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// A <see cref="CancellationToken"/> that represents the <see cref="IHostedService.StartAsync(CancellationToken)"/> call.
+        /// </summary>
+        public CancellationToken StartToken => _startCts.Token;
+
+        /// <summary>
+        /// A <see cref="CancellationToken"/> that repesents the <see cref="IHostedService.StopAsync(CancellationToken)"/> call.
+        /// </summary>
+        public CancellationToken StopToken => _stopCts.Token;
+
+        public virtual Task StartAsync(CancellationToken cancellationToken)
         {
-            // If the token is cancellable, create a linked token so we can trigger cancellation 
-            // on shutdown and based on the incoming token
-            _cts = cancellationToken.CanBeCanceled ?
-                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken) :
-                new CancellationTokenSource();
-
-            // Store the task we're executing
-            _executingTask = ExecuteAsync(_cts.Token);
-
-            // If the task is completed then return it, this will bubble cancellation and failure to the caller
-            if (_executingTask.IsFaulted)
+            using (cancellationToken.Register(_startCts.Cancel))
             {
-                return _executingTask;
-            }
+                // This token
+                _executionCts = new CancellationTokenSource();
 
-            // Otherwise it's running
-            return Task.CompletedTask;
+                // Store the task we're executing
+                _executingTask = ExecuteAsync(_executionCts.Token);
+
+                // If the task is completed then return it, this will bubble cancellation and failure to the caller
+                if (_executingTask.IsCompleted)
+                {
+                    return _executingTask;
+                }
+
+                // Otherwise it's running
+                return Task.CompletedTask;
+            }
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
             // Stop called without start
             if (_executingTask == null)
@@ -51,16 +63,26 @@ namespace Microsoft.Extensions.Hosting
                 return;
             }
 
-            try
+            using (cancellationToken.Register(_stopCts.Cancel))
             {
-                // Signal cancellation to the executing method
-                _cts.Cancel();
+                try
+                {
+                    // Signal cancellation to the executing method
+                    _executionCts.Cancel();
+                }
+                finally
+                {
+                    // Wait until the task completes or the stop token triggers
+                    await Task.WhenAny(_executingTask, Task.Delay(-1, cancellationToken));
+                }
             }
-            finally
-            {
-                // Wait until the task completes or the stop token triggers
-                await Task.WhenAny(_executingTask, Task.Delay(-1, cancellationToken));
-            }
+        }
+
+        public virtual void Dispose()
+        {
+            _startCts.Dispose();
+            _stopCts.Dispose();
+            _executionCts?.Dispose();
         }
     }
 }

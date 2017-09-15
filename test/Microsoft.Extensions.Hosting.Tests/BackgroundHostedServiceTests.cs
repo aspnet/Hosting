@@ -49,22 +49,6 @@ namespace Microsoft.Extensions.Hosting.Tests
         }
 
         [Fact]
-        public async Task StartYieldToken()
-        {
-            var tcs = new TaskCompletionSource<object>();
-            var cts = new CancellationTokenSource();
-            var service = new MyBackgroundService(tcs.Task);
-
-            var task = service.StartAsync(cts.Token);
-
-            cts.Cancel();
-
-            await task;
-
-            await Assert.ThrowsAsync<TaskCanceledException>(() => service.ExecuteTask);
-        }
-
-        [Fact]
         public async Task StopAsyncWithoutStartAsyncNoops()
         {
             var tcs = new TaskCompletionSource<object>();
