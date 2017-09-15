@@ -11,10 +11,11 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public abstract class BackgroundService : IHostedService, IDisposable
     {
+        private static Action<object> _cancelToken = CancelToken;
+
         private Task _executingTask;
         private CancellationTokenSource _executionCts;
-        private readonly CancellationTokenSource _startCts = new CancellationTokenSource();
-        private readonly CancellationTokenSource _stopCts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _shutdownCts = new CancellationTokenSource();
 
         /// <summary>
         /// This method is called when the <see cref="IHostedService"/> starts. The implementation should return a task that represents
@@ -25,18 +26,13 @@ namespace Microsoft.Extensions.Hosting
         protected abstract Task ExecuteAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// A <see cref="CancellationToken"/> that represents the <see cref="IHostedService.StartAsync(CancellationToken)"/> call.
+        /// A <see cref="CancellationToken"/> that repesents the ungraceful shutdown.
         /// </summary>
-        public CancellationToken StartToken => _startCts.Token;
-
-        /// <summary>
-        /// A <see cref="CancellationToken"/> that repesents the <see cref="IHostedService.StopAsync(CancellationToken)"/> call.
-        /// </summary>
-        public CancellationToken StopToken => _stopCts.Token;
+        public CancellationToken ShutdownToken => _shutdownCts.Token;
 
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
-            using (cancellationToken.Register(_startCts.Cancel))
+            using (cancellationToken.Register(_cancelToken, _shutdownCts))
             {
                 // This token
                 _executionCts = new CancellationTokenSource();
@@ -63,7 +59,7 @@ namespace Microsoft.Extensions.Hosting
                 return;
             }
 
-            using (cancellationToken.Register(_stopCts.Cancel))
+            using (cancellationToken.Register(_cancelToken, _shutdownCts))
             {
                 try
                 {
@@ -80,9 +76,10 @@ namespace Microsoft.Extensions.Hosting
 
         public virtual void Dispose()
         {
-            _startCts.Dispose();
-            _stopCts.Dispose();
+            _shutdownCts.Dispose();
             _executionCts?.Dispose();
         }
+
+        private static void CancelToken(object state) => ((CancellationTokenSource)state).Cancel();
     }
 }
