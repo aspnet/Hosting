@@ -7,13 +7,13 @@ namespace GenericHostSample
 {
     public class MyServiceA : BackgroundService
     {
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Console.WriteLine("MyServiceA is starting.");
 
-            cancellationToken.Register(() => Console.WriteLine("MyServiceA is stopping."));
+            stoppingToken.Register(() => Console.WriteLine("MyServiceA is stopping."));
 
-            while (!cancellationToken.IsCancellationRequested)
+            while (!stoppingToken.IsCancellationRequested)
             {
                 Console.WriteLine("MyServiceA is doing background work.");
 

@@ -94,22 +94,42 @@ namespace Microsoft.Extensions.Hosting.Tests
             await Assert.ThrowsAsync<AggregateException>(() => service.StopAsync(cts.Token));
 
             Assert.Equal(2, service.TokenCalls);
-            Assert.True(service.ShutdownToken.IsCancellationRequested);
+            Assert.True(service.CancelledToken.IsCancellationRequested);
+        }
+
+        [Fact]
+        public async Task StartAsyncThenDisposeTriggersCancelledToken()
+        {
+            var service = new WaitForCancelledTokenService();
+
+            await service.StartAsync(CancellationToken.None);
+
+            service.Dispose();
+
+            Assert.True(service.CancelledToken.IsCancellationRequested);
+        }
+
+        private class WaitForCancelledTokenService : BackgroundService
+        {
+            protected override Task ExecuteAsync(CancellationToken stoppingToken)
+            {
+                return Task.Delay(-1, CancelledToken);
+            }
         }
 
         private class ThrowOnCancellationService : BackgroundService
         {
             public int TokenCalls { get; set; }
 
-            protected override Task ExecuteAsync(CancellationToken cancellationToken)
+            protected override Task ExecuteAsync(CancellationToken stoppingToken)
             {
-                cancellationToken.Register(() =>
+                stoppingToken.Register(() =>
                 {
                     TokenCalls++;
                     throw new InvalidOperationException();
                 });
 
-                cancellationToken.Register(() =>
+                stoppingToken.Register(() =>
                 {
                     TokenCalls++;
                 });
@@ -120,7 +140,7 @@ namespace Microsoft.Extensions.Hosting.Tests
 
         private class IgnoreCancellationService : BackgroundService
         {
-            protected override Task ExecuteAsync(CancellationToken cancellationToken)
+            protected override Task ExecuteAsync(CancellationToken stoppingToken)
             {
                 return new TaskCompletionSource<object>().Task;
             }
@@ -137,15 +157,15 @@ namespace Microsoft.Extensions.Hosting.Tests
                 _task = task;
             }
 
-            protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+            protected override async Task ExecuteAsync(CancellationToken stoppingToken)
             {
-                ExecuteTask = ExecuteCore(cancellationToken);
+                ExecuteTask = ExecuteCore(stoppingToken);
                 await ExecuteTask;
             }
 
-            private async Task ExecuteCore(CancellationToken cancellationToken)
+            private async Task ExecuteCore(CancellationToken stoppingToken)
             {
-                var task = await Task.WhenAny(_task, Task.Delay(-1, cancellationToken));
+                var task = await Task.WhenAny(_task, Task.Delay(-1, stoppingToken));
 
                 await task;
             }
