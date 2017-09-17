@@ -36,6 +36,10 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         public CancellationToken CancelledToken { get; }
 
+        /// <summary>
+        /// Triggered when the application host is ready to start the service.
+        /// </summary>
+        /// <param name="cancellationToken">Indicates that the start process has been aborted.</param>
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             using (cancellationToken.Register(_cancelToken, _cancelledCts))
@@ -54,6 +58,10 @@ namespace Microsoft.Extensions.Hosting
             }
         }
 
+        /// <summary>
+        /// Triggered when the application host is performing a graceful shutdown.
+        /// </summary>
+        /// <param name="cancellationToken">Indicates that the shutdown process should no longer be graceful.</param>
         public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
             // Stop called without start
