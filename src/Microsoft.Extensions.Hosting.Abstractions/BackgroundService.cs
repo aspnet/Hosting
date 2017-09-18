@@ -70,8 +70,6 @@ namespace Microsoft.Extensions.Hosting
         public virtual void Dispose()
         {
             _stoppingCts.Cancel();
-
-            _stoppingCts.Dispose();
         }
     }
 }
