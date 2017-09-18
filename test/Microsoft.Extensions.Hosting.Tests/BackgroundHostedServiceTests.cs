@@ -110,7 +110,7 @@ namespace Microsoft.Extensions.Hosting.Tests
         {
             protected override Task ExecuteAsync(CancellationToken stoppingToken)
             {
-                return Task.Delay(-1, stoppingToken);
+                return Task.Delay(Timeout.Infinite, stoppingToken);
             }
         }
 
@@ -162,7 +162,7 @@ namespace Microsoft.Extensions.Hosting.Tests
 
             private async Task ExecuteCore(CancellationToken stoppingToken)
             {
-                var task = await Task.WhenAny(_task, Task.Delay(-1, stoppingToken));
+                var task = await Task.WhenAny(_task, Task.Delay(Timeout.Infinite, stoppingToken));
 
                 await task;
             }
