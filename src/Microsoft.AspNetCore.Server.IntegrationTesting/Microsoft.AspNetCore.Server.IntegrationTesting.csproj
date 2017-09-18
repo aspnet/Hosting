@@ -8,6 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>aspnetcore;testing</PackageTags>
     <EnableApiCheck>false</EnableApiCheck>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

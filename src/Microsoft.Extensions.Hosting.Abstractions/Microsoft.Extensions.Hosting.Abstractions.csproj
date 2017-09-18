@@ -8,6 +8,7 @@
     <PackageTags>hosting</PackageTags>
     <EnableApiCheck>false</EnableApiCheck>
     <RootNamespace>Microsoft.Extensions.Hosting</RootNamespace>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

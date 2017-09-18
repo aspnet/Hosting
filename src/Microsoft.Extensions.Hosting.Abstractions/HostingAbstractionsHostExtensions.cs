@@ -54,7 +54,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="host">The <see cref="IHost"/> to run.</param>
         /// <param name="token">The token to trigger shutdown.</param>
-        public static async Task RunAsync(this IHost host, CancellationToken token = default(CancellationToken))
+        public static async Task RunAsync(this IHost host, CancellationToken token = default)
         {
             using (host)
             {
@@ -69,7 +69,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="host">The running <see cref="IHost"/>.</param>
         /// <param name="token">The token to trigger shutdown.</param>
-        public static async Task WaitForShutdownAsync(this IHost host, CancellationToken token = default(CancellationToken))
+        public static async Task WaitForShutdownAsync(this IHost host, CancellationToken token = default)
         {
             var applicationLifetime = host.Services.GetService<IApplicationLifetime>();
 
