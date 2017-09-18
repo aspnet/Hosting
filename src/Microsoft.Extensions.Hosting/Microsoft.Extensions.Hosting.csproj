@@ -7,7 +7,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>hosting</PackageTags>
     <EnableApiCheck>false</EnableApiCheck>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
