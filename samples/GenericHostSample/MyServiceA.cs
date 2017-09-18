@@ -17,7 +17,7 @@ namespace GenericHostSample
             {
                 Console.WriteLine("MyServiceA is doing background work.");
 
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
 
             Console.WriteLine("MyServiceA background task is stopping.");

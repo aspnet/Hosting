@@ -12,16 +12,8 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public abstract class BackgroundService : IHostedService, IDisposable
     {
-        private static Action<object> _cancelToken = CancelToken;
-
         private Task _executingTask;
         private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
-        private readonly CancellationTokenSource _cancelledCts = new CancellationTokenSource();
-
-        public BackgroundService()
-        {
-            CancelledToken = _cancelledCts.Token;
-        }
 
         /// <summary>
         /// This method is called when the <see cref="IHostedService"/> starts. The implementation should return a task that represents
@@ -32,30 +24,22 @@ namespace Microsoft.Extensions.Hosting
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
         /// <summary>
-        /// Triggered if cancellation is triggered during <see cref="IHostedService.StartAsync(CancellationToken)"/> or <see cref="IHostedService.StopAsync(CancellationToken)"/>.
-        /// </summary>
-        public CancellationToken CancelledToken { get; }
-
-        /// <summary>
         /// Triggered when the application host is ready to start the service.
         /// </summary>
         /// <param name="cancellationToken">Indicates that the start process has been aborted.</param>
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
-            using (cancellationToken.Register(_cancelToken, _cancelledCts))
+            // Store the task we're executing
+            _executingTask = ExecuteAsync(_stoppingCts.Token);
+
+            // If the task is completed then return it, this will bubble cancellation and failure to the caller
+            if (_executingTask.IsCompleted)
             {
-                // Store the task we're executing
-                _executingTask = ExecuteAsync(_stoppingCts.Token);
-
-                // If the task is completed then return it, this will bubble cancellation and failure to the caller
-                if (_executingTask.IsCompleted)
-                {
-                    return _executingTask;
-                }
-
-                // Otherwise it's running
-                return Task.CompletedTask;
+                return _executingTask;
             }
+
+            // Otherwise it's running
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -70,30 +54,24 @@ namespace Microsoft.Extensions.Hosting
                 return;
             }
 
-            using (cancellationToken.Register(_cancelToken, _cancelledCts))
+            try
             {
-                try
-                {
-                    // Signal cancellation to the executing method
-                    _stoppingCts.Cancel();
-                }
-                finally
-                {
-                    // Wait until the task completes or the stop token triggers
-                    await Task.WhenAny(_executingTask, Task.Delay(-1, cancellationToken));
-                }
+                // Signal cancellation to the executing method
+                _stoppingCts.Cancel();
             }
+            finally
+            {
+                // Wait until the task completes or the stop token triggers
+                await Task.WhenAny(_executingTask, Task.Delay(-1, cancellationToken));
+            }
+
         }
 
         public virtual void Dispose()
         {
             _stoppingCts.Cancel();
-            _cancelledCts.Cancel();
 
             _stoppingCts.Dispose();
-            _cancelledCts.Dispose();
         }
-
-        private static void CancelToken(object state) => ((CancellationTokenSource)state).Cancel();
     }
 }

@@ -94,7 +94,6 @@ namespace Microsoft.Extensions.Hosting.Tests
             await Assert.ThrowsAsync<AggregateException>(() => service.StopAsync(cts.Token));
 
             Assert.Equal(2, service.TokenCalls);
-            Assert.True(service.CancelledToken.IsCancellationRequested);
         }
 
         [Fact]
@@ -105,15 +104,13 @@ namespace Microsoft.Extensions.Hosting.Tests
             await service.StartAsync(CancellationToken.None);
 
             service.Dispose();
-
-            Assert.True(service.CancelledToken.IsCancellationRequested);
         }
 
         private class WaitForCancelledTokenService : BackgroundService
         {
             protected override Task ExecuteAsync(CancellationToken stoppingToken)
             {
-                return Task.Delay(-1, CancelledToken);
+                return Task.Delay(-1, stoppingToken);
             }
         }
 
