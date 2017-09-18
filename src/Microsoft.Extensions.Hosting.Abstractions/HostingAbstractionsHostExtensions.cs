@@ -41,7 +41,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// Runs a web application and block the calling thread until host shutdown.
+        /// Runs an application and block the calling thread until host shutdown.
         /// </summary>
         /// <param name="host">The <see cref="IHost"/> to run.</param>
         public static void Run(this IHost host)
@@ -50,7 +50,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// Runs a web application and returns a Task that only completes when the token is triggered or shutdown is triggered.
+        /// Runs an application and returns a Task that only completes when the token is triggered or shutdown is triggered.
         /// </summary>
         /// <param name="host">The <see cref="IHost"/> to run.</param>
         /// <param name="token">The token to trigger shutdown.</param>
@@ -88,7 +88,7 @@ namespace Microsoft.Extensions.Hosting
 
             await waitForStop.Task;
 
-            // WebHost will use its default ShutdownTimeout if none is specified.
+            // Host will use its default ShutdownTimeout if none is specified.
             await host.StopAsync();
         }
     }
