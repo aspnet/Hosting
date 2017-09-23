@@ -12,8 +12,13 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public abstract class BackgroundService : IHostedService, IDisposable
     {
+        private static readonly Func<object, Task> _executeBackgroundTask = ExecuteBackgroundTaskAsync;
+
         private Task _executingTask;
         private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
+
+        // For testing purposes only
+        internal Task ExecutingTask => _executingTask;
 
         /// <summary>
         /// This method is called when the <see cref="IHostedService"/> starts. The implementation should return a task that represents
@@ -30,14 +35,11 @@ namespace Microsoft.Extensions.Hosting
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             // Store the task we're executing
-            _executingTask = ExecuteAsync(_stoppingCts.Token);
-
-            // If the task is completed then return it, this will bubble cancellation and failure to the caller
-            if (_executingTask.IsCompleted)
-            {
-                return _executingTask;
-            }
-
+            _executingTask = Task.Factory.StartNew(_executeBackgroundTask,
+                                                   this,
+                                                   cancellationToken,
+                                                   TaskCreationOptions.DenyChildAttach,
+                                                   TaskScheduler.Default).Unwrap();
             // Otherwise it's running
             return Task.CompletedTask;
         }
@@ -62,14 +64,34 @@ namespace Microsoft.Extensions.Hosting
             finally
             {
                 // Wait until the task completes or the stop token triggers
-                await Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite, cancellationToken));
-            }
+                var task = await Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite, cancellationToken));
 
+                // Bubble any exceptions thrown by the executing task
+                if (task == _executingTask)
+                {
+                    try
+                    {
+                        await _executingTask;
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Swallow task canclled exceptions since it might be by design that
+                        // the executing task is cancelled
+                    }
+                }
+            }
         }
 
         public virtual void Dispose()
         {
             _stoppingCts.Cancel();
+        }
+
+        private static Task ExecuteBackgroundTaskAsync(object state)
+        {
+            var service = (BackgroundService)state;
+
+            return service.ExecuteAsync(service._stoppingCts.Token);
         }
     }
 }
