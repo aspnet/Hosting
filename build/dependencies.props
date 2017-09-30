@@ -15,4 +15,6 @@
     <SerilogFileSinkVersion>3.2.0</SerilogFileSinkVersion>
     <SystemReflectionMetadataVersion>1.5.0</SystemReflectionMetadataVersion>
   </PropertyGroup>
+
+  <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>
