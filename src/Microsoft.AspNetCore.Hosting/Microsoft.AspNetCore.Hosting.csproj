@@ -32,8 +32,4 @@
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <DotNetCliToolReference Include="RazorPageGenerator" Version="$(RazorPageGeneratorPackageVersion)" />
-  </ItemGroup>
-
 </Project>
