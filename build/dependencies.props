@@ -1,11 +1,11 @@
 ﻿<Project>
   <PropertyGroup>
-    <InternalAspNetCoreSdkPackageVersion>2.0.2-beta-15522</InternalAspNetCoreSdkPackageVersion>
-    <MicrosoftAspNetCoreHttpAbstractionsPackageVersion>2.0.1-rtm-83</MicrosoftAspNetCoreHttpAbstractionsPackageVersion>
-    <MicrosoftAspNetCoreHttpExtensionsPackageVersion>2.0.1-rtm-83</MicrosoftAspNetCoreHttpExtensionsPackageVersion>
-    <MicrosoftAspNetCoreHttpFeaturesPackageVersion>2.0.1-rtm-83</MicrosoftAspNetCoreHttpFeaturesPackageVersion>
-    <MicrosoftAspNetCoreHttpPackageVersion>2.0.1-rtm-83</MicrosoftAspNetCoreHttpPackageVersion>
-    <MicrosoftAspNetCoreOwinPackageVersion>2.0.1-rtm-83</MicrosoftAspNetCoreOwinPackageVersion>
+    <InternalAspNetCoreSdkPackageVersion>2.0.2-rc1-15526</InternalAspNetCoreSdkPackageVersion>
+    <MicrosoftAspNetCoreHttpAbstractionsPackageVersion>2.0.1-rtm-105</MicrosoftAspNetCoreHttpAbstractionsPackageVersion>
+    <MicrosoftAspNetCoreHttpExtensionsPackageVersion>2.0.1-rtm-105</MicrosoftAspNetCoreHttpExtensionsPackageVersion>
+    <MicrosoftAspNetCoreHttpFeaturesPackageVersion>2.0.1-rtm-105</MicrosoftAspNetCoreHttpFeaturesPackageVersion>
+    <MicrosoftAspNetCoreHttpPackageVersion>2.0.1-rtm-105</MicrosoftAspNetCoreHttpPackageVersion>
+    <MicrosoftAspNetCoreOwinPackageVersion>2.0.1-rtm-105</MicrosoftAspNetCoreOwinPackageVersion>
     <MicrosoftAspNetCoreTestingPackageVersion>2.0.0</MicrosoftAspNetCoreTestingPackageVersion>
     <MicrosoftExtensionsConfigurationAbstractionsPackageVersion>2.0.0</MicrosoftExtensionsConfigurationAbstractionsPackageVersion>
     <MicrosoftExtensionsConfigurationBinderPackageVersion>2.0.0</MicrosoftExtensionsConfigurationBinderPackageVersion>
