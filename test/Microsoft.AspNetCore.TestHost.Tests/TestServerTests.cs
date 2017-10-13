@@ -43,6 +43,13 @@ namespace Microsoft.AspNetCore.TestHost
         }
 
         [Fact]
+        public void TestServerDefaultsToCorrectIpAndPort()
+        {
+            var host = new TestServer(new WebHostBuilder().Configure(app => { }));
+            Assert.Equal(new Uri("http://127.0.0.1:80"), host.BaseAddress);
+        }
+
+        [Fact]
         public async Task ServicesCanBeOverridenForTestingAsync()
         {
             var builder = new WebHostBuilder()
