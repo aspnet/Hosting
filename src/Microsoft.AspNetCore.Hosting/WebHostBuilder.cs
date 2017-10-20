@@ -263,7 +263,6 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddTransient<IHttpContextFactory, HttpContextFactory>();
             services.AddScoped<IMiddlewareFactory, MiddlewareFactory>();
             services.AddOptions();
-            services.AddLogging();
 
             // Conjure up a RequestServices
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
@@ -320,6 +319,8 @@ namespace Microsoft.AspNetCore.Hosting
             var listener = hostingServiceProvider.GetService<DiagnosticListener>();
             services.Replace(ServiceDescriptor.Singleton(typeof(DiagnosticListener), listener));
             services.Replace(ServiceDescriptor.Singleton(typeof(DiagnosticSource), listener));
+
+            services.AddLogging();
         }
 
         private string ResolveContentRootPath(string contentRootPath, string basePath)

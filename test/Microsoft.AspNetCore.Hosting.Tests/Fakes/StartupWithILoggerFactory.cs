@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ namespace Microsoft.AspNetCore.Hosting.Fakes
         public StartupWithILoggerFactory(ILoggerFactory constructorLoggerFactory)
         {
              ConstructorLoggerFactory = constructorLoggerFactory;
+            throw new InvalidOperationException();
         }
 
         public void ConfigureServices(IServiceCollection collection)

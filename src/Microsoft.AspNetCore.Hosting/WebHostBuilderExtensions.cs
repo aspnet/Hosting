@@ -131,7 +131,7 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<ILoggingBuilder> configureLogging)
         {
-            return hostBuilder.ConfigureServices(collection => collection.AddLogging(configureLogging));
+            return hostBuilder.ConfigureLogging((context, builder) => configureLogging(builder));
         }
 
         /// <summary>
@@ -142,7 +142,12 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder ConfigureLogging(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ILoggingBuilder> configureLogging)
         {
-            return hostBuilder.ConfigureServices((context, collection) => collection.AddLogging(builder => configureLogging(context, builder)));
+            return hostBuilder.ConfigureServices(
+                (context, collection) => collection.AddSingleton<IStartupConfigureServicesFilter>(
+                    new ConfigureAppServicesFilter(services =>
+                    {
+                        services.AddLogging(builder => configureLogging(context, builder));
+                    })));
         }
     }
 }

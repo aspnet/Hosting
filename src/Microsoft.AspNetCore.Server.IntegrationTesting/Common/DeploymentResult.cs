@@ -37,7 +37,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         public CancellationToken HostShutdownToken { get; }
 
         /// <summary>
-        /// An <see cref="HttpClient"/> with <see cref="LoggingHandler"/> configured and the <see cref="HttpClient.BaseAddress"/> set to the <see cref="ApplicationBaseUri"/>
+        /// An <see cref="HttpClient"/> with <see cref="LoggingHandler"/> configured and the <see cref="System.Net.Http.HttpClient.BaseAddress"/> set to the <see cref="ApplicationBaseUri"/>
         /// </summary>
         public HttpClient HttpClient { get; }
 
@@ -58,7 +58,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         }
 
         /// <summary>
-        /// Create an <see cref="HttpClient"/> with <see cref="LoggingHandler"/> configured and the <see cref="HttpClient.BaseAddress"/> set to the <see cref="ApplicationBaseUri"/>,
+        /// Create an <see cref="HttpClient"/> with <see cref="LoggingHandler"/> configured and the <see cref="System.Net.Http.HttpClient.BaseAddress"/> set to the <see cref="ApplicationBaseUri"/>,
         /// but using the provided <see cref="HttpMessageHandler"/> and the underlying handler.
         /// </summary>
         /// <param name="baseHandler"></param>

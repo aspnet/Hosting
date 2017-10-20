@@ -944,6 +944,21 @@ namespace Microsoft.AspNetCore.Hosting
             }
         }
 
+        [Fact]
+        public async Task InjectingLoggerIntoStartupFails()
+        {
+            var server = new TestServer();
+            var builder = CreateWebHostBuilder()
+                .UseStartup<StartupWithILoggerFactory>()
+                .UseServer(server);
+
+            using (var host = (WebHost) builder.Build())
+            {
+                await host.StartAsync();
+                await AssertResponseContains(server.RequestDelegate, "Unable to resolve service for type", "Microsoft.Extensions.Logging.ILoggerFactory");
+            }
+        }
+
         private static void StaticConfigureMethod(IApplicationBuilder app) { }
 
         private IWebHostBuilder CreateWebHostBuilder()
@@ -959,14 +974,17 @@ namespace Microsoft.AspNetCore.Hosting
             return new WebHostBuilder().UseConfiguration(config);
         }
 
-        private async Task AssertResponseContains(RequestDelegate app, string expectedText)
+        private async Task AssertResponseContains(RequestDelegate app, params string[] expectedTexts)
         {
             var httpContext = new DefaultHttpContext();
             httpContext.Response.Body = new MemoryStream();
             await app(httpContext);
             httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
             var bodyText = new StreamReader(httpContext.Response.Body).ReadToEnd();
-            Assert.Contains(expectedText, bodyText);
+            foreach (var expectedText in expectedTexts)
+            {
+                Assert.Contains(expectedText, bodyText);
+            }
         }
 
         private class TestServer : IServer
