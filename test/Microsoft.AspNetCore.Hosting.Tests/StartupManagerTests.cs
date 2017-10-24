@@ -138,6 +138,33 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             Assert.Equal("ConfigureContainerFilter After 2", after.Message);
         }
 
+        [Fact]
+        public void Configure_ConfigureContainerFilters_Runs()
+        {
+            using (var host = new WebHostBuilder()
+                .UseFakeServer()
+                .Configure(
+                    app =>
+                    {
+                        var applicationServices = app.ApplicationServices;
+                        var before = applicationServices.GetRequiredService<ServiceBefore>();
+                        var after = applicationServices.GetRequiredService<ServiceAfter>();
+
+                        Assert.Equal("StartupServicesFilter Before 1", before.Message);
+                        Assert.Equal("ConfigureContainerFilter After 2", after.Message);
+                    })
+                .ConfigureServices(
+                    serviceCollection =>
+                    {
+                        serviceCollection.AddSingleton<IStartupConfigureServicesFilter>(new TestStartupServicesFilter(1, overrideAfterService: false));
+                    })
+                .Build())
+            {
+                var hostingEnv = host.Services.GetService<IHostingEnvironment>();
+                Assert.Equal("Microsoft.AspNetCore.Hosting.Tests", hostingEnv.ApplicationName);
+            }
+        }
+
         public class ConfigureContainerStartupServicesFiltersStartup
         {
             public void ConfigureContainer(MyContainer services)
