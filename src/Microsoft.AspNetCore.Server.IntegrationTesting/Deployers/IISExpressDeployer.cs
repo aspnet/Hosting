@@ -148,21 +148,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                         {
                             Logger.LogTrace($"Config File Content:{Environment.NewLine}===START CONFIG==={Environment.NewLine}{{configContent}}{Environment.NewLine}===END CONFIG===", serverConfig);
                         }
-                        if (serverConfig.Contains("[HostingModel]"))
-                        {
-                            string hostingModel = "";
-                            // Explicitly check for hosting model as we may eventually add more hosting models. 
-                            if (DeploymentParameters.HostingModel == HostingModel.InProcess)
-                            {
-                                hostingModel = "inprocess";
-                            }
-                            else if (DeploymentParameters.HostingModel == HostingModel.OutOfProcess)
-                            {
-                                hostingModel = "outofprocess";
-                            }
 
-                            serverConfig.Replace("[HostingModel]", hostingModel);
-                        }
+                        serverConfig.Replace("[HostingModel]", DeploymentParameters.HostingModel.ToString());
 
                         File.WriteAllText(DeploymentParameters.ServerConfigLocation, serverConfig);
                     }
