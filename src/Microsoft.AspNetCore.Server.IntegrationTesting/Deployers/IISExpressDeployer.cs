@@ -150,9 +150,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                         }
                         if (serverConfig.Contains("[HostingModel]"))
                         {
-                            // If we ever add a third hosting model, we will default to replacing it, hence checking for 
-                            // in process and out of process explicitly.
                             string hostingModel = "";
+                            // Explicitly check for hosting model as we may eventually add more hosting models. 
                             if (DeploymentParameters.HostingModel == HostingModel.InProcess)
                             {
                                 hostingModel = "inprocess";
