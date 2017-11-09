@@ -148,9 +148,13 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                         {
                             Logger.LogTrace($"Config File Content:{Environment.NewLine}===START CONFIG==={Environment.NewLine}{{configContent}}{Environment.NewLine}===END CONFIG===", serverConfig);
                         }
-                        var hostingModel = DeploymentParameters.HostingModel.ToString();
-                        serverConfig.Replace("[HostingModel]", hostingModel);
-                        Logger.LogDebug("Writing HostingModel '{hostingModel} to ", hostingModel);
+
+                        if (serverConfig.Contains("[HostingModel]"))
+                        {
+                            var hostingModel = DeploymentParameters.HostingModel.ToString();
+                            serverConfig.Replace("[HostingModel]", hostingModel);
+                            Logger.LogDebug("Writing HostingModel '{hostingModel}' to config", hostingModel);
+                        }
 
                         File.WriteAllText(DeploymentParameters.ServerConfigLocation, serverConfig);
                     }
