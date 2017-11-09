@@ -148,6 +148,22 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                         {
                             Logger.LogTrace($"Config File Content:{Environment.NewLine}===START CONFIG==={Environment.NewLine}{{configContent}}{Environment.NewLine}===END CONFIG===", serverConfig);
                         }
+                        if (serverConfig.Contains("[HostingModel]"))
+                        {
+                            // If we ever add a third hosting model, we will default to replacing it, hence checking for 
+                            // in process and out of process explicitly.
+                            string hostingModel = "";
+                            if (DeploymentParameters.HostingModel == HostingModel.InProcess)
+                            {
+                                hostingModel = "inprocess";
+                            }
+                            else if (DeploymentParameters.HostingModel == HostingModel.OutOfProcess)
+                            {
+                                hostingModel = "outofprocess";
+                            }
+
+                            serverConfig.Replace("[HostingModel]", hostingModel);
+                        }
 
                         File.WriteAllText(DeploymentParameters.ServerConfigLocation, serverConfig);
                     }
