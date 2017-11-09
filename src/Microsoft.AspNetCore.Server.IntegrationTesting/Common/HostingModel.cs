@@ -5,7 +5,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 {
     public enum HostingModel
     {
-        InProcess,
-        OutOfProcess
+        OutOfProcess,
+        InProcess
     }
 }
