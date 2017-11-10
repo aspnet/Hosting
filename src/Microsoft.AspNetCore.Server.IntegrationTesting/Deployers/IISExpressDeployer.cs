@@ -142,18 +142,18 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                         DeploymentParameters.ServerConfigLocation = Path.GetTempFileName();
 
-                        Logger.LogDebug("Saving Config to {configPath}", DeploymentParameters.ServerConfigLocation);
-
-                        if (Logger.IsEnabled(LogLevel.Trace))
-                        {
-                            Logger.LogTrace($"Config File Content:{Environment.NewLine}===START CONFIG==={Environment.NewLine}{{configContent}}{Environment.NewLine}===END CONFIG===", serverConfig);
-                        }
-
                         if (serverConfig.Contains("[HostingModel]"))
                         {
                             var hostingModel = DeploymentParameters.HostingModel.ToString();
                             serverConfig.Replace("[HostingModel]", hostingModel);
                             Logger.LogDebug("Writing HostingModel '{hostingModel}' to config", hostingModel);
+                        }
+
+                        Logger.LogDebug("Saving Config to {configPath}", DeploymentParameters.ServerConfigLocation);
+
+                        if (Logger.IsEnabled(LogLevel.Trace))
+                        {
+                            Logger.LogTrace($"Config File Content:{Environment.NewLine}===START CONFIG==={Environment.NewLine}{{configContent}}{Environment.NewLine}===END CONFIG===", serverConfig);
                         }
 
                         File.WriteAllText(DeploymentParameters.ServerConfigLocation, serverConfig);
