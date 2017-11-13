@@ -108,30 +108,16 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                         if (serverConfig.Contains("[ANCMPath]"))
                         {
-                            string ancmPath;
                             // We need to pick the bitness based the OS / IIS Express, not the application.
                             // We'll eventually add support for choosing which IIS Express bitness to run: https://github.com/aspnet/Hosting/issues/880
-                            var ancmFile = Is64BitHost ? @"aspnetcore_x64.dll" : @"aspnetcore_x86.dll";
+                            var ancmFile = Is64BitHost ? @"x64\aspnetcore.dll" : @"x86\aspnetcore.dll";
                             // Bin deployed by Microsoft.AspNetCore.AspNetCoreModule.nupkg
-                            if (DeploymentParameters.RuntimeFlavor == RuntimeFlavor.CoreClr
-                                && DeploymentParameters.ApplicationType == ApplicationType.Portable)
-                            {
-                                ancmPath = Path.Combine(contentRoot, @"runtimes\win7\native\", ancmFile);
-                            }
-                            else
-                            {
-                                ancmPath = Path.Combine(contentRoot, ancmFile);
-                            }
+                            var ancmPath = Path.Combine(contentRoot, @"contentFiles\any\any\", ancmFile);
 
                             if (!File.Exists(Environment.ExpandEnvironmentVariables(ancmPath)))
                             {
                                 // Now check the backup location in content files
-                                ancmFile = Is64BitHost ? @"x64\aspnetcore.dll" : @"x86\aspnetcore.dll";
-                                ancmPath = Path.Combine(contentRoot, @"contentFiles\any\any\", ancmFile);
-                                if (!File.Exists(Environment.ExpandEnvironmentVariables(ancmPath)))
-                                {
-                                    throw new FileNotFoundException("AspNetCoreModule could not be found.", ancmPath);
-                                }
+                                throw new FileNotFoundException("AspNetCoreModule could not be found.", ancmPath);
                             }
 
                             Logger.LogDebug("Writing ANCMPath '{ancmPath}' to config", ancmPath);
