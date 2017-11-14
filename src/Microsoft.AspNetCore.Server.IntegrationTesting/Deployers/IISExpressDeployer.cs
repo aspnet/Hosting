@@ -116,7 +116,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                             if (!File.Exists(Environment.ExpandEnvironmentVariables(ancmPath)))
                             {
-                                // Now check the backup location in content files
                                 throw new FileNotFoundException("AspNetCoreModule could not be found.", ancmPath);
                             }
 
