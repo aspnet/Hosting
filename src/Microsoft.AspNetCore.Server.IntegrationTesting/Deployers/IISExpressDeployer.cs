@@ -47,12 +47,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         {
             get
             {
-                var is64BitPropertyInfo = typeof(Environment).GetProperty("Is64BitOperatingSystem", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (is64BitPropertyInfo != null)
-                {
-                    return (bool)is64BitPropertyInfo.GetValue(null);
-                }
-                return false;
+                return Environment.Is64BitOperatingSystem;
             }
         }
 
