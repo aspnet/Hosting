@@ -6,6 +6,8 @@ namespace Microsoft.AspNetCore.Hosting
     public static class WebHostDefaults
     {
         public static readonly string ApplicationKey = "applicationName";
+        public static readonly string ApplicationDataKey = "applicationData";
+        
         public static readonly string StartupAssemblyKey = "startupAssembly";
         public static readonly string HostingStartupAssembliesKey = "hostingStartupAssemblies";
         public static readonly string HostingStartupExcludeAssembliesKey = "hostingStartupExcludeAssemblies";

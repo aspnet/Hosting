@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
@@ -527,6 +528,41 @@ namespace Microsoft.AspNetCore.Hosting
             {
                 Assert.Equal(expected, host.Services.GetService<IHostingEnvironment>().EnvironmentName);
                 Assert.Equal(expected, host.Services.GetService<Extensions.Hosting.IHostingEnvironment>().EnvironmentName);
+            }
+        }
+
+        [Fact]
+        public void CanResolveIHostingApplicationData()
+        {
+            using (var host = new WebHostBuilder().Configure(app => { }).Build())
+            {
+                var env = host.Services.GetRequiredService<IHostingApplicationData>();
+                Assert.NotNull(env.ApplicationDataPath);
+                Assert.IsAssignableFrom<PhysicalFileProvider>(env.ApplicationDataFileProvider);
+            }
+        }
+
+        [Fact]
+        public void CanOverrideTheDefaultApplicationDataPath()
+        {
+            var settings = new Dictionary<string, string>
+            {
+                { WebHostDefaults.ApplicationDataKey, Environment.CurrentDirectory }
+            };
+
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(settings)
+                .Build();
+
+            var hostBuilder = new WebHostBuilder()
+                .UseConfiguration(config)
+                .Configure(app => { });
+
+            using (var host = hostBuilder.Build())
+            {
+                var env = host.Services.GetRequiredService<IHostingApplicationData>();
+                Assert.Equal(Environment.CurrentDirectory, env.ApplicationDataPath);
+                Assert.IsAssignableFrom<PhysicalFileProvider>(env.ApplicationDataFileProvider);
             }
         }
 

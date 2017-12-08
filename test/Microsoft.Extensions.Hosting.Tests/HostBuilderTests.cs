@@ -123,6 +123,40 @@ namespace Microsoft.Extensions.Hosting
         }
 
         [Fact]
+        public void CanResolveIHostingApplicationData()
+        {
+            using (var host = new HostBuilder().Build())
+            {
+                var env = host.Services.GetRequiredService<IHostingApplicationData>();
+                Assert.NotNull(env.ApplicationDataPath);
+                Assert.IsAssignableFrom<PhysicalFileProvider>(env.ApplicationDataFileProvider);
+            }
+        }
+
+        [Fact]
+        public void CanOverrideTheDefaultApplicationDataPath()
+        {
+            var settings = new Dictionary<string, string>
+            {
+                { HostDefaults.ApplicationDataKey, Environment.CurrentDirectory }
+            };
+
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(settings)
+                .Build();
+
+            var hostBuilder = new HostBuilder()
+                .ConfigureHostConfiguration(c => c.AddConfiguration(config));
+
+            using (var host = hostBuilder.Build())
+            {
+                var env = host.Services.GetRequiredService<IHostingApplicationData>();
+                Assert.Equal(Environment.CurrentDirectory, env.ApplicationDataPath);
+                Assert.IsAssignableFrom<PhysicalFileProvider>(env.ApplicationDataFileProvider);
+            }
+        }
+
+        [Fact]
         public void ConfigBasedSettingsConfigBasedOverride()
         {
             var settings = new Dictionary<string, string>
