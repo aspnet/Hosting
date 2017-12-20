@@ -287,7 +287,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var addresses = serverAddressesFeature?.Addresses;
                 if (addresses != null && !addresses.IsReadOnly && addresses.Count == 0)
                 {
-                    var urls = _config[WebHostDefaults.ServerUrlsKey] ?? _config[DeprecatedServerUrlsKey];
+                    var urls = _startup.Configure.GetSection(WebHostDefaults.ServerUrlsKey).Get<String>() ?? _config[DeprecatedServerUrlsKey];
                     if (!string.IsNullOrEmpty(urls))
                     {
                         serverAddressesFeature.PreferHostingUrls = WebHostUtilities.ParseBool(_config, WebHostDefaults.PreferHostingUrlsKey);
