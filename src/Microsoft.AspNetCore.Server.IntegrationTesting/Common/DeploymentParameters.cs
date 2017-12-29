@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Microsoft.AspNetCore.Server.IntegrationTesting
@@ -45,6 +46,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
             ServerType = serverType;
             RuntimeFlavor = runtimeFlavor;
             EnvironmentVariables["ASPNETCORE_DETAILEDERRORS"] = "true";
+
+            SetDefaultConfig();
         }
 
         public ServerType ServerType { get; }
@@ -81,7 +84,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         /// <summary>
         /// Configuration under which to build (ex: Release or Debug)
         /// </summary>
-        public string Configuration { get; set; } = "Debug";
+        public string Configuration { get; set; }
 
         /// <summary>
         /// Space separated command line arguments to be passed to dotnet-publish
@@ -133,6 +136,24 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                     RuntimeArchitecture,
                     ApplicationBaseUriHint,
                     PublishApplicationBeforeDeployment);
+        }
+
+        private void SetDefaultConfig()
+        {
+            SetConfigIfDebug();
+            SetConfigIfRelease();
+        }
+
+        [Conditional("DEBUG")]
+        private void SetConfigIfDebug()
+        {
+            Configuration = "Debug";
+        }
+
+        [Conditional("RELEASE")]
+        private void SetConfigIfRelease()
+        {
+            Configuration = "Release";
         }
     }
 }
