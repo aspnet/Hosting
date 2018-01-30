@@ -176,7 +176,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             if (_applicationServices == null)
             {
+                _applicationServices = _hostingServiceProvider.GetServices<IServiceProvider>()
+                                                              .LastOrDefault();
                 EnsureStartup();
+
                 _applicationServices = _startup.ConfigureServices(_applicationServiceCollection);
             }
         }
@@ -188,7 +191,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 return;
             }
 
-            _startup = _hostingServiceProvider.GetService<IStartup>();
+            _startup = (_applicationServices ?? _hostingServiceProvider).GetService<IStartup>();
 
             if (_startup == null)
             {
