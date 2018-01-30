@@ -70,7 +70,7 @@ namespace Microsoft.AspNetCore.TestHost
                 app.Use((ctx, next) => ctx.Response.WriteAsync(
                     $"{ctx.RequestServices.GetRequiredService<SimpleService>().Message}, {ctx.RequestServices.GetRequiredService<TestService>().Message}"));
         }
-
+        
         public class ThirdPartyContainer
         {
             public IServiceCollection Services { get; set; }
@@ -81,6 +81,84 @@ namespace Microsoft.AspNetCore.TestHost
             public ThirdPartyContainer CreateBuilder(IServiceCollection services) => new ThirdPartyContainer { Services = services };
 
             public IServiceProvider CreateServiceProvider(ThirdPartyContainer containerBuilder) => containerBuilder.Services.BuildServiceProvider();
+        }
+
+        [Fact]
+        public async Task ExternalContainerInstanceCanBeUsedToGetIStartup()
+        {
+            var external = new UnityContainer();
+            external.Register(typeof(TestService)); // Register outside builder service
+
+            var builder = new WebHostBuilder()
+                .ConfigureTestServices(services =>  // Register inside builder service
+                    services.AddSingleton(new SimpleService { Message = "OverridesConfigureServices" }))
+                .UseStartup<UnityStartup>()
+                .ConfigureServices(s => {           // Register outside provider instance
+                    s.AddSingleton<IServiceProvider>(external.BuildServiceProvider(s));
+                });
+
+            var host = new TestServer(builder);
+
+            var response = await host.CreateClient().GetStringAsync("/");
+
+            Assert.Equal("ConfigureServices, UnityStartupConstructor", response);
+        }
+
+        public class UnityContainer 
+        {
+            internal TestServiceCollection Registrations { get; set; } = new TestServiceCollection();
+
+
+            public void Register(Type registeredType)
+            {
+                Registrations.AddTransient(registeredType);
+            }
+
+            public IServiceProvider BuildServiceProvider(IServiceCollection services)
+            {
+                var collection = new TestServiceCollection();
+
+                foreach (var service in services) collection.Add(service);
+                foreach (var service in Registrations) collection.Add(service);
+                collection.AddSingleton(this);
+
+                return collection.BuildServiceProvider();
+            }
+
+            internal class TestServiceCollection : System.Collections.Generic.List<ServiceDescriptor>, 
+                                                   IServiceCollection
+            {
+            }
+        }
+
+        public class UnityStartup : IStartup
+        {
+            UnityContainer _container;
+            TestService _outside;
+
+            public UnityStartup(UnityContainer container, TestService outside)
+            {
+                _container = container ?? throw new ArgumentNullException(nameof(container));
+                _outside = outside   ?? throw new ArgumentNullException(nameof(outside));
+
+                _container.Registrations.AddSingleton(new TestService { Message = "UnityStartupConstructor" });
+            }
+
+            public void Configure(IApplicationBuilder app) =>
+                app.Use((ctx, next) => ctx.Response.WriteAsync(
+                    $"{ctx.RequestServices.GetRequiredService<SimpleService>().Message}, " +
+                    $"{ctx.RequestServices.GetRequiredService<TestService>().Message}"));
+
+            public IServiceProvider ConfigureServices(IServiceCollection services)
+            {
+                services.AddSingleton(new SimpleService { Message = "ConfigureServices" });
+
+                // Normally container would register more types from colection
+                // but for this test will just create updated provider
+                foreach (var service in _container.Registrations) services.Add(service);
+
+                return services.BuildServiceProvider();
+            }
         }
 
         [Fact]
