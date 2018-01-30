@@ -71,6 +71,74 @@ namespace Microsoft.AspNetCore.TestHost
                     $"{ctx.RequestServices.GetRequiredService<SimpleService>().Message}, {ctx.RequestServices.GetRequiredService<TestService>().Message}"));
         }
 
+        [Fact]
+        public async Task ExternalContainersCouldBeCombined()
+        {
+            var builder = new WebHostBuilder()
+                .ConfigureServices(s => s.AddSingleton<IServiceProviderFactory<ThirdPartyContainer>, ThirdPartyContainerServiceProviderFactory>())
+                .UseStartup<ThirdPartyContainerStartup>()
+                .ConfigureTestServices(services => services.AddSingleton(new SimpleService { Message = "OverridesConfigureServices" }))
+                .ConfigureTestContainer<ThirdPartyContainer>(container => container.Services.AddSingleton(new TestService { Message = "OverridesConfigureContainer" }))
+                .ConfigureServices(s => // Register outside provider instance
+                    s.AddSingleton<IServiceProviderFactory<IServiceCollection>>(new ExternalContainerFactory()));
+
+            var host = new TestServer(builder);
+
+            var response = await host.CreateClient().GetStringAsync("/");
+
+            Assert.Equal("OverridesConfigureServices, OverridesConfigureContainer", response);
+        }
+
+        [Fact]
+        public async Task ExternalContainerInstanceCanBeUsedForEverything()
+        {
+            var builder = new WebHostBuilder()
+                .UseStartup<CustomContainerStartup>()
+                .ConfigureServices(s => // Register outside provider instance
+                    s.AddSingleton<IServiceProviderFactory<IServiceCollection>>(new ExternalContainerFactory()));
+
+            var host = new TestServer(builder);
+
+            var response = await host.CreateClient().GetStringAsync("/");
+
+            Assert.Equal("ApplicationServicesEqual:True", response);
+        }
+
+
+        public class ExternalContainerFactory : IServiceProviderFactory<IServiceCollection>
+        {
+            public IServiceCollection CreateBuilder(IServiceCollection services)
+            {
+                return services;
+            }
+
+            public IServiceProvider CreateServiceProvider(IServiceCollection containerBuilder)
+            {
+                return containerBuilder.BuildServiceProvider();
+            }
+        }
+
+
+        [Fact]
+        public async Task ContainerInstanceCanBeUsedToGetIStartup()
+        {
+            var builder = new WebHostBuilder()
+                .UseStartup<ThirdPartyContainerStartup>()
+                .ConfigureTestServices(services => services.AddSingleton(new SimpleService { Message = "OverridesConfigureServices" }))
+                .ConfigureServices(s => {
+                    s.AddSingleton<IServiceProviderFactory<ThirdPartyContainer>, ThirdPartyContainerServiceProviderFactory>();
+                    s.AddSingleton<IServiceProvider>((a) => s.BuildServiceProvider()); // Provide outside provider instance
+                })
+                .ConfigureTestContainer<ThirdPartyContainer>(container => container.Services.AddSingleton(new TestService { Message = "OverridesConfigureContainer" }));
+
+            var host = new TestServer(builder);
+
+            var response = await host.CreateClient().GetStringAsync("/");
+
+            Assert.Equal("OverridesConfigureServices, OverridesConfigureContainer", response);
+        }
+       
+
         public class ThirdPartyContainer
         {
             public IServiceCollection Services { get; set; }
