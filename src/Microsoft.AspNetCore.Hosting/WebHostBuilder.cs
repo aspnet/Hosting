@@ -212,7 +212,7 @@ namespace Microsoft.AspNetCore.Hosting
                 {
                     using (provider)
                     {
-                        return factory.CreateServiceProvider(factory.CreateBuilder(collection))
+                        return factory.CreateServiceProvider(factory.CreateBuilder(collection));
                     }
                 }
                 
