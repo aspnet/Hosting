@@ -205,10 +205,10 @@ namespace Microsoft.AspNetCore.Hosting
 
             IServiceProvider GetProviderFromFactory(IServiceCollection collection)
             {
-                var provider = colection.BuildServiceProvider();
+                var provider = collection.BuildServiceProvider();
                 var factory = provider.GetService<IServiceProviderFactory<IServiceCollection>>();
 
-                return factory?.CreateServiceProvider(factory.CreateBuilder(colection)) ?? provider;
+                return factory?.CreateServiceProvider(factory.CreateBuilder(collection)) ?? provider;
             }
         }
 
