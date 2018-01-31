@@ -203,7 +203,7 @@ namespace Microsoft.AspNetCore.Hosting
                 throw;
             }
 
-            IServiceProvider GetProviderFromFactory(IServiceCollection colection)
+            IServiceProvider GetProviderFromFactory(IServiceCollection collection)
             {
                 var provider = colection.BuildServiceProvider();
                 var factory = provider.GetService<IServiceProviderFactory<IServiceCollection>>();
