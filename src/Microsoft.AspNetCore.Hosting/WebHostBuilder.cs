@@ -153,7 +153,7 @@ namespace Microsoft.AspNetCore.Hosting
 
             var hostingServices = BuildCommonServices(out var hostingStartupErrors);
             var applicationServices = hostingServices.Clone();
-            var hostingServiceProvider = GetProviderFromFactory(hostingServices) ?? hostingServices.BuildServiceProvider();
+            var hostingServiceProvider = GetProviderFromFactory(hostingServices);
 
             if (!_options.SuppressStatusMessages)
             {
@@ -205,12 +205,10 @@ namespace Microsoft.AspNetCore.Hosting
 
             IServiceProvider GetProviderFromFactory(IServiceCollection colection)
             {
-                var factory = (IServiceProviderFactory<IServiceCollection>)
-                    colection.LastOrDefault(d => d.ServiceType == typeof(IServiceProviderFactory<IServiceCollection>) &&
-                                                 d.ImplementationInstance != null)?
-                             .ImplementationInstance;
+                var provider = colection.BuildServiceProvider();
+                var factory = provider.GetService<IServiceProviderFactory<IServiceCollection>>();
 
-                return factory?.CreateServiceProvider(factory.CreateBuilder(colection));
+                return factory?.CreateServiceProvider(factory.CreateBuilder(colection)) ?? provider;
             }
         }
 
