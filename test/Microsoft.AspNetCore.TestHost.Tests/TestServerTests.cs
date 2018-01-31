@@ -71,34 +71,6 @@ namespace Microsoft.AspNetCore.TestHost
                     $"{ctx.RequestServices.GetRequiredService<SimpleService>().Message}, {ctx.RequestServices.GetRequiredService<TestService>().Message}"));
         }
 
-        [Fact]
-        public async Task ExternalContainerInstanceCanBeUsedForEverything()
-        {
-            var builder = new WebHostBuilder()
-                .UseStartup<CustomContainerStartup>()
-                .ConfigureServices(s => // Register outside provider instance
-                    s.AddSingleton<IServiceProviderFactory<IServiceCollection>>(new ExternalContainerFactory()));
-
-            var host = new TestServer(builder);
-
-            var response = await host.CreateClient().GetStringAsync("/");
-
-            Assert.Equal("ApplicationServicesEqual:True", response);
-        }
-
-        public class ExternalContainerFactory : IServiceProviderFactory<IServiceCollection>
-        {
-            public IServiceCollection CreateBuilder(IServiceCollection services)
-            {
-                return services;
-            }
-
-            public IServiceProvider CreateServiceProvider(IServiceCollection containerBuilder)
-            {
-                return containerBuilder.BuildServiceProvider();
-            }
-        }
-
         public class ThirdPartyContainer
         {
             public IServiceCollection Services { get; set; }
