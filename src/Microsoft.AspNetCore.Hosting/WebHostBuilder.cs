@@ -208,7 +208,15 @@ namespace Microsoft.AspNetCore.Hosting
                 var provider = collection.BuildServiceProvider();
                 var factory = provider.GetService<IServiceProviderFactory<IServiceCollection>>();
 
-                return factory?.CreateServiceProvider(factory.CreateBuilder(collection)) ?? provider;
+                if (factory != null)
+                {
+                    using (provider)
+                    {
+                        return factory.CreateServiceProvider(factory.CreateBuilder(collection))
+                    }
+                }
+                
+                return provider;                
             }
         }
 
