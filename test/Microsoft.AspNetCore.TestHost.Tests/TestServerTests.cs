@@ -72,24 +72,6 @@ namespace Microsoft.AspNetCore.TestHost
         }
 
         [Fact]
-        public async Task ExternalContainersCouldBeCombined()
-        {
-            var builder = new WebHostBuilder()
-                .ConfigureServices(s => s.AddSingleton<IServiceProviderFactory<ThirdPartyContainer>, ThirdPartyContainerServiceProviderFactory>())
-                .UseStartup<ThirdPartyContainerStartup>()
-                .ConfigureTestServices(services => services.AddSingleton(new SimpleService { Message = "OverridesConfigureServices" }))
-                .ConfigureTestContainer<ThirdPartyContainer>(container => container.Services.AddSingleton(new TestService { Message = "OverridesConfigureContainer" }))
-                .ConfigureServices(s => // Register outside provider instance
-                    s.AddSingleton<IServiceProviderFactory<IServiceCollection>>(new ExternalContainerFactory()));
-
-            var host = new TestServer(builder);
-
-            var response = await host.CreateClient().GetStringAsync("/");
-
-            Assert.Equal("OverridesConfigureServices, OverridesConfigureContainer", response);
-        }
-
-        [Fact]
         public async Task ExternalContainerInstanceCanBeUsedForEverything()
         {
             var builder = new WebHostBuilder()
