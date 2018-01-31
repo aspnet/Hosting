@@ -86,7 +86,6 @@ namespace Microsoft.AspNetCore.TestHost
             Assert.Equal("ApplicationServicesEqual:True", response);
         }
 
-
         public class ExternalContainerFactory : IServiceProviderFactory<IServiceCollection>
         {
             public IServiceCollection CreateBuilder(IServiceCollection services)
@@ -99,27 +98,6 @@ namespace Microsoft.AspNetCore.TestHost
                 return containerBuilder.BuildServiceProvider();
             }
         }
-
-
-        [Fact]
-        public async Task ContainerInstanceCanBeUsedToGetIStartup()
-        {
-            var builder = new WebHostBuilder()
-                .UseStartup<ThirdPartyContainerStartup>()
-                .ConfigureTestServices(services => services.AddSingleton(new SimpleService { Message = "OverridesConfigureServices" }))
-                .ConfigureServices(s => {
-                    s.AddSingleton<IServiceProviderFactory<ThirdPartyContainer>, ThirdPartyContainerServiceProviderFactory>();
-                    s.AddSingleton<IServiceProvider>((a) => s.BuildServiceProvider()); // Provide outside provider instance
-                })
-                .ConfigureTestContainer<ThirdPartyContainer>(container => container.Services.AddSingleton(new TestService { Message = "OverridesConfigureContainer" }));
-
-            var host = new TestServer(builder);
-
-            var response = await host.CreateClient().GetStringAsync("/");
-
-            Assert.Equal("OverridesConfigureServices, OverridesConfigureContainer", response);
-        }
-       
 
         public class ThirdPartyContainer
         {
