@@ -32,6 +32,7 @@ namespace Microsoft.AspNetCore.Hosting
         private WebHostBuilderContext _context;
         private bool _webHostBuilt;
         private List<Action<WebHostBuilderContext, IConfigurationBuilder>> _configureAppConfigurationBuilderDelegates;
+        private Func<IServiceCollection> _serviceCollectionDelegate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebHostBuilder"/> class.
@@ -84,6 +85,12 @@ namespace Microsoft.AspNetCore.Hosting
         public IWebHostBuilder UseSetting(string key, string value)
         {
             _config[key] = value;
+            return this;
+        }
+
+        public IWebHostBuilder UseExternalServiceCollection(Func<IServiceCollection> serviceCollectionDelegate)
+        {
+            _serviceCollectionDelegate = serviceCollectionDelegate;
             return this;
         }
 
@@ -262,7 +269,16 @@ namespace Microsoft.AspNetCore.Hosting
             _hostingEnvironment.Initialize(contentRootPath, _options);
             _context.HostingEnvironment = _hostingEnvironment;
 
-            var services = new ServiceCollection();
+            IServiceCollection services;
+            if (_serviceCollectionDelegate == null)
+            {
+                services = new ServiceCollection();
+            }
+            else
+            {
+                services = _serviceCollectionDelegate();
+            }
+            
             services.AddSingleton(_options);
             services.AddSingleton<IHostingEnvironment>(_hostingEnvironment);
             services.AddSingleton<Extensions.Hosting.IHostingEnvironment>(_hostingEnvironment);
