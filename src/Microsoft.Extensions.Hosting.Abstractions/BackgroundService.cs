@@ -12,6 +12,7 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public abstract class BackgroundService : IHostedService, IDisposable
     {
+        private bool disposed = false;
         private Task _executingTask;
         private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
 
@@ -67,9 +68,25 @@ namespace Microsoft.Extensions.Hosting
 
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            _stoppingCts.Cancel();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _stoppingCts.Cancel();
+            }
+
+            disposed = true;
         }
     }
 }
