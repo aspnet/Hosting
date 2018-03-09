@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -26,6 +28,7 @@ namespace Microsoft.Extensions.Hosting
         private IConfiguration _appConfiguration;
         private HostBuilderContext _hostBuilderContext;
         private IHostingEnvironment _hostingEnvironment;
+        private IHostingApplicationData _hostingApplicationData;
         private IServiceProvider _appServices;
 
         /// <summary>
@@ -109,6 +112,7 @@ namespace Microsoft.Extensions.Hosting
 
             BuildHostConfiguration();
             CreateHostingEnvironment();
+            CreateHostingApplicationData();
             CreateHostBuilderContext();
             BuildAppConfiguration();
             CreateServiceProvider();
@@ -150,6 +154,69 @@ namespace Microsoft.Extensions.Hosting
             return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
         }
 
+        private void CreateHostingApplicationData()
+        {
+            var appDataPath = ResolveApplicationDataPath(_hostConfiguration[HostDefaults.ApplicationDataKey]);
+            _hostingApplicationData = new HostingApplicationData();
+            if (appDataPath != null)
+            {
+                _hostingApplicationData.ApplicationDataPath = appDataPath;
+                _hostingApplicationData.ApplicationDataFileProvider = new PhysicalFileProvider(appDataPath);
+            }
+        }
+
+        private string ResolveApplicationDataPath(string applicationDataPath)
+        {
+            var directoryInfo = GetOrCreateDirectory(applicationDataPath);
+            if (directoryInfo != null)
+            {
+                return directoryInfo.FullName;
+            }
+
+            // Environment.GetFolderPath returns null if the user profile isn't loaded.
+            var localAppDataFromSystemPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var localAppDataFromEnvPath = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+            var userProfilePath = Environment.GetEnvironmentVariable("USERPROFILE");
+            var homePath = Environment.GetEnvironmentVariable("HOME");
+
+            // To preserve backwards-compatibility with 1.x, Environment.SpecialFolder.LocalApplicationData
+            // cannot take precedence over $LOCALAPPDATA and $HOME/.aspnet on non-Windows platforms.
+            // We do this in here too to keep consistency with the locations where data protection stores keys.
+            directoryInfo = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+                GetOrCreateDirectory(GetFolderPath(localAppDataFromSystemPath, "ASP.NET")) :
+                null;
+
+            directoryInfo = directoryInfo ??
+                GetOrCreateDirectory(GetFolderPath(localAppDataFromEnvPath, "ASP.NET")) ??
+                GetOrCreateDirectory(GetFolderPath(userProfilePath, "AppData", "Local", "ASP.NET")) ??
+                GetOrCreateDirectory(GetFolderPath(homePath, ".aspnet")) ??
+                GetOrCreateDirectory(GetFolderPath(localAppDataFromSystemPath, "ASP.NET")) ??
+                GetOrCreateDirectory(GetFolderPath(AppContext.BaseDirectory, "APP_DATA"));
+
+            return directoryInfo?.FullName;
+
+            DirectoryInfo GetOrCreateDirectory(string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    return null;
+                }
+                try
+                {
+                    var directory = new DirectoryInfo(path);
+                    directory.Create(); // throws if we don't have access, e.g., user profile not loaded
+                    return directory;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            string GetFolderPath(string basePath, params string[] path)
+                => string.IsNullOrEmpty(basePath) ? null : Path.Combine(new[] { basePath }.Concat(path).ToArray());
+        }
+
         private void CreateHostBuilderContext()
         {
             _hostBuilderContext = new HostBuilderContext(Properties)
@@ -175,6 +242,7 @@ namespace Microsoft.Extensions.Hosting
         {
             var services = new ServiceCollection();
             services.AddSingleton(_hostingEnvironment);
+            services.AddSingleton(_hostingApplicationData);
             services.AddSingleton(_hostBuilderContext);
             services.AddSingleton(_appConfiguration);
             services.AddSingleton<IApplicationLifetime, ApplicationLifetime>();
@@ -182,7 +250,7 @@ namespace Microsoft.Extensions.Hosting
             services.AddSingleton<IHost, Host>();
             services.AddOptions();
             services.AddLogging();
-            
+
             foreach (var configureServicesAction in _configureServicesActions)
             {
                 configureServicesAction(_hostBuilderContext, services);

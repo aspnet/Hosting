@@ -25,6 +25,8 @@ namespace Microsoft.AspNetCore.Hosting
     public class WebHostBuilder : IWebHostBuilder
     {
         private readonly HostingEnvironment _hostingEnvironment;
+        private readonly HostingApplicationData _hostingApplicationData;
+
         private readonly List<Action<WebHostBuilderContext, IServiceCollection>> _configureServicesDelegates;
 
         private IConfiguration _config;
@@ -39,6 +41,7 @@ namespace Microsoft.AspNetCore.Hosting
         public WebHostBuilder()
         {
             _hostingEnvironment = new HostingEnvironment();
+            _hostingApplicationData = new HostingApplicationData();
             _configureServicesDelegates = new List<Action<WebHostBuilderContext, IServiceCollection>>();
             _configureAppConfigurationBuilderDelegates = new List<Action<WebHostBuilderContext, IConfigurationBuilder>>();
 
@@ -261,10 +264,11 @@ namespace Microsoft.AspNetCore.Hosting
             // Initialize the hosting environment
             _hostingEnvironment.Initialize(contentRootPath, _options);
             _context.HostingEnvironment = _hostingEnvironment;
-
+            _hostingApplicationData.Initialize(_options);
             var services = new ServiceCollection();
             services.AddSingleton(_options);
             services.AddSingleton<IHostingEnvironment>(_hostingEnvironment);
+            services.AddSingleton<IHostingApplicationData>(_hostingApplicationData);
             services.AddSingleton<Extensions.Hosting.IHostingEnvironment>(_hostingEnvironment);
             services.AddSingleton(_context);
 

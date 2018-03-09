@@ -23,5 +23,11 @@ namespace Microsoft.Extensions.Hosting
         /// and <see cref="IHostingEnvironment.ContentRootFileProvider"/>.
         /// </summary>
         public static readonly string ContentRootKey = "contentRoot";
+
+        /// <summary>
+        /// The configuration key used to set <see cref="IHostingApplicationData.ApplicationDataPath"/>
+        /// and <see cref="IHostingApplicationData.ApplicationDataFileProvider"/>.
+        /// </summary>
+        public static readonly string ApplicationDataKey = "applicationDataRoot";
     }
 }
