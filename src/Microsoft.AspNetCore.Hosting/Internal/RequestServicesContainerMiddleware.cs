@@ -30,34 +30,30 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             _scopeFactory = scopeFactory;
         }
 
-        public async Task Invoke(HttpContext httpContext)
+        public Task Invoke(HttpContext httpContext)
         {
             Debug.Assert(httpContext != null);
 
             // local cache for virtual disptach result
             var features = httpContext.Features;
-            var existingFeature = features.Get<IServiceProvidersFeature>();
 
-            // All done if RequestServices is set
-            if (existingFeature?.RequestServices != null)
+            var replacementFeature = new RequestServicesFeature(httpContext, _scopeFactory);
+
+            features.Set<IServiceProvidersFeature>(replacementFeature);
+            var task = _next.Invoke(httpContext);
+
+#if NETCOREAPP2_1
+            if (!task.IsCompletedSuccessfully)
+#else
+            if (task.Status != TaskStatus.RanToCompletion)
+#endif
             {
-                await _next.Invoke(httpContext);
-                return;
+                return InvokeAsyncAwaited(task);
             }
 
-            var replacementFeature = new RequestServicesFeature(_scopeFactory);
+            return Task.CompletedTask;
 
-            try
-            {
-                features.Set<IServiceProvidersFeature>(replacementFeature);
-                await _next.Invoke(httpContext);
-            }
-            finally
-            {
-                replacementFeature.Dispose();
-                // Restore previous feature state
-                features.Set(existingFeature);
-            }
+            async Task InvokeAsyncAwaited(Task resultTask) => await resultTask;
         }
     }
 }
