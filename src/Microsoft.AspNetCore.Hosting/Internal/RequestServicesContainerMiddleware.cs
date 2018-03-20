@@ -40,20 +40,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             var replacementFeature = new RequestServicesFeature(httpContext, _scopeFactory);
 
             features.Set<IServiceProvidersFeature>(replacementFeature);
-            var task = _next.Invoke(httpContext);
-
-#if NETCOREAPP2_1
-            if (!task.IsCompletedSuccessfully)
-#else
-            if (task.Status != TaskStatus.RanToCompletion)
-#endif
-            {
-                return InvokeAsyncAwaited(task);
-            }
-
-            return Task.CompletedTask;
-
-            async Task InvokeAsyncAwaited(Task resultTask) => await resultTask;
+            return _next.Invoke(httpContext);
         }
     }
 }
