@@ -30,10 +30,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 if (!_requestServicesSet)
                 {
+                    _context.Response.RegisterForDispose(this);
                     _scope = _scopeFactory.CreateScope();
                     _requestServices = _scope.ServiceProvider;
                     _requestServicesSet = true;
-                    _context.Response.RegisterForDispose(this);
                 }
                 return _requestServices;
             }
