@@ -37,9 +37,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // local cache for virtual disptach result
             var features = httpContext.Features;
 
-            var replacementFeature = new RequestServicesFeature(httpContext, _scopeFactory);
+            var servicesFeature = new RequestServicesFeature(httpContext, _scopeFactory);
 
-            features.Set<IServiceProvidersFeature>(replacementFeature);
+            features.Set<IServiceProvidersFeature>(servicesFeature);
             return _next.Invoke(httpContext);
         }
     }
