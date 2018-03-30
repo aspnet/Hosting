@@ -311,10 +311,6 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
             var config = XDocument.Load(webConfigFile);
             var element = config.Descendants("aspNetCore").FirstOrDefault();
             element.SetAttributeValue("hostingModel", "inprocess");
-
-            var argsValue = element.Attribute("arguments").Value;
-            var newArgs = $"{argsValue} --server Microsoft.AspNetCore.Server.IIS";
-            element.SetAttributeValue("arguments", newArgs);
             config.Save(webConfigFile);
         }
     }
