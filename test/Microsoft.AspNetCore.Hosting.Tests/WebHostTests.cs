@@ -792,6 +792,9 @@ namespace Microsoft.AspNetCore.Hosting
         [Fact]
         public void EnvDefaultsToProductionIfNoConfig()
         {
+            // Users might have a global environment variable set.
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "");
+
             using (var host = CreateBuilder().UseFakeServer().Build())
             {
                 var env = host.Services.GetService<IHostingEnvironment>();
@@ -845,7 +848,11 @@ namespace Microsoft.AspNetCore.Hosting
         [Fact]
         public async Task IsEnvironment_Extension_Is_Case_Insensitive()
         {
-            using (var host = CreateBuilder().UseFakeServer().Build())
+            var builder = CreateBuilder()
+                .UseEnvironment(EnvironmentName.Production)
+                .UseFakeServer();
+
+            using (var host = builder.Build())
             {
                 await host.StartAsync();
                 var env = host.Services.GetRequiredService<IHostingEnvironment>();
