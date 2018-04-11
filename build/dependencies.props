@@ -23,10 +23,10 @@
     <MicrosoftExtensionsFileProvidersAbstractionsPackageVersion>2.1.0-preview3-32196</MicrosoftExtensionsFileProvidersAbstractionsPackageVersion>
     <MicrosoftExtensionsFileProvidersEmbeddedPackageVersion>2.1.0-preview3-32196</MicrosoftExtensionsFileProvidersEmbeddedPackageVersion>
     <MicrosoftExtensionsFileProvidersPhysicalPackageVersion>2.1.0-preview3-32196</MicrosoftExtensionsFileProvidersPhysicalPackageVersion>
-    <MicrosoftExtensionsLoggingAbstractionsPackageVersion>2.1.0-a-preview3-file-logger-16468</MicrosoftExtensionsLoggingAbstractionsPackageVersion>
-    <MicrosoftExtensionsLoggingConsolePackageVersion>2.1.0-a-preview3-file-logger-16468</MicrosoftExtensionsLoggingConsolePackageVersion>
-    <MicrosoftExtensionsLoggingPackageVersion>2.1.0-a-preview3-file-logger-16468</MicrosoftExtensionsLoggingPackageVersion>
-    <MicrosoftExtensionsLoggingTestingPackageVersion>2.1.0-a-preview3-file-logger-16468</MicrosoftExtensionsLoggingTestingPackageVersion>
+    <MicrosoftExtensionsLoggingAbstractionsPackageVersion>2.1.0-a-preview3-file-logger-16471</MicrosoftExtensionsLoggingAbstractionsPackageVersion>
+    <MicrosoftExtensionsLoggingConsolePackageVersion>2.1.0-a-preview3-file-logger-16471</MicrosoftExtensionsLoggingConsolePackageVersion>
+    <MicrosoftExtensionsLoggingPackageVersion>2.1.0-a-preview3-file-logger-16471</MicrosoftExtensionsLoggingPackageVersion>
+    <MicrosoftExtensionsLoggingTestingPackageVersion>2.1.0-a-preview3-file-logger-16471</MicrosoftExtensionsLoggingTestingPackageVersion>
     <MicrosoftExtensionsOptionsPackageVersion>2.1.0-preview3-32196</MicrosoftExtensionsOptionsPackageVersion>
     <MicrosoftExtensionsProcessSourcesPackageVersion>2.1.0-preview3-32196</MicrosoftExtensionsProcessSourcesPackageVersion>
     <MicrosoftExtensionsRazorViewsSourcesPackageVersion>2.1.0-preview3-32196</MicrosoftExtensionsRazorViewsSourcesPackageVersion>
