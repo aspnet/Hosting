@@ -34,14 +34,16 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             Debug.Assert(httpContext != null);
 
+            var features = httpContext.Features;
+            var servicesFeature = features.Get<IServiceProvidersFeature>();
+
             // All done if RequestServices is set
-            if (httpContext.RequestServices != null)
+            if (servicesFeature?.RequestServices != null)
             {
                 return _next.Invoke(httpContext);
             }
 
-            var servicesFeature = new RequestServicesFeature(httpContext, _scopeFactory);
-            httpContext.Features.Set<IServiceProvidersFeature>(servicesFeature);
+            features.Set<IServiceProvidersFeature>(new RequestServicesFeature(httpContext, _scopeFactory));
             return _next.Invoke(httpContext);
         }
     }
