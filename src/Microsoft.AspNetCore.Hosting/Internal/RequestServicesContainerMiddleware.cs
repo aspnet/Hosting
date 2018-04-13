@@ -34,12 +34,14 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             Debug.Assert(httpContext != null);
 
-            // local cache for virtual disptach result
-            var features = httpContext.Features;
+            // All done if RequestServices is set
+            if (httpContext.RequestServices != null)
+            {
+                return _next.Invoke(httpContext);
+            }
 
             var servicesFeature = new RequestServicesFeature(httpContext, _scopeFactory);
-
-            features.Set<IServiceProvidersFeature>(servicesFeature);
+            httpContext.Features.Set<IServiceProvidersFeature>(servicesFeature);
             return _next.Invoke(httpContext);
         }
     }
