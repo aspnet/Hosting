@@ -11,14 +11,26 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
     {
         public static Uri BuildTestUri()
         {
-            return new UriBuilder("http", "localhost", GetNextPort()).Uri;
+            return BuildTestUri(null);
         }
 
         public static Uri BuildTestUri(string hint)
         {
+            return BuildTestUri(hint, statusMessagesEnabled: false);
+        }
+
+        public static Uri BuildTestUri(string hint, bool statusMessagesEnabled)
+        {
             if (string.IsNullOrEmpty(hint))
             {
-                return BuildTestUri();
+                if (statusMessagesEnabled)
+                {
+                    return new UriBuilder("http", "127.0.0.1", 0).Uri;
+                }
+                else
+                {
+                    return new UriBuilder("http", "localhost", GetNextPort()).Uri;
+                }
             }
             else
             {
