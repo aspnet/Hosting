@@ -19,7 +19,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
             return BuildTestUri(hint, statusMessagesEnabled: false);
         }
 
-        public static Uri BuildTestUri(string hint, bool statusMessagesEnabled)
+        internal static Uri BuildTestUri(string hint, bool statusMessagesEnabled)
         {
             if (string.IsNullOrEmpty(hint))
             {
