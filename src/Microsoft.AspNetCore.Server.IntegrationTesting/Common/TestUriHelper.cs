@@ -25,15 +25,18 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
             {
                 if (statusMessagesEnabled)
                 {
-                    // Most functional tests use this codepath and should directly
-                    // bind to dynamic port "0" and scrape the assigned port
-                    // from the status message, which should be 100% reliable.
+                    // Most functional tests use this codepath and should directly bind to dynamic port "0" and scrape
+                    // the assigned port from the status message, which should be 100% reliable since the port is bound
+                    // once and never released.  Binding to dynamic port "0" on "localhost" (both IPv4 and IPv6) is not
+                    // supported, so the port is only bound on "127.0.0.1" (IPv4).  If a test explicitly requires IPv6,
+                    // it should provide a hint URL with "localhost" (IPv4 and IPv6) or "[::1]" (IPv6-only).
                     return new UriBuilder("http", "127.0.0.1", 0).Uri;
                 }
                 else
                 {
-                    // If status messages are disabled, the less reliable GetNextPort()
-                    // must be used.
+                    // If status messages are disabled, there is no status message from which to scrape the assigned port,
+                    // so the less reliable GetNextPort() must be used.  The port is bound on "localhost" (both IPv4 and IPv6),
+                    // since this is supported when using a specific (non-zero) port.
                     return new UriBuilder("http", "localhost", GetNextPort()).Uri;
                 }
             }
@@ -42,11 +45,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
                 var uriHint = new Uri(hint);
                 if (uriHint.Port == 0)
                 {
-                    // Only a few tests use this codepath, so it's fine to use the less reliable
-                    // GetNextPort() for simplicity.  These tests could be improved to bind 
-                    // to dynamic port "0" (when status messages are enabled) but the hostname
-                    // would need to be "127.0.0.1" or "[::1]".  Binding to dynamic port "0" on
-                    // "localhost" is not supported in Kestrel.
+                    // Only a few tests use this codepath, so it's fine to use the less reliable GetNextPort() for simplicity.
+                    // The tests using this codepath will be reviewed to see if they can be changed to directly bind to dynamic
+                    // port "0" on "127.0.0.1" and scrape the assigned port from the status message (the default codepath).
                     return new UriBuilder(uriHint) { Port = GetNextPort() }.Uri;
                 }
                 else
@@ -66,16 +67,12 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
         // exceptions.  This method should only be used when the application itself cannot use
         // dynamic port "0" (e.g. IISExpress).  Most functional tests using raw Kestrel
         // (with status messages enabled) should directly bind to dynamic port "0" and scrape 
-        // the assigned port from the status message, which should be 100% reliable.
+        // the assigned port from the status message, which should be 100% reliable since the port
+        // is bound once and never released.
         public static int GetNextPort()
         {
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
-                // Let the OS assign the next available port. Unless we cycle through all ports
-                // on a test run, the OS will always increment the port number when making these calls.
-                // This prevents races in parallel test runs where a test is already bound to
-                // a given port, and a new test is able to bind to the same port due to port
-                // reuse being enabled by default by the OS.
                 socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 return ((IPEndPoint)socket.LocalEndPoint).Port;
             }
