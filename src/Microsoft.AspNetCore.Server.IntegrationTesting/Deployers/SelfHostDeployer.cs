@@ -42,7 +42,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 }
 
                 var hintUrl = TestUriHelper.BuildTestUri(
-                    DeploymentParameters.ApplicationBaseUriHint, DeploymentParameters.StatusMessagesEnabled);
+                    DeploymentParameters.ApplicationBaseUriHint,
+                    DeploymentParameters.ServerType,
+                    DeploymentParameters.StatusMessagesEnabled);
 
                 // Launch the host process.
                 var (actualUrl, hostExitToken) = await StartSelfHostAsync(hintUrl);

@@ -16,14 +16,17 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
 
         public static Uri BuildTestUri(string hint)
         {
-            return BuildTestUri(hint, statusMessagesEnabled: false);
+            // If this method is called directly, there is no way to know the server type or whether status messages
+            // are enabled.  It's safest to assume the server is WebListener (which doesn't support binding to dynamic
+            // port "0") and status messages are not enabled (so the assigned port cannot be scraped from console output).
+            return BuildTestUri(hint, serverType: ServerType.WebListener, statusMessagesEnabled: false);
         }
 
-        internal static Uri BuildTestUri(string hint, bool statusMessagesEnabled)
+        internal static Uri BuildTestUri(string hint, ServerType serverType, bool statusMessagesEnabled)
         {
             if (string.IsNullOrEmpty(hint))
             {
-                if (statusMessagesEnabled)
+                if (serverType == ServerType.Kestrel && statusMessagesEnabled)
                 {
                     // Most functional tests use this codepath and should directly bind to dynamic port "0" and scrape
                     // the assigned port from the status message, which should be 100% reliable since the port is bound
@@ -34,9 +37,10 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
                 }
                 else
                 {
-                    // If status messages are disabled, there is no status message from which to scrape the assigned port,
-                    // so the less reliable GetNextPort() must be used.  The port is bound on "localhost" (both IPv4 and IPv6),
-                    // since this is supported when using a specific (non-zero) port.
+                    // If the server type is not Kestrel, or status messages are disabled, there is no status message
+                    // from which to scrape the assigned port, so the less reliable GetNextPort() must be used.  The
+                    // port is bound on "localhost" (both IPv4 and IPv6), since this is supported when using a specific
+                    // (non-zero) port.
                     return new UriBuilder("http", "localhost", GetNextPort()).Uri;
                 }
             }
