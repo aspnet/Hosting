@@ -7,14 +7,8 @@ using System.Net.Sockets;
 
 namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
 {
-    public static class TestUriHelper
+    internal static class TestUriHelper
     {
-        // Public for use in other test projects
-        public static string BuildTestUrl(ServerType serverType)
-        {
-            return BuildTestUri(serverType).ToString();
-        }
-
         internal static Uri BuildTestUri(ServerType serverType)
         {
             return BuildTestUri(serverType, hint: null);
