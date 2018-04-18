@@ -61,7 +61,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         public string ApplicationBaseUriHint { get; set; }
 
         /// <summary>
-        /// Scheme used by the deployed application if <see cref="DeploymentResult.ApplicationBaseUriHint"/> is empty.
+        /// Scheme used by the deployed application if <see cref="ApplicationBaseUriHint"/> is empty.
         /// </summary>
         public string Scheme { get; set; } = Uri.UriSchemeHttp;
 
