@@ -12,7 +12,12 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
         // Public for use in other test projects
         public static string BuildTestUrl(ServerType serverType)
         {
-            return BuildTestUri(serverType, hint: null).ToString();
+            return BuildTestUri(serverType).ToString();
+        }
+
+        internal static Uri BuildTestUri(ServerType serverType)
+        {
+            return BuildTestUri(serverType, hint: null);
         }
 
         internal static Uri BuildTestUri(ServerType serverType, string hint)
