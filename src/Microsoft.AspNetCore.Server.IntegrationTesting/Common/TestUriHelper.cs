@@ -10,9 +10,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
     public static class TestUriHelper
     {
         // Public for use in other test projects
-        public static Uri BuildTestUri(ServerType serverType)
+        public static string BuildTestUrl(ServerType serverType)
         {
-            return BuildTestUri(serverType, hint: null);
+            return BuildTestUri(serverType, hint: null).ToString();
         }
 
         internal static Uri BuildTestUri(ServerType serverType, string hint)
