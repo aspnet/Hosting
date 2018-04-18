@@ -3,7 +3,7 @@
     // Public for use in other test projects
     public static class TestUrlHelper
     {
-        public static string BuildTestUrl(ServerType serverType)
+        public static string GetTestUrl(ServerType serverType)
         {
             return TestUriHelper.BuildTestUri(serverType).ToString();
         }
