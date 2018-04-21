@@ -96,6 +96,24 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         }
 
         [Fact]
+        public void CreateContextSetsRequestIdInScopeWithHierarchicalParentRequestId()
+        {
+            // Arrange
+            var logger = new LoggerWithScopes();
+            var hostingApplication = CreateApplication(out var features, logger: logger);
+            features.Get<IHttpRequestFeature>().Headers["Request-Id"] = "|Guid.1.da4e9679.";
+
+            // Act
+            var context = hostingApplication.CreateContext(features);
+
+            Assert.Single(logger.Scopes);
+            var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
+            var actualRequestId = pairs["RequestId"].ToString();
+            Assert.StartsWith("|Guid.1.da4e9679.", actualRequestId);
+            Assert.EndsWith("_", actualRequestId);
+        }
+
+        [Fact]
         public void CreateContextSetsCorrelationIdInScopeWithFlatParentRequestId()
         {
             // Arrange

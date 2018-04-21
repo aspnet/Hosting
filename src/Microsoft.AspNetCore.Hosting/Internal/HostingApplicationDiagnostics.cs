@@ -77,11 +77,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 // If the baggage includes the Id, then than is more correct as the root Id than the
                 // Activity.RootId in the case of a mixed hierarchical and non-hierarchical scenario.
                 var activityRootId = context.Activity.GetBaggageItem("Id") ?? context.Activity.RootId;
+                var requestId = context.Activity.Id;
 
                 // Scope may be relevant for a different level of logging, so we always create it
                 // see: https://github.com/aspnet/Hosting/pull/944
                 // Scope can be null if logging is not on.
-                context.Scope = _logger.RequestScope(httpContext, parentRequestId, activityRootId);
+                context.Scope = _logger.RequestScope(httpContext, requestId, parentRequestId, activityRootId);
 
                 if (_logger.IsEnabled(LogLevel.Information))
                 {

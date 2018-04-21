@@ -13,10 +13,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     internal static class HostingLoggerExtensions
     {
-        public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext, string parentRequestId,
+        public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext, 
+            string requestId,
+            string parentRequestId,
             string activityRootId)
         {
-            return logger.BeginScope(new HostingLogScope(httpContext, parentRequestId, activityRootId));
+            return logger.BeginScope(new HostingLogScope(httpContext, requestId, parentRequestId, activityRootId));
         }
 
         public static void ApplicationError(this ILogger logger, Exception exception)
@@ -96,6 +98,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private class HostingLogScope : IReadOnlyList<KeyValuePair<string, object>>
         {
             private readonly HttpContext _httpContext;
+            private readonly string _requestId;
             private readonly string _parentRequestId;
             private readonly string _activityRootId;
 
@@ -115,7 +118,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 {
                     if (index == 0)
                     {
-                        return new KeyValuePair<string, object>("RequestId", _httpContext.TraceIdentifier);
+                        return new KeyValuePair<string, object>("RequestId", _requestId);
                     }
                     else if (index == 1)
                     {
@@ -134,9 +137,13 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
             }
 
-            public HostingLogScope(HttpContext httpContext, string parentRequestId, string activityRootId)
+            public HostingLogScope(HttpContext httpContext, 
+                string requestId, 
+                string parentRequestId,
+                string activityRootId)
             {
                 _httpContext = httpContext;
+                _requestId = requestId;
                 _parentRequestId = parentRequestId;
                 _activityRootId = activityRootId;
             }
