@@ -55,14 +55,15 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             if (diagnosticListenerEnabled || loggingEnabled)
             {
                 httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out parentRequestId);
+
+                if (_diagnosticListener.IsEnabled(ActivityName, httpContext) || loggingEnabled)
+                {
+                    context.Activity = StartActivity(httpContext, parentRequestId);
+                }
             }
 
             if (diagnosticListenerEnabled)
             {
-                if (_diagnosticListener.IsEnabled(ActivityName, httpContext))
-                {
-                    context.Activity = StartActivity(httpContext, parentRequestId);
-                }
                 if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsBeginRequestKey))
                 {
                     startTimestamp = Stopwatch.GetTimestamp();

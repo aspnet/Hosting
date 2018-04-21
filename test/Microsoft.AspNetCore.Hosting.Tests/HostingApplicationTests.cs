@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -78,6 +79,34 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             Assert.Null(Activity.Current);
             Assert.True(isEnabledActivityFired);
             Assert.False(isEnabledStartFired);
+            Assert.False(eventsFired);
+        }
+
+        [Fact]
+        public void ActivityIsCreatedWhenIsEnabledForDiagnosticSourceIsFalseAndLoggingIsEnabled()
+        {
+            var diagnosticSource = new DiagnosticListener("DummySource");
+            var hostingApplication = CreateApplication(
+                out var features, diagnosticSource: diagnosticSource, logger: new NullScopeLogger());
+
+            bool eventsFired = false;
+            bool isEnabledStartFired = false;
+
+            diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair =>
+            {
+                eventsFired |= pair.Key.StartsWith("Microsoft.AspNetCore.Hosting.HttpRequestIn");
+            }), (s, o, arg3) =>
+            {
+                if (s == "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start")
+                {
+                    isEnabledStartFired = true;
+                }
+                return false;
+            });
+
+            hostingApplication.CreateContext(features);
+            Assert.NotNull(Activity.Current);
+            Assert.True(isEnabledStartFired);
             Assert.False(eventsFired);
         }
 
@@ -237,7 +266,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         }
 
         [Fact]
-        public void ActivityParentIdAndBaggeReadFromHeaders()
+        public void ActivityParentIdAndBaggageReadFromHeaders()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
             var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
@@ -289,7 +318,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests
 
             var hostingApplication = new HostingApplication(
                 ctx => Task.FromResult(0),
-                logger ?? new NullScopeLogger(),
+                logger ?? NullLogger.Instance,
                 diagnosticSource ?? new NoopDiagnosticSource(),
                 httpContextFactory.Object);
 
