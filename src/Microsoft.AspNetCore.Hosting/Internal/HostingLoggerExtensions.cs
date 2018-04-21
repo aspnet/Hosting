@@ -13,9 +13,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     internal static class HostingLoggerExtensions
     {
-        public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext, string correlationId)
+        public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext, string parentRequestId)
         {
-            return logger.BeginScope(new HostingLogScope(httpContext, correlationId));
+            return logger.BeginScope(new HostingLogScope(httpContext, parentRequestId));
         }
 
         public static void ApplicationError(this ILogger logger, Exception exception)
@@ -95,7 +95,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private class HostingLogScope : IReadOnlyList<KeyValuePair<string, object>>
         {
             private readonly HttpContext _httpContext;
-            private readonly string _correlationId;
+            private readonly string _parentRequestId;
 
             private string _cachedToString;
 
@@ -121,17 +121,17 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     }
                     else if (index == 2)
                     {
-                        return new KeyValuePair<string, object>("CorrelationId", _correlationId);
+                        return new KeyValuePair<string, object>("ParentRequestId", _parentRequestId);
                     }
 
                     throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
 
-            public HostingLogScope(HttpContext httpContext, string correlationId)
+            public HostingLogScope(HttpContext httpContext, string parentRequestId)
             {
                 _httpContext = httpContext;
-                _correlationId = correlationId;
+                _parentRequestId = parentRequestId;
             }
 
             public override string ToString()

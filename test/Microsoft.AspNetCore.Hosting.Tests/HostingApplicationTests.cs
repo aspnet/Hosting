@@ -32,7 +32,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         }
 
         [Fact]
-        public void CreateContextSetsCorrelationIdInScope()
+        public void CreateContextSetsParentRequestIdInScope()
         {
             // Arrange
             var logger = new LoggerWithScopes();
@@ -44,7 +44,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests
 
             Assert.Single(logger.Scopes);
             var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal("some correlation id", pairs["CorrelationId"].ToString());
+            Assert.Equal("some correlation id", pairs["ParentRequestId"].ToString());
         }
 
         [Fact]

@@ -51,17 +51,17 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             // If logging is enabled or the diagnostic listener is enabled, try to get the correlation
             // id from the header
-            StringValues correlationId;
+            StringValues parentRequestId;
             if (diagnosticListenerEnabled || loggingEnabled)
             {
-                httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out correlationId);
+                httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out parentRequestId);
             }
 
             if (diagnosticListenerEnabled)
             {
                 if (_diagnosticListener.IsEnabled(ActivityName, httpContext))
                 {
-                    context.Activity = StartActivity(httpContext, correlationId);
+                    context.Activity = StartActivity(httpContext, parentRequestId);
                 }
                 if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsBeginRequestKey))
                 {
@@ -76,7 +76,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 // Scope may be relevant for a different level of logging, so we always create it
                 // see: https://github.com/aspnet/Hosting/pull/944
                 // Scope can be null if logging is not on.
-                context.Scope = _logger.RequestScope(httpContext, correlationId);
+                context.Scope = _logger.RequestScope(httpContext, parentRequestId);
 
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
@@ -240,12 +240,12 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private Activity StartActivity(HttpContext httpContext, StringValues requestId)
+        private Activity StartActivity(HttpContext httpContext, StringValues parentRequestId)
         {
             var activity = new Activity(ActivityName);
-            if (!StringValues.IsNullOrEmpty(requestId))
+            if (!StringValues.IsNullOrEmpty(parentRequestId))
             {
-                activity.SetParentId(requestId);
+                activity.SetParentId(parentRequestId);
 
                 // We expect baggage to be empty by default
                 // Only very advanced users will be using it in near future, we encourage them to keep baggage small (few items)
