@@ -33,6 +33,22 @@ namespace Microsoft.AspNetCore.Hosting.Tests
         }
 
         [Fact]
+        public void CreateContextSetsCorrelationIdInScope()
+        {
+            // Arrange
+            var logger = new LoggerWithScopes();
+            var hostingApplication = CreateApplication(out var features, logger: logger);
+            features.Get<IHttpRequestFeature>().Headers["Request-Id"] = "some correlation id";
+
+            // Act
+            var context = hostingApplication.CreateContext(features);
+
+            Assert.Single(logger.Scopes);
+            var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
+            Assert.Equal("some correlation id", pairs["CorrelationId"].ToString());
+        }
+
+        [Fact]
         public void CreateContextSetsParentRequestIdInScope()
         {
             // Arrange
@@ -46,6 +62,77 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             Assert.Single(logger.Scopes);
             var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
             Assert.Equal("some correlation id", pairs["ParentRequestId"].ToString());
+        }
+
+        [Fact]
+        public void CreateContextSetsCorrelationIdInScopeWithoutParentRequestId()
+        {
+            // Arrange
+            var logger = new LoggerWithScopes();
+            var hostingApplication = CreateApplication(out var features, logger: logger);
+
+            // Act
+            var context = hostingApplication.CreateContext(features);
+
+            Assert.Single(logger.Scopes);
+            var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
+            Assert.NotEmpty(pairs["CorrelationId"].ToString());
+        }
+
+        [Fact]
+        public void CreateContextSetsCorrelationIdInScopeWithHierarchicalParentRequestId()
+        {
+            // Arrange
+            var logger = new LoggerWithScopes();
+            var hostingApplication = CreateApplication(out var features, logger: logger);
+            features.Get<IHttpRequestFeature>().Headers["Request-Id"] = "|Guid.1.da4e9679.";
+
+            // Act
+            var context = hostingApplication.CreateContext(features);
+
+            Assert.Single(logger.Scopes);
+            var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
+            Assert.Equal("Guid", pairs["CorrelationId"].ToString());
+        }
+
+        [Fact]
+        public void CreateContextSetsCorrelationIdInScopeWithFlatParentRequestId()
+        {
+            // Arrange
+            var logger = new LoggerWithScopes();
+            var hostingApplication = CreateApplication(out var features, logger: logger);
+            features.Get<IHttpRequestFeature>().Headers["Request-Id"] = "Guid";
+
+            // Act
+            var context = hostingApplication.CreateContext(features);
+
+            Assert.Single(logger.Scopes);
+            var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
+            Assert.Equal("Guid", pairs["CorrelationId"].ToString());
+        }
+
+        [Fact]
+        public void CreateContextSetsCorrelationIdInScopeWithFlatParentRequestIdAndCorrelationContext()
+        {
+            // Arrange
+            var logger = new LoggerWithScopes();
+            var hostingApplication = CreateApplication(out var features, logger: logger);
+
+            features.Set<IHttpRequestFeature>(new HttpRequestFeature()
+            {
+                Headers = new HeaderDictionary()
+                {
+                    {"Request-Id", "ghi"},
+                    {"Correlation-Context", "Key1=value1, Key2=value2, Id=123"}
+                }
+            });
+
+            // Act
+            var context = hostingApplication.CreateContext(features);
+
+            Assert.Single(logger.Scopes);
+            var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
+            Assert.Equal("123", pairs["CorrelationId"].ToString());
         }
 
         [Fact]

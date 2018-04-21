@@ -13,9 +13,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     internal static class HostingLoggerExtensions
     {
-        public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext, string parentRequestId)
+        public static IDisposable RequestScope(this ILogger logger, HttpContext httpContext, string parentRequestId,
+            string activityRootId)
         {
-            return logger.BeginScope(new HostingLogScope(httpContext, parentRequestId));
+            return logger.BeginScope(new HostingLogScope(httpContext, parentRequestId, activityRootId));
         }
 
         public static void ApplicationError(this ILogger logger, Exception exception)
@@ -96,6 +97,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             private readonly HttpContext _httpContext;
             private readonly string _parentRequestId;
+            private readonly string _activityRootId;
 
             private string _cachedToString;
 
@@ -103,7 +105,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 get
                 {
-                    return 3;
+                    return 4;
                 }
             }
 
@@ -121,6 +123,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     }
                     else if (index == 2)
                     {
+                        return new KeyValuePair<string, object>("CorrelationId", _activityRootId);
+                    }
+                    else if (index == 3)
+                    {
                         return new KeyValuePair<string, object>("ParentRequestId", _parentRequestId);
                     }
 
@@ -128,10 +134,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
             }
 
-            public HostingLogScope(HttpContext httpContext, string parentRequestId)
+            public HostingLogScope(HttpContext httpContext, string parentRequestId, string activityRootId)
             {
                 _httpContext = httpContext;
                 _parentRequestId = parentRequestId;
+                _activityRootId = activityRootId;
             }
 
             public override string ToString()
