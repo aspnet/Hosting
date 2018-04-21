@@ -137,13 +137,13 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     }
 
                 }
+            }
 
-                var activity = context.Activity;
-                // Always stop activity if it was started
-                if (activity != null)
-                {
-                    StopActivity(httpContext, activity);
-                }
+            var activity = context.Activity;
+            // Always stop activity if it was started
+            if (activity != null)
+            {
+                StopActivity(httpContext, activity);
             }
 
             if (context.EventLogEnabled && exception != null)
