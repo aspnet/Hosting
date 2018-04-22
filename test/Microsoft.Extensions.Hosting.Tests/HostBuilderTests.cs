@@ -4,10 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting.Fakes;
+using Microsoft.Extensions.Hosting.Tests.Fakes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -457,6 +459,37 @@ namespace Microsoft.Extensions.Hosting
             hostBuilder.Properties.Add("key", "value");
 
             Assert.Equal("value", hostBuilder.Properties["key"]);
+
+            using (hostBuilder.Build()) { }
+        }
+
+
+        [Fact]
+        public void When_UseConsoleLifetime_Then_SingleHostLifetime()
+        {
+            var hostBuilder = new HostBuilder()
+                .UseConsoleLifetime();
+
+            hostBuilder.ConfigureContainer((HostBuilderContext hostContext, IServiceCollection services) =>
+            {
+                var count = services.Count(descriptor => descriptor.ServiceType == typeof(IHostLifetime));
+                Assert.Equal(1, count);
+            });
+
+            using (hostBuilder.Build()) { }
+        }
+
+        [Fact]
+        public void When_FakeHostLifetime_Then_SingleHostLifetime()
+        {
+            var hostBuilder = new HostBuilder()
+                .UseHostLifetime<FakeHostLifetime>();
+
+            hostBuilder.ConfigureContainer((HostBuilderContext hostContext, IServiceCollection services) =>
+            {
+                var count = services.Count(descriptor => descriptor.ServiceType == typeof(IHostLifetime));
+                Assert.Equal(1, count);
+            });
 
             using (hostBuilder.Build()) { }
         }
