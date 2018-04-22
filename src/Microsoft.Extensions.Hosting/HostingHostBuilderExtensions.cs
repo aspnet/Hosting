@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -116,7 +117,19 @@ namespace Microsoft.Extensions.Hosting
         /// <returns>The same instance of the <see cref="IHostBuilder"/> for chaining.</returns>
         public static IHostBuilder UseConsoleLifetime(this IHostBuilder hostBuilder)
         {
-            return hostBuilder.ConfigureServices((context, collection) => collection.AddSingleton<IHostLifetime, ConsoleLifetime>());
+            return hostBuilder.UseHostLifetime<ConsoleLifetime>();
+        }
+
+        /// <summary>
+        /// Replaces the registered <see cref="IHostLifetime"/> type in the service container with the specified <typeparamref name="TLifetime"/>.
+        /// </summary>
+        /// <typeparam name="TLifetime"></typeparam>
+        /// <param name="hostBuilder">The <see cref="IHostBuilder" /> to configure.</param>
+        /// <returns>The same instance of the <see cref="IHostBuilder"/> for chaining.</returns>
+        public static IHostBuilder UseHostLifetime<TLifetime>(this IHostBuilder hostBuilder)
+            where TLifetime : class, IHostLifetime
+        {
+            return hostBuilder.ConfigureServices((context, collection) => collection.Replace(ServiceDescriptor.Singleton<IHostLifetime, TLifetime>()));
         }
 
         /// <summary>
