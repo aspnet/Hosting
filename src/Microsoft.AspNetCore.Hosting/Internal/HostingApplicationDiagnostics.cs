@@ -37,8 +37,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void BeginRequest(HttpContext httpContext, ref HostingApplication.Context context)
         {
-            long startTimestamp = 0;
-
             if (HostingEventSource.Log.IsEnabled())
             {
                 context.EventLogEnabled = true;
@@ -51,52 +49,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             // If logging is enabled or the diagnostic listener is enabled, try to get the correlation
             // id from the header
-            StringValues parentRequestId;
             if (diagnosticListenerEnabled || loggingEnabled)
             {
-                httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out parentRequestId);
-
-                if (_diagnosticListener.IsEnabled(ActivityName, httpContext) || loggingEnabled)
-                {
-                    context.Activity = StartActivity(httpContext, parentRequestId);
-                }
+                // Non-inline
+                SetupLoggingAndDiagnosticListenerForRequestScope(httpContext, ref context, loggingEnabled, diagnosticListenerEnabled);
             }
-
-            if (diagnosticListenerEnabled)
-            {
-                if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsBeginRequestKey))
-                {
-                    startTimestamp = Stopwatch.GetTimestamp();
-                    RecordBeginRequestDiagnostics(httpContext, startTimestamp);
-                }
-            }
-
-            // To avoid allocation, return a null scope if the logger is not on at least to some degree.
-            if (loggingEnabled)
-            {
-                // If the baggage includes the Id, then than is more correct as the root Id than the
-                // Activity.RootId in the case of a mixed hierarchical and non-hierarchical scenario.
-                var activityRootId = context.Activity.GetBaggageItem("Id") ?? context.Activity.RootId;
-                var requestId = context.Activity.Id;
-
-                // Scope may be relevant for a different level of logging, so we always create it
-                // see: https://github.com/aspnet/Hosting/pull/944
-                // Scope can be null if logging is not on.
-                context.Scope = _logger.RequestScope(httpContext, requestId, parentRequestId, activityRootId);
-
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    if (startTimestamp == 0)
-                    {
-                        startTimestamp = Stopwatch.GetTimestamp();
-                    }
-
-                    // Non-inline
-                    LogRequestStarting(httpContext);
-                }
-            }
-
-            context.StartTimestamp = startTimestamp;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,6 +106,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // Always stop activity if it was started
             if (activity != null)
             {
+                // Non-inline
                 StopActivity(httpContext, activity);
             }
 
@@ -173,6 +131,53 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        private void SetupLoggingAndDiagnosticListenerForRequestScope(HttpContext httpContext,
+            ref HostingApplication.Context context, bool loggingEnabled, bool diagnosticListenerEnabled)
+        {
+            long startTimestamp = 0;
+            httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out StringValues parentRequestId);
+
+            if (_diagnosticListener.IsEnabled(ActivityName, httpContext) || loggingEnabled)
+            {
+                context.Activity = StartActivity(httpContext, parentRequestId);
+            }
+
+            if (diagnosticListenerEnabled)
+            {
+                if (_diagnosticListener.IsEnabled(DeprecatedDiagnosticsBeginRequestKey))
+                {
+                    startTimestamp = Stopwatch.GetTimestamp();
+                    RecordBeginRequestDiagnostics(httpContext, startTimestamp);
+                }
+            }
+
+            // To avoid allocation, return a null scope if the logger is not on at least to some degree.
+            if (loggingEnabled)
+            {
+                // If the baggage includes the Id, then than is more correct as the root Id than the
+                // Activity.RootId in the case of a mixed hierarchical and non-hierarchical scenario.
+                var activityRootId = context.Activity.GetBaggageItem("Id") ?? context.Activity.RootId;
+                var requestId = context.Activity.Id;
+
+                // Scope may be relevant for a different level of logging, so we always create it
+                // see: https://github.com/aspnet/Hosting/pull/944
+                // Scope can be null if logging is not on.
+                context.Scope = _logger.RequestScope(httpContext, requestId, parentRequestId, activityRootId);
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    if (startTimestamp == 0)
+                    {
+                        startTimestamp = Stopwatch.GetTimestamp();
+                    }
+
+                    LogRequestStarting(httpContext);
+                }
+            }
+
+            context.StartTimestamp = startTimestamp;
+        }
+
         private void LogRequestStarting(HttpContext httpContext)
         {
             // IsEnabled is checked in the caller, so if we are here just log
