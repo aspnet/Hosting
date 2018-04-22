@@ -11,7 +11,7 @@ namespace SampleMsmqHost
 {
     public interface IMsmqConnection
     {
-        Task SendTextAsync(string text, CancellationToken cancellationToken);
+        void SendText(string text);
 
         Task<Message> ReceiveAsync(CancellationToken cancellationToken);
     }
@@ -46,19 +46,17 @@ namespace SampleMsmqHost
             _queue?.Dispose();
         }
 
-        public async Task SendTextAsync(string text, CancellationToken cancellationToken)
+        public void SendText(string text)
         {
             // send the text message as UTF7
             using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream, Encoding.UTF7))
             using (var message = new Message())
             {
-                await writer.WriteAsync(text);
-                await writer.FlushAsync();
+                writer.Write(text);
+                writer.Flush();
 
                 message.BodyStream = stream;
-
-                cancellationToken.ThrowIfCancellationRequested();
 
                 _queue.Send(message);
             }
