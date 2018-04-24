@@ -47,8 +47,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             var diagnosticListenerEnabled = _diagnosticListener.IsEnabled();
             var loggingEnabled = _logger.IsEnabled(LogLevel.Critical);
 
-            // If logging is enabled or the diagnostic listener is enabled, try to get the correlation
-            // id from the header
             if (diagnosticListenerEnabled || loggingEnabled)
             {
                 // Non-inline
@@ -135,6 +133,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             ref HostingApplication.Context context, bool loggingEnabled, bool diagnosticListenerEnabled)
         {
             long startTimestamp = 0;
+
+            // If logging is enabled or the diagnostic listener is enabled, try to get the correlation
+            // id from the header
             httpContext.Request.Headers.TryGetValue(RequestIdHeaderName, out StringValues parentRequestId);
 
             if (_diagnosticListener.IsEnabled(ActivityName, httpContext) || loggingEnabled)
@@ -154,7 +155,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             // To avoid allocation, return a null scope if the logger is not on at least to some degree.
             if (loggingEnabled)
             {
-                // If the baggage includes the Id, then than is more correct as the root Id than the
+                // If the baggage includes the Id, then it is more correct as the root Id than the
                 // Activity.RootId in the case of a mixed hierarchical and non-hierarchical scenario.
                 var activityRootId = context.Activity.GetBaggageItem("Id") ?? context.Activity.RootId;
                 var requestId = context.Activity.Id;
