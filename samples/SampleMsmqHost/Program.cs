@@ -41,20 +41,19 @@ namespace SampleMsmqHost
                     services.AddTransient<IMsmqProcessor, MsmqProcessor>();
                     services.AddTransient<IHostedService, MsmqService>();
                 })
-                .UseConsoleLifetime()
                 .Build();
 
-            // start the MSMQ host
-            await host.StartAsync();
+            using (host)
+            {
+                // start the MSMQ host
+                await host.StartAsync();
 
-            // read and dispatch messages to the MSMQ queue
-            StartReadLoop(host);
+                // read and dispatch messages to the MSMQ queue
+                StartReadLoop(host);
 
-            // wait for the MSMQ host to shutdown
-            await host.WaitForShutdownAsync();
-
-            // don't forget to cleanup
-            host.Dispose();
+                // wait for the MSMQ host to shutdown
+                await host.WaitForShutdownAsync();
+            }
         }
 
         private static void StartReadLoop(IHost host)
