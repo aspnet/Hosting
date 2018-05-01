@@ -167,7 +167,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                     {
                         ModifyAspNetCoreSectionInWebConfig(key: "hostingModel", value: "inprocess");
                     }
-                    ModifyAspNetCoreSectionInWebConfig(key: "module", value: DeploymentParameters.ANCMVersion.ToString());
+                    ModifyAspNetCoreSectionInWebConfig(key: "modules", value: DeploymentParameters.ANCMVersion.ToString());
 
                     var parameters = string.IsNullOrWhiteSpace(DeploymentParameters.ServerConfigLocation) ?
                                     string.Format("/port:{0} /path:\"{1}\" /trace:error", uri.Port, contentRoot) :
