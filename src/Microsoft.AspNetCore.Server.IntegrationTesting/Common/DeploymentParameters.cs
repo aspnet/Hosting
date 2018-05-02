@@ -124,7 +124,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
         /// When using the IISExpressDeployer, determines whether to use the older or newer version
         /// of ANCM.
         /// </summary>
-        public ANCMVersion ANCMVersion { get; set; } = ANCMVersion.AspNetCoreModuleV2;
+        public ANCMVersion ANCMVersion { get; set; } = ANCMVersion.AspNetCoreModule;
 
         /// <summary>
         /// Environment variables to be set before starting the host.
