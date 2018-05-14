@@ -243,10 +243,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
             if (serverConfig.Contains(replaceFlag))
             {
                 var ancmFile = Path.Combine(contentRoot, Is64BitHost ? $@"x64\{dllName}" : $@"x86\{dllName}");
-                var p = Environment.ExpandEnvironmentVariables(ancmFile);
                 if (!File.Exists(Environment.ExpandEnvironmentVariables(ancmFile)))
                 {
-                    ancmFile = Path.Combine(contentRoot, $@"{dllName}");
+                    ancmFile = Path.Combine(contentRoot, dllName);
                     if (!File.Exists(Environment.ExpandEnvironmentVariables(ancmFile)))
                     {
                         throw new FileNotFoundException("AspNetCoreModule could not be found.", ancmFile);
