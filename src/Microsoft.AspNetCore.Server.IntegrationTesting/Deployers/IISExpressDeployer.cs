@@ -106,9 +106,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                         // Pass on the applicationhost.config to iis express. With this don't need to pass in the /path /port switches as they are in the applicationHost.config
                         // We take a copy of the original specified applicationHost.Config to prevent modifying the one in the repo.
-                        ModifyANCMPathInConfig(replaceFlag: "[ANCMPath]", dllName: "aspnetcore.dll", serverConfig, contentRoot);
+                        serverConfig = ModifyANCMPathInConfig(replaceFlag: "[ANCMPath]", dllName: "aspnetcore.dll", serverConfig, contentRoot);
 
-                        ModifyANCMPathInConfig(replaceFlag: "[ANCMV2Path]", dllName: "aspnetcorev2.dll", serverConfig, contentRoot);
+                        serverConfig = ModifyANCMPathInConfig(replaceFlag: "[ANCMV2Path]", dllName: "aspnetcorev2.dll", serverConfig, contentRoot);
 
                         Logger.LogDebug("Writing ApplicationPhysicalPath '{applicationPhysicalPath}' to config", contentRoot);
                         Logger.LogDebug("Writing Port '{port}' to config", port);
@@ -238,7 +238,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
             }
         }
 
-        private void ModifyANCMPathInConfig(string replaceFlag, string dllName, string serverConfig, string contentRoot)
+        private string ModifyANCMPathInConfig(string replaceFlag, string dllName, string serverConfig, string contentRoot)
         {
             if (serverConfig.Contains(replaceFlag))
             {
@@ -253,9 +253,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 }
 
                 Logger.LogDebug($"Writing '{replaceFlag}' '{ancmFile}' to config");
-                serverConfig =
-                    serverConfig.Replace(replaceFlag, ancmFile);
+                return serverConfig.Replace(replaceFlag, ancmFile);
             }
+            return serverConfig;
         }
 
         private string GetIISExpressPath()
