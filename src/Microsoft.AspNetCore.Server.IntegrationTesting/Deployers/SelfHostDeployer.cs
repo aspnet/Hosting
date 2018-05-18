@@ -78,7 +78,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                     if (DeploymentParameters.RuntimeFlavor == RuntimeFlavor.CoreClr && DeploymentParameters.ApplicationType == ApplicationType.Portable)
                     {
-                        executableName = "dotnet";
+                        executableName = GetDotNetExeForArchitecture();
                         executableArgs = executable;
                     }
                     else
@@ -90,7 +90,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 {
                     workingDirectory = DeploymentParameters.ApplicationPath;
                     var targetFramework = DeploymentParameters.TargetFramework ?? (DeploymentParameters.RuntimeFlavor == RuntimeFlavor.Clr ? Tfm.Net461 : Tfm.NetCoreApp22);
-                    executableName = DotnetCommandName;
+
+                    executableName = GetDotNetExeForArchitecture();
                     executableArgs = $"run --no-build -c {DeploymentParameters.Configuration} --framework {targetFramework} {DotnetArgumentSeparator}";
                 }
 
@@ -173,6 +174,22 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                 return (url: actualUrl ?? hintUrl, hostExitToken: hostExitTokenSource.Token);
             }
+        }
+
+        private string GetDotNetExeForArchitecture()
+        {
+            var executableName = DotnetCommandName;
+            // We expect x64 dotnet.exe to be on the path but we have to go searching for the x86 version.
+            if (DotNetCommands.IsRunningX86OnX64(DeploymentParameters.RuntimeArchitecture))
+            {
+                executableName = DotNetCommands.GetDotNetExecutable(DeploymentParameters.RuntimeArchitecture);
+                if (!File.Exists(executableName))
+                {
+                    throw new Exception($"Unable to find '{executableName}'.'");
+                }
+            }
+
+            return executableName;
         }
 
         public override void Dispose()
