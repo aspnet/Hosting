@@ -61,34 +61,5 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting.Common
                 }
             }
         }
-
-        // IIS Express preregisteres 44300-44399 ports with SSL bindings.
-        // So some tests always have to use ports in this range, and we can't rely on OS-allocated ports without a whole lot of ceremony around
-        // creating self-signed certificates and registering SSL bindings with HTTP.sys
-        public static int GetNextSSLPort()
-        {
-            var next = 44300;
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-            {
-                while (true)
-                {
-                    try
-                    {
-                        var port = next++;
-                        socket.Bind(new IPEndPoint(IPAddress.Loopback, port));
-                        return port;
-                    }
-                    catch (SocketException)
-                    {
-                        // Retry unless exhausted
-                        if (next > 44399)
-                        {
-                            throw;
-                        }
-                    }
-                }
-            }
-        }
-
     }
 }
