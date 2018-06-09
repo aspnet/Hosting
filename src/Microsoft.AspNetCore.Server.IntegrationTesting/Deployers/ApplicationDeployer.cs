@@ -127,11 +127,26 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                 hostProcess.StartAndCaptureOutAndErrToLogger("dotnet-publish", Logger);
 
-                hostProcess.WaitForExit();
-
-                if (hostProcess.ExitCode != 0)
+                // A timeout is passed to Process.WaitForExit() for two reasons:
+                // 
+                // 1. Without a timeout, WaitForExit() blocks until child processes are killed, which can cause hangs due to
+                //    MSBuild NodeReuse child processes started by dotnet.exe.  With any timeout, WaitForExit() returns when
+                //    the parent process is killed and ignores child processes (https://stackoverflow.com/a/37983587/102052).
+                // 
+                // 2. If "dotnet publish" does hang indefinitely for some reason, tests should fail fast with an error message.
+                const int _timeoutMinutes = 5;
+                if (hostProcess.WaitForExit(milliseconds: _timeoutMinutes * 60 * 1000))
                 {
-                    var message = $"{DotnetCommandName} publish exited with exit code : {hostProcess.ExitCode}";
+                    if (hostProcess.ExitCode != 0)
+                    {
+                        var message = $"{DotnetCommandName} publish exited with exit code : {hostProcess.ExitCode}";
+                        Logger.LogError(message);
+                        throw new Exception(message);
+                    }
+                }
+                else
+                {
+                    var message = $"{DotnetCommandName} publish failed to exit after {_timeoutMinutes} minutes";
                     Logger.LogError(message);
                     throw new Exception(message);
                 }
