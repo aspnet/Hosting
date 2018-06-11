@@ -129,9 +129,10 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
                 // A timeout is passed to Process.WaitForExit() for two reasons:
                 // 
-                // 1. Without a timeout, WaitForExit() blocks until child processes are killed, which can cause hangs due to
-                //    MSBuild NodeReuse child processes started by dotnet.exe.  With a timeout, WaitForExit() returns when
-                //    the parent process is killed and ignores child processes (https://stackoverflow.com/a/37983587/102052).
+                // 1. When process output is read asynchronously, WaitForExit() without a timeout blocks until child processes
+                //    are killed, which can cause hangs due to MSBuild NodeReuse child processes started by dotnet.exe.
+                //    With a timeout, WaitForExit() returns when the parent process is killed and ignores child processes.
+                //    https://stackoverflow.com/a/37983587/102052
                 // 
                 // 2. If "dotnet publish" does hang indefinitely for some reason, tests should fail fast with an error message.
                 const int timeoutMinutes = 5;
