@@ -134,8 +134,8 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 //    the parent process is killed and ignores child processes (https://stackoverflow.com/a/37983587/102052).
                 // 
                 // 2. If "dotnet publish" does hang indefinitely for some reason, tests should fail fast with an error message.
-                const int _timeoutMinutes = 5;
-                if (hostProcess.WaitForExit(milliseconds: _timeoutMinutes * 60 * 1000))
+                const int timeoutMinutes = 5;
+                if (hostProcess.WaitForExit(milliseconds: timeoutMinutes * 60 * 1000))
                 {
                     if (hostProcess.ExitCode != 0)
                     {
@@ -146,7 +146,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 }
                 else
                 {
-                    var message = $"{DotnetCommandName} publish failed to exit after {_timeoutMinutes} minutes";
+                    var message = $"{DotnetCommandName} publish failed to exit after {timeoutMinutes} minutes";
                     Logger.LogError(message);
                     throw new Exception(message);
                 }
