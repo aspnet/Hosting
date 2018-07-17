@@ -187,7 +187,7 @@ namespace Microsoft.AspNetCore.Hosting
                 applicationServices,
                 hostingServiceProvider,
                 _options,
-                _config,
+                _context.Configuration,
                 hostingStartupErrors);
             try
             {

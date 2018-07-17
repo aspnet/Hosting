@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Fakes;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,12 @@ namespace Microsoft.AspNetCore.Hosting
 {
     public class WebHostBuilderTests
     {
+        public WebHostBuilderTests()
+        {
+            Environment.SetEnvironmentVariable("ASPNETCORE_URLS", null);
+            Environment.SetEnvironmentVariable("ASPNETCORE_SERVER.URLS", null);
+        }
+
         [Fact]
         public void Build_honors_UseStartup_with_string()
         {
@@ -1032,6 +1039,119 @@ namespace Microsoft.AspNetCore.Hosting
             }
         }
 
+        [Fact]
+        public void UseServerUrlsKeyWhenEnvironmentVariableDefined()
+        {
+            List<string> urls = new List<string>(2);
+            for (int i = 0; i < urls.Capacity; ++i)
+            {
+                urls.Add($"http://{Guid.NewGuid().ToString("N")}:5000/");
+            }
+
+            Environment.SetEnvironmentVariable("ASPNETCORE_URLS", string.Join(';', urls));
+
+            var builder = CreateWebHostBuilder()
+                .Configure(app => { })
+                .UseServer(new TestServer());
+
+            using (var host = builder.Build())
+            {
+                IServerAddressesFeature addresses = host.ServerFeatures.Get<IServerAddressesFeature>();
+                Assert.Equal(urls.Count, addresses.Addresses.Count);
+                foreach (string url in urls)
+                {
+                    Assert.True(addresses.Addresses.Contains(url));
+                }
+            }
+        }
+
+        [Fact]
+        public void UseDeprecatedServerUrlsKeyWhenEnvironmentVariableDefined()
+        {
+            List<string> urls = new List<string>(2);
+            for (int i = 0; i < urls.Capacity; ++i)
+            {
+                urls.Add($"http://{Guid.NewGuid().ToString("N")}:5000/");
+            }
+
+            Environment.SetEnvironmentVariable("ASPNETCORE_SERVER.URLS", string.Join(';', urls));
+
+            var builder = CreateWebHostBuilder()
+                .Configure(app => { })
+                .UseServer(new TestServer());
+
+            using (var host = builder.Build())
+            {
+                IServerAddressesFeature addresses = host.ServerFeatures.Get<IServerAddressesFeature>();
+                Assert.Equal(urls.Count, addresses.Addresses.Count);
+                foreach (string url in urls)
+                {
+                    Assert.True(addresses.Addresses.Contains(url));
+                }
+            }
+        }
+
+        [Fact]
+        public void UseServerUrlsKeyInsteadOfDeprecatedServerUrlsKey()
+        {
+            List<string> urls = new List<string>(2);
+            for (int i = 0; i < urls.Capacity; ++i)
+            {
+                urls.Add($"http://{Guid.NewGuid().ToString("N")}:5000/");
+            }
+
+            Environment.SetEnvironmentVariable("ASPNETCORE_URLS", string.Join(';', urls));
+            Environment.SetEnvironmentVariable("ASPNETCORE_SERVER.URLS", $"http://{Guid.NewGuid().ToString("N")}:5000/");
+
+            var builder = CreateWebHostBuilder()
+                .Configure(app => { })
+                .UseServer(new TestServer());
+
+            using (var host = builder.Build())
+            {
+                IServerAddressesFeature addresses = host.ServerFeatures.Get<IServerAddressesFeature>();
+                Assert.Equal(urls.Count, addresses.Addresses.Count);
+                foreach (string url in urls)
+                {
+                    Assert.True(addresses.Addresses.Contains(url));
+                }
+            }
+        }
+
+        [Fact]
+        public void UseConfigurationUrlsWhenServerUrlsKeyNotDefined()
+        {
+            List<string> urls = new List<string>(2);
+            for (int i = 0; i < urls.Capacity; ++i)
+            {
+                urls.Add($"http://{Guid.NewGuid().ToString("N")}:5000/");
+            }
+
+            Dictionary<string, string> configData = new Dictionary<string, string>()
+            {
+                [WebHostDefaults.ServerUrlsKey] = string.Join(';', urls)
+            };
+            IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(configData).Build();
+
+            var builder = CreateWebHostBuilder()
+                .ConfigureAppConfiguration((context, configBuilder) =>
+                {
+                    configBuilder.AddConfiguration(config);
+                })
+                .Configure(app => { })
+                .UseServer(new TestServer());
+
+            using (var host = builder.Build())
+            {
+                IServerAddressesFeature addresses = host.ServerFeatures.Get<IServerAddressesFeature>();
+                Assert.Equal(urls.Count, addresses.Addresses.Count);
+                foreach (string url in urls)
+                {
+                    Assert.True(addresses.Addresses.Contains(url));
+                }
+            }
+        }
+
         private static void StaticConfigureMethod(IApplicationBuilder app) { }
 
         private IWebHostBuilder CreateWebHostBuilder()
@@ -1059,7 +1179,12 @@ namespace Microsoft.AspNetCore.Hosting
 
         private class TestServer : IServer
         {
-            IFeatureCollection IServer.Features { get; }
+            public TestServer()
+            {
+                Features.Set<IServerAddressesFeature>(new ServerAddressesFeature());
+            }
+
+            public IFeatureCollection Features { get; } = new FeatureCollection();
             public RequestDelegate RequestDelegate { get; private set; }
 
             public void Dispose() { }
