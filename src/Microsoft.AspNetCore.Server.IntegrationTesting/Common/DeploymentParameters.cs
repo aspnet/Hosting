@@ -99,7 +99,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
             }
         }
 
-        public TestApplication TestApplication { get; set; }
+        public ApplicationPublisher ApplicationPublisher { get; set; }
 
         public ServerType ServerType { get; set;  }
 

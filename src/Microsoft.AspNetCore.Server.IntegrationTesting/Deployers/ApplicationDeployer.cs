@@ -20,11 +20,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
     {
         public static readonly string DotnetCommandName = "dotnet";
 
-        // This is the argument that separates the dotnet arguments for the args being passed to the
-        // app being run when running dotnet run
-        public static readonly string DotnetArgumentSeparator = "--";
-
         private readonly Stopwatch _stopwatch = new Stopwatch();
+
+        private PublishedApplication _publishedApplication;
 
         public ApplicationDeployer(DeploymentParameters deploymentParameters, ILoggerFactory loggerFactory)
         {
@@ -82,14 +80,9 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
 
         protected void DotnetPublish(string publishRoot = null)
         {
-            if (DeploymentParameters.TestApplication == null)
-            {
-                TestApplication.PublishApplication(DeploymentParameters, Logger, publishRoot ?? Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-            }
-            else
-            {
-                DeploymentParameters.PublishedApplicationRootPath = DeploymentParameters.TestApplication.Publish(DeploymentParameters, Logger);
-            }
+            var publisher = DeploymentParameters.ApplicationPublisher ?? new ApplicationPublisher(DeploymentParameters.ApplicationPath);
+            _publishedApplication = publisher.Publish(DeploymentParameters, Logger).GetAwaiter().GetResult();
+            DeploymentParameters.PublishedApplicationRootPath = _publishedApplication.Path;
         }
 
         protected void CleanPublishedOutput()
@@ -104,11 +97,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                 }
                 else
                 {
-                    RetryHelper.RetryOperation(
-                        () => Directory.Delete(DeploymentParameters.PublishedApplicationRootPath, true),
-                        e => Logger.LogWarning($"Failed to delete directory : {e.Message}"),
-                        retryCount: 3,
-                        retryDelayMilliseconds: 100);
+                    _publishedApplication.Dispose();
                 }
             }
         }
