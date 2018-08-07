@@ -35,6 +35,7 @@ namespace Microsoft.AspNetCore.Server.IntegrationTesting
                                  + $" --output \"{publishDirectory.FullName}\""
                                  + $" --framework {deploymentParameters.TargetFramework}"
                                  + $" --configuration {deploymentParameters.Configuration}"
+                                 + "/bl:out.binlog"
                                  + (deploymentParameters.RestoreOnPublish
                                      ? string.Empty
                                      : " --no-restore -p:VerifyMatchingImplicitPackageVersion=false");
