@@ -1,0 +1,46 @@
+<Project>
+  <Import Project="..\Directory.Build.targets" />
+
+  <ItemGroup>
+    <None Include="$(TestProjectTemplateFile)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TestProjectGenInputs Include="$(ProjectAssetsFile)" />
+    <TestProjectGenInputs Include="$(MSBuildAllProjects)" />
+    <TestProjectGenInputs Include="$(TestProjectTemplateFile)" />
+    <TestProjectGenInputs Include="$(MSBuildThisFileDirectory)..\build\dependencies.props" />
+    <TestProjectGenInputs Include="$(MSBuildThisFileDirectory)..\build\sources.props" />
+    <TestProjectGenInputs Include="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
+    <TestProjectGenInputs Include="$(DotNetRestoreSourcePropsPath)" Condition=" '$(DotNetRestoreSourcePropsPath)' != '' " />
+  </ItemGroup>
+
+  <Target Name="GenerateTestProject" BeforeTargets="CoreCompile" Inputs="@(TestProjectGenInputs)" Outputs="$(GeneratedTestProjectFile)">
+    <PropertyGroup>
+      <RestoreSources>
+        $(RestoreSources);
+        $(MSBuildThisFileDirectory)..\artifacts\build;
+      </RestoreSources>
+      <TestProjectProperties>
+        RestoreSources=$([MSBuild]::Escape($(RestoreSources.Trim())));
+        TargetFramework=$(TargetFramework);
+        MicrosoftNETCoreApp20PackageVersion=$(MicrosoftNETCoreApp20PackageVersion);
+        MicrosoftNETCoreApp21PackageVersion=$(MicrosoftNETCoreApp21PackageVersion);
+        MicrosoftNETCoreApp22PackageVersion=$(MicrosoftNETCoreApp22PackageVersion);
+        MicrosoftExtensionsConfigurationPackageVersion=$(MicrosoftExtensionsConfigurationPackageVersion);
+        MicrosoftExtensionsConfigurationCommandLinePackageVersion=$(MicrosoftExtensionsConfigurationCommandLinePackageVersion);
+        MicrosoftExtensionsConfigurationEnvironmentVariablesPackageVersion=$(MicrosoftExtensionsConfigurationEnvironmentVariablesPackageVersion);
+        MicrosoftExtensionsLoggingConsolePackageVersion=$(MicrosoftExtensionsLoggingConsolePackageVersion);
+      </TestProjectProperties>
+    </PropertyGroup>
+
+    <Sdk_GenerateFileFromTemplate
+      TemplateFile="$(TestProjectTemplateFile)"
+      Properties="$(TestProjectProperties)"
+      OutputPath="$(GeneratedTestProjectFile)">
+      <Output TaskParameter="OutputPath" ItemName="FileWrites" />
+      <Output TaskParameter="OutputPath" ItemName="Compile" />
+    </Sdk_GenerateFileFromTemplate>
+
+  </Target>
+</Project>
