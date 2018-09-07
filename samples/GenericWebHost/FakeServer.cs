@@ -24,7 +24,7 @@ namespace GenericWebHost
 
     public static class FakeServerWebHostBuilderExtensions
     {
-        public static IHostBuilder UseFakeServer(this IHostBuilder builder)
+        public static IHostBuilder UseKestrel(this IHostBuilder builder)
         {
             return builder.ConfigureServices((builderContext, services) => services.AddSingleton<IServer, FakeServer>());
         }

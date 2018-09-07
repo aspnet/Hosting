@@ -6,6 +6,6 @@ namespace GenericWebHost
 {
     public class WebHostServiceOptions
     {
-        public Action<HostBuilderContext, IApplicationBuilder> ConfigureApp { get; internal set; }
+        public Action<HostBuilderContext, IApplicationBuilder> Configure { get; internal set; }
     }
 }

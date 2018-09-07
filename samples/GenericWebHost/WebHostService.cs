@@ -21,9 +21,9 @@ namespace GenericWebHost
         {
             Options = options?.Value ?? throw new System.ArgumentNullException(nameof(options));
 
-            if (Options.ConfigureApp == null)
+            if (Options.Configure == null)
             {
-                throw new ArgumentException(nameof(Options.ConfigureApp));
+                throw new ArgumentException(nameof(Options.Configure));
             }
 
             Services = services ?? throw new ArgumentNullException(nameof(services));
@@ -44,10 +44,8 @@ namespace GenericWebHost
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Server.Features.Get<IServerAddressesFeature>()?.Addresses.Add("http://localhost:5000");
-
             var builder = new ApplicationBuilder(Services, Server.Features);
-            Options.ConfigureApp(HostBuilderContext, builder);
+            Options.Configure(HostBuilderContext, builder);
             var app = builder.Build();
 
             var httpApp = new HostingApplication(app, Logger, DiagnosticListener, HttpContextFactory);

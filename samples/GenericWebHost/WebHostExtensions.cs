@@ -14,13 +14,13 @@ namespace GenericWebHost
 {
     public static class WebHostExtensions
     {
-        public static IHostBuilder ConfigureWebHost(this IHostBuilder builder, Action<HostBuilderContext, IApplicationBuilder> configureApp)
+        public static IHostBuilder ConfigureWebHost(this IHostBuilder builder, Action<HostBuilderContext, IApplicationBuilder> configure)
         {
             return builder.ConfigureServices((bulderContext, services) =>
             {
                 services.Configure<WebHostServiceOptions>(options =>
                 {
-                    options.ConfigureApp = configureApp;
+                    options.Configure = configure;
                 });
                 services.AddHostedService<WebHostService>();
                 

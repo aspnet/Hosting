@@ -21,8 +21,9 @@ namespace GenericWebHost
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    
                 })
-                .UseFakeServer()
+                .UseKestrel()
                 .ConfigureWebHost((hostContext, app) =>
                 {
                     app.Run(async (context) =>
@@ -32,8 +33,6 @@ namespace GenericWebHost
                 })
                 .UseConsoleLifetime()
                 .Build();
-
-            var s = host.Services;
 
             await host.RunAsync();
         }
