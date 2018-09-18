@@ -162,7 +162,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
         }
 
-
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void LogRequestStarting(HttpContext httpContext)
         {

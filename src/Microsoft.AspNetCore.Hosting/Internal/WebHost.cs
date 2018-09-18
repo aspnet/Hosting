@@ -203,15 +203,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 EnsureServer();
 
                 var builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
-                var diagnosticSource = _applicationServices.GetRequiredService<DiagnosticListener>();
                 var builder = builderFactory.CreateBuilder(Server.Features);
                 builder.ApplicationServices = _applicationServices;
-
-                // Make sure the diagnostic middleware runs first. Ideally this would be a startup filter
-                // but at the moment it's possible to run code before those and that might break some scenarios
-                // We can move to an IStartupFilter in the next major but try to preserve as much
-                // here on by default.
-                builder.UseMiddleware<RequestDiagnosticsMiddleware>(_logger, diagnosticSource);
 
                 var startupFilters = _applicationServices.GetService<IEnumerable<IStartupFilter>>();
                 Action<IApplicationBuilder> configure = _startup.Configure;
