@@ -15,16 +15,10 @@ namespace Microsoft.AspNetCore.Hosting.Internal
     {
         private readonly RequestDelegate _application;
         private readonly IHttpContextFactory _httpContextFactory;
-        private HostingApplicationDiagnostics _diagnostics;
-
-        public HostingApplication(
-            RequestDelegate application,
-            ILogger logger,
-            DiagnosticListener diagnosticSource,
-            IHttpContextFactory httpContextFactory)
+        
+        public HostingApplication(RequestDelegate application, IHttpContextFactory httpContextFactory)
         {
             _application = application;
-            _diagnostics = new HostingApplicationDiagnostics(logger, diagnosticSource);
             _httpContextFactory = httpContextFactory;
         }
 
@@ -33,9 +27,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         {
             var context = new Context();
             var httpContext = _httpContextFactory.Create(contextFeatures);
-
-            _diagnostics.BeginRequest(httpContext, ref context);
-
             context.HttpContext = httpContext;
             return context;
         }
@@ -50,9 +41,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public void DisposeContext(Context context, Exception exception)
         {
             var httpContext = context.HttpContext;
-            _diagnostics.RequestEnd(httpContext, exception, context);
             _httpContextFactory.Dispose(httpContext);
-            _diagnostics.ContextDisposed(context);
         }
 
         public struct Context

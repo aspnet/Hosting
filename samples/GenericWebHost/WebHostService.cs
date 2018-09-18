@@ -50,7 +50,7 @@ namespace GenericWebHost
             Options.ConfigureApp(HostBuilderContext, builder);
             var app = builder.Build();
 
-            var httpApp = new HostingApplication(app, Logger, DiagnosticListener, HttpContextFactory);
+            var httpApp = new HostingApplication(app, HttpContextFactory);
             return Server.StartAsync(httpApp, cancellationToken);
         }
 

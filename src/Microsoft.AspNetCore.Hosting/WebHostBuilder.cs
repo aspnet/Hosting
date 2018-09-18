@@ -291,7 +291,8 @@ namespace Microsoft.AspNetCore.Hosting
             services.AddOptions();
             services.AddLogging();
 
-            // Conjure up a RequestServices
+            // Add default middleware to the pipeline
+            services.AddTransient<IStartupFilter, RequestDiagnosticsStartupFilter>();
             services.AddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
             services.AddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
 
