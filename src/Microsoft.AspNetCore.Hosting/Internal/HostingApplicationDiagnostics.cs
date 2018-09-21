@@ -154,11 +154,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             // Logging Scope is finshed with
             context.Scope?.Dispose();
-        }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ContextDisposed(HostingApplication.Context context)
-        {
             if (context.EventLogEnabled)
             {
                 // Non-inline
@@ -277,7 +273,14 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void StopActivity(HttpContext httpContext, Activity activity)
         {
-            _diagnosticListener.StopActivity(activity, new { HttpContext = httpContext });
+            if (_diagnosticListener.IsEnabled(ActivityStartKey))
+            {
+                _diagnosticListener.StopActivity(activity, new { HttpContext = httpContext });
+            }
+            else 
+            {
+                activity.Stop();
+            }
         }
     }
 }

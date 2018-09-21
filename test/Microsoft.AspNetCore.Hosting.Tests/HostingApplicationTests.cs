@@ -21,37 +21,41 @@ namespace Microsoft.AspNetCore.Hosting.Tests
     public class HostingApplicationTests
     {
         [Fact]
-        public void DisposeContextDoesNotThrowWhenContextScopeIsNull()
+        public async Task DisposeContextDoesNotThrowWhenContextScopeIsNull()
         {
             // Arrange
-            var hostingApplication = CreateApplication(out var features);
-            var context = hostingApplication.CreateContext(features);
+            var app = CreateApplication();
 
-            // Act/Assert
-            hostingApplication.DisposeContext(context, null);
+            var context = new DefaultHttpContext();
+
+            await app(context);
         }
 
         [Fact]
-        public void CreateContextSetsCorrelationIdInScope()
+        public async Task CreateContextSetsCorrelationIdInScope()
         {
             // Arrange
             var logger = new LoggerWithScopes();
-            var hostingApplication = CreateApplication(out var features, logger: logger);
-            features.Get<IHttpRequestFeature>().Headers["Request-Id"] = "some correlation id";
+            var app = CreateApplication(logger: logger);
+            var context = new DefaultHttpContext();
+            context.Request.Headers["Request-Id"] = "some correlation id";
 
             // Act
-            var context = hostingApplication.CreateContext(features);
+            await app(context);
 
+            // Assert
             Assert.Single(logger.Scopes);
             var pairs = ((IReadOnlyList<KeyValuePair<string, object>>)logger.Scopes[0]).ToDictionary(p => p.Key, p => p.Value);
             Assert.Equal("some correlation id", pairs["CorrelationId"].ToString());
         }
 
         [Fact]
-        public void ActivityIsNotCreatedWhenIsEnabledForActivityIsFalse()
+        public async Task ActivityIsNotCreatedWhenIsEnabledForActivityIsFalse()
         {
+            var tcs = new TaskCompletionSource<object>();
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             bool eventsFired = false;
             bool isEnabledActivityFired = false;
@@ -74,18 +78,25 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                 return false;
             });
 
-            hostingApplication.CreateContext(features);
-            Assert.Null(Activity.Current);
+            var app = middleware(httpContext =>
+            {
+                Assert.Null(Activity.Current);
+                return Task.CompletedTask;
+            });
+
+            await app(context);
+
             Assert.True(isEnabledActivityFired);
             Assert.False(isEnabledStartFired);
             Assert.False(eventsFired);
         }
 
         [Fact]
-        public void ActivityIsCreatedButNotLoggedWhenIsEnabledForActivityStartIsFalse()
+        public async Task ActivityIsCreatedButNotLoggedWhenIsEnabledForActivityStartIsFalse()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             bool eventsFired = false;
             bool isEnabledStartFired = false;
@@ -111,18 +122,25 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                 return true;
             });
 
-            hostingApplication.CreateContext(features);
-            Assert.NotNull(Activity.Current);
+            var app = middleware(httpContext =>
+            {
+                Assert.NotNull(Activity.Current);
+                return Task.CompletedTask;
+            });
+
+            await app(context);
+
             Assert.True(isEnabledActivityFired);
             Assert.True(isEnabledStartFired);
             Assert.False(eventsFired);
         }
 
         [Fact]
-        public void ActivityIsCreatedAndLogged()
+        public async Task ActivityIsCreatedAndLogged()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             bool startCalled = false;
 
@@ -138,16 +156,23 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                 }
             }));
 
-            hostingApplication.CreateContext(features);
-            Assert.NotNull(Activity.Current);
+            var app = middleware(httpContext =>
+            {
+                Assert.NotNull(Activity.Current);
+                return Task.CompletedTask;
+            });
+
+            await app(context);
+
             Assert.True(startCalled);
         }
 
         [Fact]
-        public void ActivityIsStoppedDuringStopCall()
+        public async Task ActivityIsStoppedDuringStopCall()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var app = CreateApplication(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             bool endCalled = false;
             diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair =>
@@ -163,16 +188,17 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                 }
             }));
 
-            var context = hostingApplication.CreateContext(features);
-            hostingApplication.DisposeContext(context, null);
+            await app(context);
+
             Assert.True(endCalled);
         }
 
         [Fact]
-        public void ActivityIsStoppedDuringUnhandledExceptionCall()
+        public async Task ActivityIsStoppedDuringUnhandledExceptionCall()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             bool endCalled = false;
             diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair =>
@@ -187,16 +213,22 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                 }
             }));
 
-            var context = hostingApplication.CreateContext(features);
-            hostingApplication.DisposeContext(context, new Exception());
+            var app = middleware(httpContext =>
+            {
+                throw new Exception();
+            });
+
+            await Assert.ThrowsAsync<Exception>(() => app(context));
+
             Assert.True(endCalled);
         }
 
         [Fact]
-        public void ActivityIsAvailableDuringUnhandledExceptionCall()
+        public async Task ActivityIsAvailableDuringUnhandledExceptionCall()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             bool endCalled = false;
             diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair =>
@@ -209,16 +241,22 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                 }
             }));
 
-            var context = hostingApplication.CreateContext(features);
-            hostingApplication.DisposeContext(context, new Exception());
+            var app = middleware(httpContext =>
+            {
+                throw new Exception();
+            });
+
+            await Assert.ThrowsAsync<Exception>(() => app(context));
+
             Assert.True(endCalled);
         }
 
         [Fact]
-        public void ActivityIsAvailibleDuringRequest()
+        public async Task ActivityIsAvailibleDuringRequest()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
 
             diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair => { }),
                 s =>
@@ -230,17 +268,24 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                     return false;
                 });
 
-            hostingApplication.CreateContext(features);
+            var app = middleware(httpContext =>
+            {
+                Assert.NotNull(Activity.Current);
+                Assert.Equal("Microsoft.AspNetCore.Hosting.HttpRequestIn", Activity.Current.OperationName);
+                return Task.CompletedTask;
+            });
 
-            Assert.NotNull(Activity.Current);
-            Assert.Equal("Microsoft.AspNetCore.Hosting.HttpRequestIn", Activity.Current.OperationName);
+            await app(context);
         }
 
         [Fact]
-        public void ActivityParentIdAndBaggeReadFromHeaders()
+        public async Task ActivityParentIdAndBaggeReadFromHeaders()
         {
             var diagnosticSource = new DiagnosticListener("DummySource");
-            var hostingApplication = CreateApplication(out var features, diagnosticSource: diagnosticSource);
+            var middleware = CreateDiagnosticMiddleware(diagnosticSource: diagnosticSource);
+            var context = new DefaultHttpContext();
+            context.Request.Headers["Request-Id"] = "ParentId1";
+            context.Request.Headers["Correlation-Context"] = "Key1=value1, Key2=value2";
 
             diagnosticSource.Subscribe(new CallbackDiagnosticListener(pair => { }),
                 s =>
@@ -252,19 +297,17 @@ namespace Microsoft.AspNetCore.Hosting.Tests
                     return false;
                 });
 
-            features.Set<IHttpRequestFeature>(new HttpRequestFeature()
+            var app = middleware(httpContext =>
             {
-                Headers = new HeaderDictionary()
-                {
-                    {"Request-Id", "ParentId1"},
-                    {"Correlation-Context", "Key1=value1, Key2=value2"}
-                }
+                Assert.Equal("Microsoft.AspNetCore.Hosting.HttpRequestIn", Activity.Current.OperationName);
+                Assert.Equal("ParentId1", Activity.Current.ParentId);
+                Assert.Contains(Activity.Current.Baggage, pair => pair.Key == "Key1" && pair.Value == "value1");
+                Assert.Contains(Activity.Current.Baggage, pair => pair.Key == "Key2" && pair.Value == "value2");
+
+                return Task.CompletedTask;
             });
-            hostingApplication.CreateContext(features);
-            Assert.Equal("Microsoft.AspNetCore.Hosting.HttpRequestIn", Activity.Current.OperationName);
-            Assert.Equal("ParentId1", Activity.Current.ParentId);
-            Assert.Contains(Activity.Current.Baggage, pair => pair.Key == "Key1" && pair.Value == "value1");
-            Assert.Contains(Activity.Current.Baggage, pair => pair.Key == "Key2" && pair.Value == "value2");
+
+            await app(context);
         }
 
         private static void AssertProperty<T>(object o, string name)
@@ -277,23 +320,14 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             Assert.IsAssignableFrom<T>(value);
         }
 
-        private static HostingApplication CreateApplication(out FeatureCollection features,
-            DiagnosticListener diagnosticSource = null, ILogger logger = null)
+        private static RequestDelegate CreateApplication(DiagnosticListener diagnosticSource = null, ILogger logger = null)
         {
-            var httpContextFactory = new Mock<IHttpContextFactory>();
+            return CreateDiagnosticMiddleware(diagnosticSource, logger)(context => Task.CompletedTask);
+        }
 
-            features = new FeatureCollection();
-            features.Set<IHttpRequestFeature>(new HttpRequestFeature());
-            httpContextFactory.Setup(s => s.Create(It.IsAny<IFeatureCollection>())).Returns(new DefaultHttpContext(features));
-            httpContextFactory.Setup(s => s.Dispose(It.IsAny<HttpContext>()));
-
-            var hostingApplication = new HostingApplication(
-                ctx => Task.FromResult(0),
-                logger ?? new NullScopeLogger(),
-                diagnosticSource ?? new NoopDiagnosticSource(),
-                httpContextFactory.Object);
-
-            return hostingApplication;
+        private static Func<RequestDelegate, RequestDelegate> CreateDiagnosticMiddleware(DiagnosticListener diagnosticSource = null, ILogger logger = null)
+        {
+            return next => new RequestDiagnosticsMiddleware(next, diagnosticSource ?? new NoopDiagnosticSource(), logger ?? new NullScopeLogger()).Invoke;
         }
 
         private class NullScopeLogger : ILogger
@@ -321,7 +355,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
             {
-                
+
             }
 
             private class Scope : IDisposable

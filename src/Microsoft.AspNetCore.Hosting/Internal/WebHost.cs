@@ -141,9 +141,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             _applicationLifetime = _applicationServices.GetRequiredService<IApplicationLifetime>() as ApplicationLifetime;
             _hostedServiceExecutor = _applicationServices.GetRequiredService<HostedServiceExecutor>();
-            var diagnosticSource = _applicationServices.GetRequiredService<DiagnosticListener>();
             var httpContextFactory = _applicationServices.GetRequiredService<IHttpContextFactory>();
-            var hostingApp = new HostingApplication(application, _logger, diagnosticSource, httpContextFactory);
+            var hostingApp = new HostingApplication(application, httpContextFactory);
             await Server.StartAsync(hostingApp, cancellationToken).ConfigureAwait(false);
 
             // Fire IApplicationLifetime.Started
