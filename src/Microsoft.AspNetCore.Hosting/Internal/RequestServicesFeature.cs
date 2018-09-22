@@ -31,6 +31,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 if (!_requestServicesSet)
                 {
                     _context.Response.RegisterForDispose(this);
+                    // Don't hold onto the http context any longer than we need to
+                    _context = null;
                     _scope = _scopeFactory.CreateScope();
                     _requestServices = _scope.ServiceProvider;
                     _requestServicesSet = true;
