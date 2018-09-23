@@ -194,7 +194,6 @@ namespace Microsoft.AspNetCore.Hosting
                     logger.LogWarning($"The assembly {assemblyName} was specified multiple times. Hosting startup assemblies should only be specified once.");
                 }
 
-
                 return host;
             }
             catch
