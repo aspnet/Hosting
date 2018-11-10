@@ -20,7 +20,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private readonly IHostBuilder _builder;
         private readonly IConfiguration _config;
         private readonly object _startupKey = new object();
-        private readonly AggregateException _hostingStartupErrors;
+        private AggregateException _hostingStartupErrors;
 
         public GenericWebHostBuilder(IHostBuilder builder)
         {
@@ -34,6 +34,71 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 config.AddConfiguration(_config);
             });
 
+            ExecuteHostingStartups();
+
+            _builder.ConfigureServices((context, services) =>
+            {
+                var webhostContext = GetWebHostBuilderContext(context);
+                var webHostOptions = (WebHostOptions)context.Properties[typeof(WebHostOptions)];
+
+                // Add the IHostingEnvironment and IApplicationLifetime from Microsoft.AspNetCore.Hosting
+                services.AddSingleton(webhostContext.HostingEnvironment);
+                services.AddSingleton<IApplicationLifetime, GenericHostApplicationLifetime>();
+
+                services.Configure<GenericWebHostServiceOptions>(options =>
+                {
+                    // Set the options
+                    options.WebHostOptions = webHostOptions;
+                    // Store and forward any startup errors
+                    options.HostingStartupExceptions = _hostingStartupErrors;
+                });
+
+                services.AddHostedService<GenericWebHostService>();
+
+                // REVIEW: This is bad since we don't own this type. Anybody could add one of these and it would mess things up
+                // We need to flow this differently
+                var listener = new DiagnosticListener("Microsoft.AspNetCore");
+                services.TryAddSingleton<DiagnosticListener>(listener);
+                services.TryAddSingleton<DiagnosticSource>(listener);
+
+                services.TryAddSingleton<IHttpContextFactory, HttpContextFactory>();
+                services.TryAddScoped<IMiddlewareFactory, MiddlewareFactory>();
+                services.TryAddSingleton<IApplicationBuilderFactory, ApplicationBuilderFactory>();
+
+                // Conjure up a RequestServices
+                services.TryAddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
+                services.TryAddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
+
+                // Ensure object pooling is available everywhere.
+                services.TryAddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
+
+                // Support UseStartup(assemblyName)
+                if (!string.IsNullOrEmpty(webHostOptions.StartupAssembly))
+                {
+                    try
+                    {
+                        var startupType = StartupLoader.FindStartupType(webHostOptions.StartupAssembly, webhostContext.HostingEnvironment.EnvironmentName);
+                        UseStartup(startupType);
+                    }
+                    catch (Exception ex) when (webHostOptions.CaptureStartupErrors)
+                    {
+                        var capture = ExceptionDispatchInfo.Capture(ex);
+
+                        services.Configure<GenericWebHostServiceOptions>(options =>
+                        {
+                            options.ConfigureApplication = app =>
+                            {
+                                // Throw if there was any errors initializing startup
+                                capture.Throw();
+                            };
+                        });
+                    }
+                }
+            });
+        }
+
+        private void ExecuteHostingStartups()
+        {
             // REVIEW: This doesn't support config from the outside
             var configuration = new ConfigurationBuilder()
                             .AddEnvironmentVariables()
@@ -71,42 +136,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     _hostingStartupErrors = new AggregateException(exceptions);
                 }
             }
-
-            _builder.ConfigureServices((context, services) =>
-            {
-                var webhostContext = GetWebHostBuilderContext(context);
-
-                // Add the IHostingEnvironment and IApplicationLifetime from Microsoft.AspNetCore.Hosting
-                services.AddSingleton(webhostContext.HostingEnvironment);
-                services.AddSingleton<IApplicationLifetime, GenericHostApplicationLifetime>();
-
-                services.Configure<GenericWebHostServiceOptions>(o =>
-                {
-                    // Set the options
-                    o.WebHostOptions = (WebHostOptions)context.Properties[typeof(WebHostOptions)];
-                    // Store and forward any startup errors
-                    o.HostingStartupExceptions = _hostingStartupErrors;
-                });
-
-                services.AddHostedService<GenericWebHostService>();
-
-                // REVIEW: This is bad since we don't own this type. Anybody could add one of these and it would mess things up
-                // We need to flow this differently
-                var listener = new DiagnosticListener("Microsoft.AspNetCore");
-                services.TryAddSingleton<DiagnosticListener>(listener);
-                services.TryAddSingleton<DiagnosticSource>(listener);
-
-                services.TryAddSingleton<IHttpContextFactory, HttpContextFactory>();
-                services.TryAddScoped<IMiddlewareFactory, MiddlewareFactory>();
-                services.TryAddSingleton<IApplicationBuilderFactory, ApplicationBuilderFactory>();
-
-                // Conjure up a RequestServices
-                services.TryAddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
-                services.TryAddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
-
-                // Ensure object pooling is available everywhere.
-                services.TryAddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
-            });
         }
 
         public IWebHost Build() => throw new NotSupportedException($"Building this implementation of {nameof(IWebHostBuilder)} is not supported.");
@@ -162,6 +191,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             _builder.ConfigureServices((context, services) =>
             {
                 var webHostBuilderContext = GetWebHostBuilderContext(context);
+                var webHostOptions = (WebHostOptions)context.Properties[typeof(WebHostOptions)];
+
 
                 ExceptionDispatchInfo startupError = null;
                 object instance = null;
@@ -209,7 +240,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     // Resolve Configure after calling ConfigureServices and ConfigureContainer
                     configureBuilder = StartupLoader.FindConfigureDelegate(startupType, context.HostingEnvironment.EnvironmentName);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (webHostOptions.CaptureStartupErrors)
                 {
                     startupError = ExceptionDispatchInfo.Capture(ex);
                 }
