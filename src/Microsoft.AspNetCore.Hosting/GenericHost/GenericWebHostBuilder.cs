@@ -99,7 +99,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         private void ExecuteHostingStartups()
         {
-            // REVIEW: This doesn't support config from the outside
+            // REVIEW: This doesn't support arbitrary hosting configuration. We need to run this during the call to ConfigureWebHost
+            // not during IHostBuilder.Build(). This is because IHostingStartup.Configure mutates the builder itself and that should happen *before*
+            // the delegate execute, not during.
             var configuration = new ConfigurationBuilder()
                             .AddEnvironmentVariables()
                             .Build();
@@ -169,7 +171,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         internal IWebHostBuilder UseDefaultServiceProvider(Action<WebHostBuilderContext, ServiceProviderOptions> configure)
         {
-            // REVIEW: This is a hack to change the builder with the HostBuilderContext,
+            // REVIEW: This is a hack to change the builder with the HostBuilderContext in scope,
             // we're not actually using configuration here
             _builder.ConfigureAppConfiguration((context, _) =>
             {
@@ -192,7 +194,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             {
                 var webHostBuilderContext = GetWebHostBuilderContext(context);
                 var webHostOptions = (WebHostOptions)context.Properties[typeof(WebHostOptions)];
-
 
                 ExceptionDispatchInfo startupError = null;
                 object instance = null;
