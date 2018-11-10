@@ -25,6 +25,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public GenericWebHostBuilder(IHostBuilder builder)
         {
             _builder = builder;
+
             _config = new ConfigurationBuilder()
                 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
                 .Build();
@@ -32,9 +33,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             _builder.ConfigureHostConfiguration(config =>
             {
                 config.AddConfiguration(_config);
-            });
 
-            ExecuteHostingStartups();
+                // We do this super early but still late enough that we can process the configuration
+                // wired up by calls to UseSetting
+                ExecuteHostingStartups();
+            });
 
             _builder.ConfigureServices((context, services) =>
             {
@@ -99,44 +102,38 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         private void ExecuteHostingStartups()
         {
-            // REVIEW: This doesn't support arbitrary hosting configuration. We need to run this during the call to ConfigureWebHost
-            // not during IHostBuilder.Build(). This is because IHostingStartup.Configure mutates the builder itself and that should happen *before*
-            // the delegate execute, not during.
-            var configuration = new ConfigurationBuilder()
-                            .AddEnvironmentVariables()
-                            .Build();
+            var webHostOptions = new WebHostOptions(_config, Assembly.GetEntryAssembly()?.GetName().Name);
 
-            // REVIEW: Is this application name correct?
-            var webHostOptions = new WebHostOptions(configuration, Assembly.GetEntryAssembly()?.GetName().Name);
-
-            if (!webHostOptions.PreventHostingStartup)
+            if (webHostOptions.PreventHostingStartup)
             {
-                var exceptions = new List<Exception>();
+                return;
+            }
 
-                // Execute the hosting startup assemblies
-                foreach (var assemblyName in webHostOptions.GetFinalHostingStartupAssemblies().Distinct(StringComparer.OrdinalIgnoreCase))
+            var exceptions = new List<Exception>();
+
+            // Execute the hosting startup assemblies
+            foreach (var assemblyName in webHostOptions.GetFinalHostingStartupAssemblies().Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                try
                 {
-                    try
-                    {
-                        var assembly = Assembly.Load(new AssemblyName(assemblyName));
+                    var assembly = Assembly.Load(new AssemblyName(assemblyName));
 
-                        foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
-                        {
-                            var hostingStartup = (IHostingStartup)Activator.CreateInstance(attribute.HostingStartupType);
-                            hostingStartup.Configure(this);
-                        }
-                    }
-                    catch (Exception ex)
+                    foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
                     {
-                        // Capture any errors that happen during startup
-                        exceptions.Add(new InvalidOperationException($"Startup assembly {assemblyName} failed to execute. See the inner exception for more details.", ex));
+                        var hostingStartup = (IHostingStartup)Activator.CreateInstance(attribute.HostingStartupType);
+                        hostingStartup.Configure(this);
                     }
                 }
-
-                if (exceptions.Count > 0)
+                catch (Exception ex)
                 {
-                    _hostingStartupErrors = new AggregateException(exceptions);
+                    // Capture any errors that happen during startup
+                    exceptions.Add(new InvalidOperationException($"Startup assembly {assemblyName} failed to execute. See the inner exception for more details.", ex));
                 }
+            }
+
+            if (exceptions.Count > 0)
+            {
+                _hostingStartupErrors = new AggregateException(exceptions);
             }
         }
 
@@ -188,8 +185,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         internal IWebHostBuilder UseStartup(Type startupType)
         {
-            _config[HostDefaults.ApplicationKey] = startupType.GetTypeInfo().Assembly.GetName().Name;
-
             _builder.ConfigureServices((context, services) =>
             {
                 var webHostBuilderContext = GetWebHostBuilderContext(context);

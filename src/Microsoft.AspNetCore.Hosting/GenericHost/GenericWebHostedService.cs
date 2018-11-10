@@ -118,10 +118,9 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             await Server.StartAsync(httpApplication, cancellationToken);
 
-            var serverAddresses = Server.Features.Get<IServerAddressesFeature>()?.Addresses;
-            if (serverAddresses != null)
+            if (addresses != null)
             {
-                foreach (var address in serverAddresses)
+                foreach (var address in addresses)
                 {
                     Logger.LogInformation("Now listening on: {address}", address);
                 }

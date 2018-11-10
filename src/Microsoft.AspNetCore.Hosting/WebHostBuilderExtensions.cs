@@ -27,23 +27,23 @@ namespace Microsoft.AspNetCore.Hosting
                 throw new ArgumentNullException(nameof(configureApp));
             }
 
+            var startupAssemblyName = configureApp.GetMethodInfo().DeclaringType.GetTypeInfo().Assembly.GetName().Name;
+
+            hostBuilder.UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName);
+
             // Light up the GenericWebHostBuilder implementation
             if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
             {
                 return genericWebHostBuilder.Configure(configureApp);
             }
 
-            var startupAssemblyName = configureApp.GetMethodInfo().DeclaringType.GetTypeInfo().Assembly.GetName().Name;
-
-            return hostBuilder
-                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
-                .ConfigureServices(services =>
+            return hostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IStartup>(sp =>
                 {
-                    services.AddSingleton<IStartup>(sp =>
-                    {
-                        return new DelegateStartup(sp.GetRequiredService<IServiceProviderFactory<IServiceCollection>>(), configureApp);
-                    });
+                    return new DelegateStartup(sp.GetRequiredService<IServiceProviderFactory<IServiceCollection>>(), configureApp);
                 });
+            });
         }
 
 
@@ -55,16 +55,17 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseStartup(this IWebHostBuilder hostBuilder, Type startupType)
         {
+            var startupAssemblyName = startupType.GetTypeInfo().Assembly.GetName().Name;
+
+            hostBuilder.UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName);
+
             // Light up the GenericWebHostBuilder implementation
             if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
             {
                 return genericWebHostBuilder.UseStartup(startupType);
             }
 
-            var startupAssemblyName = startupType.GetTypeInfo().Assembly.GetName().Name;
-
             return hostBuilder
-                .UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName)
                 .ConfigureServices(services =>
                 {
                     if (typeof(IStartup).GetTypeInfo().IsAssignableFrom(startupType.GetTypeInfo()))
