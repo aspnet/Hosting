@@ -27,6 +27,12 @@ namespace Microsoft.AspNetCore.Hosting
                 throw new ArgumentNullException(nameof(configureApp));
             }
 
+            // Light up the GenericWebHostBuilder implementation
+            if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
+            {
+                return genericWebHostBuilder.Configure(configureApp);
+            }
+
             var startupAssemblyName = configureApp.GetMethodInfo().DeclaringType.GetTypeInfo().Assembly.GetName().Name;
 
             return hostBuilder
@@ -49,6 +55,12 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseStartup(this IWebHostBuilder hostBuilder, Type startupType)
         {
+            // Light up the GenericWebHostBuilder implementation
+            if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
+            {
+                return genericWebHostBuilder.UseStartup(startupType);
+            }
+
             var startupAssemblyName = startupType.GetTypeInfo().Assembly.GetName().Name;
 
             return hostBuilder
@@ -100,6 +112,12 @@ namespace Microsoft.AspNetCore.Hosting
         /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
         public static IWebHostBuilder UseDefaultServiceProvider(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ServiceProviderOptions> configure)
         {
+            // Light up the GenericWebHostBuilder implementation
+            if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
+            {
+                return genericWebHostBuilder.UseDefaultServiceProvider(configure);
+            }
+
             return hostBuilder.ConfigureServices((context, services) =>
             {
                 var options = new ServiceProviderOptions();
