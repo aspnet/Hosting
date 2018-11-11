@@ -189,11 +189,16 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             };
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            HostingEventSource.Log.HostStop();
-
-            return Server.StopAsync(cancellationToken);
+            try
+            {
+                await Server.StopAsync(cancellationToken);
+            }
+            finally
+            {
+                HostingEventSource.Log.HostStop();
+            }
         }
     }
 }
