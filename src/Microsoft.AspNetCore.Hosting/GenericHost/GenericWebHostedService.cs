@@ -35,12 +35,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                                      IHostingEnvironment hostingEnvironment)
         {
             Options = options.Value;
-
-            if (Options.ConfigureApplication == null)
-            {
-                throw new ArgumentException(nameof(Options.ConfigureApplication));
-            }
-
             Server = server;
             Logger = logger;
             DiagnosticListener = diagnosticListener;
