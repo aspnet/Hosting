@@ -25,7 +25,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private static readonly string DeprecatedServerUrlsKey = "server.urls";
 
         public GenericWebHostService(IOptions<GenericWebHostServiceOptions> options,
-                                     IServiceProvider services,
                                      IServer server,
                                      ILogger<GenericWebHostService> logger,
                                      DiagnosticListener diagnosticListener,
@@ -35,27 +34,24 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                                      IConfiguration configuration,
                                      IHostingEnvironment hostingEnvironment)
         {
-            Options = options?.Value ?? throw new System.ArgumentNullException(nameof(options));
+            Options = options.Value;
 
             if (Options.ConfigureApplication == null)
             {
                 throw new ArgumentException(nameof(Options.ConfigureApplication));
             }
 
-            Services = services ?? throw new ArgumentNullException(nameof(services));
-            Server = server ?? throw new ArgumentNullException(nameof(server));
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            DiagnosticListener = diagnosticListener ?? throw new ArgumentNullException(nameof(diagnosticListener));
-            HttpContextFactory = httpContextFactory ?? throw new ArgumentNullException(nameof(httpContextFactory));
-            ApplicationBuilderFactory = applicationBuilderFactory ?? throw new ArgumentNullException(nameof(applicationBuilderFactory));
-            StartupFilters = startupFilters ?? throw new ArgumentNullException(nameof(startupFilters));
-            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            HostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
+            Server = server;
+            Logger = logger;
+            DiagnosticListener = diagnosticListener;
+            HttpContextFactory = httpContextFactory;
+            ApplicationBuilderFactory = applicationBuilderFactory;
+            StartupFilters = startupFilters;
+            Configuration = configuration;
+            HostingEnvironment = hostingEnvironment;
         }
 
         public GenericWebHostServiceOptions Options { get; }
-        public IServiceProvider Services { get; }
-        public HostBuilderContext HostBuilderContext { get; }
         public IServer Server { get; }
         public ILogger<GenericWebHostService> Logger { get; }
         public DiagnosticListener DiagnosticListener { get; }
