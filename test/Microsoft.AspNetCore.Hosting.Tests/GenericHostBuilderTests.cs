@@ -82,6 +82,28 @@ namespace Microsoft.AspNetCore.Hosting.Tests
             }
         }
 
+        [Fact]
+        public async Task StartThrowsIfNoApplicationProvided()
+        {
+            var provider = new TestLoggerProvider();
+            var host = new HostBuilder()
+                .ConfigureWebHost(builder =>
+                {
+                    builder.ConfigureLogging((_, factory) =>
+                    {
+                        factory.AddProvider(provider);
+                    })
+                    .UseServer(new TestServer());
+                })
+                .Build();
+
+            using (host)
+            {
+                var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => host.StartAsync());
+                Assert.Equal("No application configured. Please specify an application via IWebHostBuilder.UseStartup, IWebHostBuilder.Configure, or specifying the startup assembly via StartupAssemblyKey in the web host configuration.", exception.Message);
+            }
+        }
+
         public class TestLoggerProvider : ILoggerProvider
         {
             public TestSink Sink { get; set; } = new TestSink();
