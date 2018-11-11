@@ -2,10 +2,10 @@
 
 namespace Microsoft.AspNetCore.Hosting.Internal
 {
-    internal class GenericHostApplicationLifetime : IApplicationLifetime
+    internal class GenericWebHostApplicationLifetime : IApplicationLifetime
     {
         private readonly Microsoft.Extensions.Hosting.IApplicationLifetime _applicationLifetime;
-        public GenericHostApplicationLifetime(Microsoft.Extensions.Hosting.IApplicationLifetime applicationLifetime)
+        public GenericWebHostApplicationLifetime(Microsoft.Extensions.Hosting.IApplicationLifetime applicationLifetime)
         {
             _applicationLifetime = applicationLifetime;
         }

@@ -46,7 +46,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
                 // Add the IHostingEnvironment and IApplicationLifetime from Microsoft.AspNetCore.Hosting
                 services.AddSingleton(webhostContext.HostingEnvironment);
-                services.AddSingleton<IApplicationLifetime, GenericHostApplicationLifetime>();
+                services.AddSingleton<IApplicationLifetime, GenericWebHostApplicationLifetime>();
 
                 services.Configure<GenericWebHostServiceOptions>(options =>
                 {
