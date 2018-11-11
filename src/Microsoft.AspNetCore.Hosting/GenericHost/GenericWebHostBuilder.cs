@@ -21,6 +21,8 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private readonly IConfiguration _config;
         private readonly object _startupKey = new object();
         private AggregateException _hostingStartupErrors;
+        private HostingStartupWebHostBuilder _hostingStartupWebHostBuilder;
+
 
         public GenericWebHostBuilder(IHostBuilder builder)
         {
@@ -37,6 +39,26 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 // We do this super early but still late enough that we can process the configuration
                 // wired up by calls to UseSetting
                 ExecuteHostingStartups();
+            });
+
+            // IHostingStartup needs to be executed before any direct methods on the builder
+            // so register these callbacks first
+            _builder.ConfigureAppConfiguration((context, configurationBuilder) =>
+            {
+                if (_hostingStartupWebHostBuilder != null)
+                {
+                    var webhostContext = GetWebHostBuilderContext(context);
+                    _hostingStartupWebHostBuilder.ConfigureAppConfiguration(webhostContext, configurationBuilder);
+                }
+            });
+
+            _builder.ConfigureServices((context, services) =>
+            {
+                if (_hostingStartupWebHostBuilder != null)
+                {
+                    var webhostContext = GetWebHostBuilderContext(context);
+                    _hostingStartupWebHostBuilder.ConfigureServices(webhostContext, services);
+                }
             });
 
             _builder.ConfigureServices((context, services) =>
@@ -110,6 +132,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             }
 
             var exceptions = new List<Exception>();
+            _hostingStartupWebHostBuilder = new HostingStartupWebHostBuilder(this);
 
             // Execute the hosting startup assemblies
             foreach (var assemblyName in webHostOptions.GetFinalHostingStartupAssemblies().Distinct(StringComparer.OrdinalIgnoreCase))
@@ -121,7 +144,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     foreach (var attribute in assembly.GetCustomAttributes<HostingStartupAttribute>())
                     {
                         var hostingStartup = (IHostingStartup)Activator.CreateInstance(attribute.HostingStartupType);
-                        hostingStartup.Configure(this);
+                        hostingStartup.Configure(_hostingStartupWebHostBuilder);
                     }
                 }
                 catch (Exception ex)
