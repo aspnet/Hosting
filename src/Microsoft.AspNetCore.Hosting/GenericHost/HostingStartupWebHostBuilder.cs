@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,13 +9,13 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     // We use this type to capture calls to the IWebHostBuilder so the we can properly order calls to 
     // to GenericHostWebHostBuilder.
-    internal class HostingStartupWebHostBuilder : IWebHostBuilder
+    internal class HostingStartupWebHostBuilder : IWebHostBuilder, ISupportsStartup, ISupportsUseDefaultServiceProvider
     {
-        private readonly IWebHostBuilder _builder;
+        private readonly GenericWebHostBuilder _builder;
         private Action<WebHostBuilderContext, IConfigurationBuilder> _configureConfiguration;
         private Action<WebHostBuilderContext, IServiceCollection> _configureServices;
 
-        public HostingStartupWebHostBuilder(IWebHostBuilder builder)
+        public HostingStartupWebHostBuilder(GenericWebHostBuilder builder)
         {
             _builder = builder;
         }
@@ -57,6 +58,21 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         public void ConfigureAppConfiguration(WebHostBuilderContext context, IConfigurationBuilder builder)
         {
             _configureConfiguration?.Invoke(context, builder);
+        }
+
+        public IWebHostBuilder UseDefaultServiceProvider(Action<WebHostBuilderContext, ServiceProviderOptions> configure)
+        {
+            return _builder.UseDefaultServiceProvider(configure);
+        }
+
+        public IWebHostBuilder Configure(Action<IApplicationBuilder> configure)
+        {
+            return _builder.Configure(configure);
+        }
+
+        public IWebHostBuilder UseStartup(Type startupType)
+        {
+            return _builder.UseStartup(startupType);
         }
     }
 }

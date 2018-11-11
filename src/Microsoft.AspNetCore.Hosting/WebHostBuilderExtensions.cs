@@ -31,10 +31,10 @@ namespace Microsoft.AspNetCore.Hosting
 
             hostBuilder.UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName);
 
-            // Light up the GenericWebHostBuilder implementation
-            if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
+            // Light up the ISupportsStartup implementation
+            if (hostBuilder is ISupportsStartup supportsStartup)
             {
-                return genericWebHostBuilder.Configure(configureApp);
+                return supportsStartup.Configure(configureApp);
             }
 
             return hostBuilder.ConfigureServices(services =>
@@ -60,9 +60,9 @@ namespace Microsoft.AspNetCore.Hosting
             hostBuilder.UseSetting(WebHostDefaults.ApplicationKey, startupAssemblyName);
 
             // Light up the GenericWebHostBuilder implementation
-            if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
+            if (hostBuilder is ISupportsStartup supportsStartup)
             {
-                return genericWebHostBuilder.UseStartup(startupType);
+                return supportsStartup.UseStartup(startupType);
             }
 
             return hostBuilder
@@ -114,9 +114,9 @@ namespace Microsoft.AspNetCore.Hosting
         public static IWebHostBuilder UseDefaultServiceProvider(this IWebHostBuilder hostBuilder, Action<WebHostBuilderContext, ServiceProviderOptions> configure)
         {
             // Light up the GenericWebHostBuilder implementation
-            if (hostBuilder is GenericWebHostBuilder genericWebHostBuilder)
+            if (hostBuilder is ISupportsUseDefaultServiceProvider supportsDefaultServiceProvider)
             {
-                return genericWebHostBuilder.UseDefaultServiceProvider(configure);
+                return supportsDefaultServiceProvider.UseDefaultServiceProvider(configure);
             }
 
             return hostBuilder.ConfigureServices((context, services) =>

@@ -15,7 +15,7 @@ using Microsoft.Extensions.ObjectPool;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
 {
-    internal class GenericWebHostBuilder : IWebHostBuilder
+    internal class GenericWebHostBuilder : IWebHostBuilder, ISupportsStartup, ISupportsUseDefaultServiceProvider
     {
         private readonly IHostBuilder _builder;
         private readonly IConfiguration _config;
@@ -193,7 +193,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             return this;
         }
 
-        internal IWebHostBuilder UseDefaultServiceProvider(Action<WebHostBuilderContext, ServiceProviderOptions> configure)
+        public IWebHostBuilder UseDefaultServiceProvider(Action<WebHostBuilderContext, ServiceProviderOptions> configure)
         {
             // REVIEW: This is a hack to change the builder with the HostBuilderContext in scope,
             // we're not actually using configuration here
@@ -210,7 +210,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             return this;
         }
 
-        internal IWebHostBuilder UseStartup(Type startupType)
+        public IWebHostBuilder UseStartup(Type startupType)
         {
             _builder.ConfigureServices((context, services) =>
             {
@@ -300,7 +300,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             builder.Build(instance)(container);
         }
 
-        internal IWebHostBuilder Configure(Action<IApplicationBuilder> configure)
+        public IWebHostBuilder Configure(Action<IApplicationBuilder> configure)
         {
             _builder.ConfigureServices((context, services) =>
             {
