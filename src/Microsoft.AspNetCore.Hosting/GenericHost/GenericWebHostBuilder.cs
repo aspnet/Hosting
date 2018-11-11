@@ -20,13 +20,15 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         private readonly IHostBuilder _builder;
         private readonly IConfiguration _config;
         private readonly object _startupKey = new object();
+        private readonly bool _allowBuild;
+
         private AggregateException _hostingStartupErrors;
         private HostingStartupWebHostBuilder _hostingStartupWebHostBuilder;
 
-
-        public GenericWebHostBuilder(IHostBuilder builder)
+        public GenericWebHostBuilder(IHostBuilder builder, bool allowBuild = true)
         {
             _builder = builder;
+            _allowBuild = allowBuild;
 
             _config = new ConfigurationBuilder()
                 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
@@ -162,8 +164,13 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
         public IWebHost Build()
         {
-            // REVIEW: This makes testing easier right now
-            return new GenericWebHost(_builder.Build());
+            if (_allowBuild)
+            {
+                // This makes testing the various implementations easy
+                return new GenericWebHost(_builder.Build());
+            }
+
+            throw new NotSupportedException($"Building this implementation of {nameof(IWebHostBuilder)} is not supported.");
         }
 
         public IWebHostBuilder ConfigureAppConfiguration(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate)

@@ -878,6 +878,32 @@ namespace Microsoft.AspNetCore.Hosting
             Assert.True(disposables[1].Disposed);
         }
 
+        [Fact]
+        public void GenericWebHostThrowsWithIStartup()
+        {
+            var builder = new GenericWebHostBuilder(new HostBuilder())
+                .UseStartup<StartupNoServices>();
+
+            var exception = Assert.Throws<NotSupportedException>(() => builder.Build());
+            Assert.Equal("Microsoft.AspNetCore.Hosting.IStartup isn't supported", exception.Message);
+        }
+
+        [Fact]
+        public void GenericWebHostThrowsOnBuild()
+        {
+            var exception = Assert.Throws<NotSupportedException>(() =>
+            {
+                var hostBuilder = new HostBuilder()
+                       .ConfigureWebHost(builder =>
+                       {
+                           builder.UseStartup<StartupNoServices>();
+                           builder.Build();
+                       });
+            });
+
+            Assert.Equal("Building this implementation of IWebHostBuilder is not supported.", exception.Message);
+        }
+
         [Theory]
         [MemberData(nameof(DefaultWebHostBuildersWithConfig))]
         public void Build_HostingStartupAssemblyCanBeExcluded(IWebHostBuilder builder)

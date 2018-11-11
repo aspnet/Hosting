@@ -8,7 +8,7 @@ namespace Microsoft.Extensions.Hosting
     {
         public static IHostBuilder ConfigureWebHost(this IHostBuilder builder, Action<IWebHostBuilder> configure)
         {
-            var webhostBuilder = new GenericWebHostBuilder(builder);
+            var webhostBuilder = new GenericWebHostBuilder(builder, allowBuild: false);
             configure(webhostBuilder);
             return builder;
         }
