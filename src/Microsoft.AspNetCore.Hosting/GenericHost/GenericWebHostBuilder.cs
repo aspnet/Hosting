@@ -246,7 +246,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                     throw new NotSupportedException($"{typeof(IStartup)} isn't supported");
                 }
 
-                instance = ActivatorUtilities.CreateInstance(new ServiceProvider(webHostBuilderContext), startupType);
+                instance = ActivatorUtilities.CreateInstance(new HostServiceProvider(webHostBuilderContext), startupType);
                 context.Properties[_startupKey] = instance;
 
                 // Startup.ConfigureServices
@@ -355,11 +355,11 @@ namespace Microsoft.AspNetCore.Hosting.Internal
         }
 
         // This exists just so that we can use ActivatorUtilities.CreateInstance on the Startup class
-        private class ServiceProvider : IServiceProvider
+        private class HostServiceProvider : IServiceProvider
         {
             private readonly WebHostBuilderContext _context;
 
-            public ServiceProvider(WebHostBuilderContext context)
+            public HostServiceProvider(WebHostBuilderContext context)
             {
                 _context = context;
             }
