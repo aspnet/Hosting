@@ -25,8 +25,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     internal class GenericWebHostService : IHostedService
     {
-        private static readonly string DeprecatedServerUrlsKey = "server.urls";
-
         private static readonly Action<IApplicationBuilder> _defaultApplication =
             _ => throw new InvalidOperationException($"No application configured. Please specify an application via IWebHostBuilder.UseStartup, IWebHostBuilder.Configure, or specifying the startup assembly via {nameof(WebHostDefaults.StartupAssemblyKey)} in the web host configuration.");
 
@@ -69,7 +67,7 @@ namespace Microsoft.AspNetCore.Hosting.Internal
             var addresses = serverAddressesFeature?.Addresses;
             if (addresses != null && !addresses.IsReadOnly && addresses.Count == 0)
             {
-                var urls = Configuration[WebHostDefaults.ServerUrlsKey] ?? Configuration[DeprecatedServerUrlsKey];
+                var urls = Configuration[WebHostDefaults.ServerUrlsKey];
                 if (!string.IsNullOrEmpty(urls))
                 {
                     serverAddressesFeature.PreferHostingUrls = WebHostUtilities.ParseBool(Configuration, WebHostDefaults.PreferHostingUrlsKey);

@@ -97,7 +97,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
                 // Conjure up a RequestServices
                 services.TryAddTransient<IStartupFilter, AutoRequestServicesStartupFilter>();
-                services.TryAddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
 
                 // Ensure object pooling is available everywhere.
                 services.TryAddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
