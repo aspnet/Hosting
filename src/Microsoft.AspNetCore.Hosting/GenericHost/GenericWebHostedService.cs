@@ -25,9 +25,6 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 {
     internal class GenericWebHostService : IHostedService
     {
-        private static readonly Action<IApplicationBuilder> _defaultApplication =
-            _ => throw new InvalidOperationException($"No application configured. Please specify an application via IWebHostBuilder.UseStartup, IWebHostBuilder.Configure, or specifying the startup assembly via {nameof(WebHostDefaults.StartupAssemblyKey)} in the web host configuration.");
-
         public GenericWebHostService(IOptions<GenericWebHostServiceOptions> options,
                                      IServer server,
                                      ILogger<GenericWebHostService> logger,
@@ -83,8 +80,14 @@ namespace Microsoft.AspNetCore.Hosting.Internal
 
             try
             {
+                Action<IApplicationBuilder> configure = Options.ConfigureApplication;
+
+                if (configure == null)
+                {
+                    throw new InvalidOperationException($"No application configured. Please specify an application via IWebHostBuilder.UseStartup, IWebHostBuilder.Configure, or specifying the startup assembly via {nameof(WebHostDefaults.StartupAssemblyKey)} in the web host configuration.");
+                }
+
                 var builder = ApplicationBuilderFactory.CreateBuilder(Server.Features);
-                Action<IApplicationBuilder> configure = Options.ConfigureApplication ?? _defaultApplication;
 
                 foreach (var filter in StartupFilters.Reverse())
                 {

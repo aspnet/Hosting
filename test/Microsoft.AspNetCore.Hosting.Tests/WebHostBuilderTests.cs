@@ -1100,6 +1100,35 @@ namespace Microsoft.AspNetCore.Hosting
             }
         }
 
+        [Theory]
+        [MemberData(nameof(DefaultWebHostBuilders))]
+        public async Task StartupFiltersDoNotRunIfNotApplicationConfigured(IWebHostBuilder builder)
+        {
+            var hostBuilder = builder
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IStartupFilter, MyStartupFilter>();
+                })
+                .UseServer(new TestServer());
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                var host = hostBuilder.Build();
+                var filter = (MyStartupFilter)host.Services.GetServices<IStartupFilter>().FirstOrDefault(s => s is MyStartupFilter);
+                Assert.NotNull(filter);
+                try
+                {
+                    await host.StartAsync();
+                }
+                finally
+                {
+                    Assert.False(filter.Executed);
+                }
+            });
+
+            Assert.Contains("No application configured.", exception.Message);
+        }
+
         private static void StaticConfigureMethod(IApplicationBuilder app) { }
 
         private IWebHostBuilder CreateWebHostBuilder()
@@ -1151,6 +1180,17 @@ namespace Microsoft.AspNetCore.Hosting
             httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
             var bodyText = new StreamReader(httpContext.Response.Body).ReadToEnd();
             Assert.Contains(expectedText, bodyText);
+        }
+
+        private class MyStartupFilter : IStartupFilter
+        {
+            public bool Executed { get; set; }
+
+            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            {
+                Executed = true;
+                return next;
+            }
         }
 
         private class TestServer : IServer
