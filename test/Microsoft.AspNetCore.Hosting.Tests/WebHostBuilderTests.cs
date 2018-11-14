@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Fakes;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Tests.Fakes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
@@ -881,7 +882,7 @@ namespace Microsoft.AspNetCore.Hosting
         [Fact]
         public void GenericWebHostThrowsWithIStartup()
         {
-            var builder = new GenericWebHostBuilder(new HostBuilder())
+            var builder = new GenericWebHostBuilderWrapper(new HostBuilder())
                 .UseStartup<StartupNoServices>();
 
             var exception = Assert.Throws<NotSupportedException>(() => builder.Build());
@@ -1118,7 +1119,7 @@ namespace Microsoft.AspNetCore.Hosting
         public static TheoryData<IWebHostBuilder> DefaultWebHostBuilders => new TheoryData<IWebHostBuilder>
         {
             new WebHostBuilder(),
-            new GenericWebHostBuilder(new HostBuilder())
+            new GenericWebHostBuilderWrapper(new HostBuilder())
         };
 
         public static TheoryData<IWebHostBuilder> DefaultWebHostBuildersWithConfig
@@ -1137,7 +1138,7 @@ namespace Microsoft.AspNetCore.Hosting
 
                 return new TheoryData<IWebHostBuilder> {
                     new WebHostBuilder().UseConfiguration(config),
-                    new GenericWebHostBuilder(new HostBuilder()).UseConfiguration(config)
+                    new GenericWebHostBuilderWrapper(new HostBuilder()).UseConfiguration(config)
                 };
             }
         }
